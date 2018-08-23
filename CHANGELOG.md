@@ -1,3 +1,32 @@
+# 0.12 (2018/08/23)
+
+## Features
+
+- `Page::items_iter` added, abstracts over "next_page" logic
+- `elefen::prelude` and `elefen::apps::prelude` modules added to more
+  easily import all necessary types
+- Helpers added to allow serialization & deseriasization of `Data` types
+  to `toml`
+
+## Breaking Changes
+
+- Combined all parameters to `mastodon.statuses` (except `id`) to their
+  own type, `StatusesRequest`
+- All API methods on `Mastodon` type moved into a trait,
+  `MastodonClient`, to enable better mocking during tests
+- `Mastodon::from_data(Data)` was changed to `Mastodon::from(Data)`
+- `AppBuilder` was changed, use `App::builder()` instead
+- `Registration` was broken up to enable better registration flow
+
+## Documentation
+
+- All API methods now have doc comments
+- All docs were updated for the new breaking changes
+
+## Compatibility
+
+- Login to pleroma instances was fixed
+
 # 0.11
 - Added more examples to `examples` directory.
 - Fixed `follow` and `unfollow` routes.
