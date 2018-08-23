@@ -18,6 +18,7 @@ serde_derive = "1"
 serde_json = "1"
 url = "1"
 try_from = "0.2.2"
+toml = { version = "0.4.6", optional = true }
 
 [dependencies.chrono]
 version = "0.4"
@@ -25,3 +26,10 @@ features = ["serde"]
 
 [dev-dependencies]
 toml = "0.4"
+
+[features]
+default-features = []
+all = ["toml"]
+
+[package.metadata.docs.rs]
+features = ["all"]
