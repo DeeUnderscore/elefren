@@ -3,6 +3,12 @@ rust:
   - stable
   - beta
   - nightly
+before_script:
+  - rustup component add rustfmt-preview
+script:
+  - cargo fmt all -- --check
+  - cargo build
+  - cargo test
 matrix:
   allow_failures:
     - rust: nightly
