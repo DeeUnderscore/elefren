@@ -438,6 +438,7 @@ impl MastodonBuilder {
         }
     }
 
+    #[allow(dead_code)]
     pub fn client(&mut self, client: Client) -> &mut Self {
         self.client = Some(client);
         self

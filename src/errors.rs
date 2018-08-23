@@ -37,6 +37,8 @@ pub enum Error {
     Client(StatusCode),
     /// Generic server error.
     Server(StatusCode),
+    /// MastodonBuilder error.
+    DataMissing,
 }
 
 impl fmt::Display for Error {
@@ -63,6 +65,7 @@ impl error::Error for Error {
             Error::ClientIdRequired => "ClientIdRequired",
             Error::ClientSecretRequired => "ClientSecretRequired",
             Error::AccessTokenRequired => "AccessTokenRequired",
+            Error::DataMissing => "DataMissing",
         }
     }
 }
