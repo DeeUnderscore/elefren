@@ -5,9 +5,28 @@
 [![Docs](https://docs.rs/elefren/badge.svg)](https://docs.rs/elefren)
 [![MIT/APACHE-2.0](https://img.shields.io/crates/l/elefren.svg)](https://crates.io/crates/elefren)
 
-## [Documentation](https://docs.rs/elefren/)
+[Documentation](https://docs.rs/elefren/)
 
 A wrapper around the [API](https://github.com/tootsuite/documentation/blob/master/docs/Using-the-API/API.md#tag) for [Mastodon](https://mastodon.social/)
+
+## Installation
+
+To add `elefren` to your project, add the following to the
+`[dependencies]` section of your `Cargo.toml`
+
+```toml
+elefren = { git = "https://github.com/pwoolcoc/elefren" }
+```
+
+## Usage
+
+To use this crate in your project, add this to your crate root (lib.rs, main.rs, etc):
+
+```rust
+extern crate elefren;
+```
+
+## Example
 
 ```rust
 extern crate elefren;
