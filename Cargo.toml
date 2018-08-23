@@ -24,9 +24,6 @@ toml = { version = "0.4.6", optional = true }
 version = "0.4"
 features = ["serde"]
 
-[dev-dependencies]
-toml = "0.4"
-
 [features]
 default-features = []
 all = ["toml"]

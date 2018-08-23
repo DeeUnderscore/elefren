@@ -30,7 +30,6 @@ extern crate elefren;
 
 ```rust
 extern crate elefren;
-extern crate toml;
 
 use std::io;
 use std::fs::File;
@@ -38,13 +37,11 @@ use std::io::prelude::*;
 
 use elefren::{Data, Mastodon, Registration};
 use elefren::apps::{AppBuilder, Scopes};
+use elefren::data::toml; // requires `features = ["toml"]`
 
 fn main() {
-    let mastodon = match File::open("mastodon-data.toml") {
-        Ok(mut file) => {
-            let mut config = String::new();
-            file.read_to_string(&mut config).unwrap();
-            let data: Data = toml::from_str(&config).unwrap();
+    let mastodon = match toml::from_file("mastodon-data.toml") {
+        Ok(data) => {
             Mastodon::from(data)
         },
         Err(_) => register(),
@@ -56,16 +53,12 @@ fn main() {
 }
 
 fn register() -> Mastodon {
-    let app = AppBuilder {
-        client_name: "elefren-examples",
-        redirect_uris: "urn:ietf:wg:oauth:2.0:oob",
-        scopes: Scopes::Read,
-        website: Some("https://github.com/pwoolcoc/elefren"),
-    };
+    let mut app = App::builder();
+    app.client_name("elefren-examples");
 
-    let mut registration = Registration::new("https://mastodon.social");
-    registration.register(app).unwrap();;
-    let url = registration.authorise().unwrap();
+    let registration = Registration::new("https://mastodon.social");
+                                        .register(app).unwrap();
+    let url = registration.authorize_url().unwrap();
 
     println!("Click this link to authorize on Mastodon: {}", url);
     println!("Paste the returned authorization code: ");
@@ -73,13 +66,11 @@ fn register() -> Mastodon {
     let mut input = String::new();
     io::stdin().read_line(&mut input).unwrap();
 
-    let code = input.trim();
-    let mastodon = registration.create_access_token(code.to_string()).unwrap();
+    let code = input.trim().to_string();
+    let mastodon = registration.complete(code).unwrap();
 
     // Save app data for using on the next run.
-    let toml = toml::to_string(&*mastodon).unwrap();
-    let mut file = File::create("mastodon-data.toml").unwrap();
-    file.write_all(toml.as_bytes()).unwrap();
+    toml::to_file(&*mastodon, "mastodon-data.toml").unwrap();
 
     mastodon
 }
