@@ -1,7 +1,7 @@
 //! Module containing all info relating to a status.
 
-use chrono::prelude::*;
 use super::prelude::*;
+use chrono::prelude::*;
 use status_builder::Visibility;
 
 /// A status from the instance.

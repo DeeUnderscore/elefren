@@ -1,4 +1,3 @@
-indent_style = "Visual"
 format_strings = true
 format_macro_matchers = true
 imports_layout = "HorizontalVertical"

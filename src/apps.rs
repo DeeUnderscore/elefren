@@ -1,5 +1,4 @@
-use std::fmt;
-use std::borrow::Cow;
+use std::{borrow::Cow, fmt};
 
 use try_from::TryInto;
 
@@ -8,13 +7,8 @@ use errors::{Error, Result};
 /// Provides the necessary types for registering an App and getting the
 /// necessary auth information
 pub mod prelude {
-    pub use {
-        apps::{
-            App,
-            Scopes
-        },
-        registration::Registration
-    };
+    pub use apps::{App, Scopes};
+    pub use registration::Registration;
 }
 
 /// Represents an application that can be registered with a mastodon instance
@@ -23,7 +17,7 @@ pub struct App {
     client_name: String,
     redirect_uris: String,
     scopes: Scopes,
-    #[serde(skip_serializing_if="Option::is_none")]
+    #[serde(skip_serializing_if = "Option::is_none")]
     website: Option<String>,
 }
 
@@ -39,8 +33,8 @@ impl App {
 
 /// Builder struct for defining your application.
 /// ```
-/// use std::error::Error;
 /// use elefren::apps::prelude::*;
+/// use std::error::Error;
 ///
 /// # fn main() -> Result<(), Box<Error>> {
 /// let mut builder = App::builder();
@@ -98,14 +92,15 @@ impl<'a> AppBuilder<'a> {
     /// Will fail if no `client_name` was provided
     pub fn build(self) -> Result<App> {
         Ok(App {
-            client_name: self.client_name
-                             .ok_or_else(|| Error::MissingField("client_name"))?
-                             .into(),
-            redirect_uris: self.redirect_uris
-                               .unwrap_or_else(|| "urn:ietf:wg:oauth:2.0:oob".into())
-                               .into(),
-            scopes: self.scopes
-                        .unwrap_or_else(|| Scopes::Read),
+            client_name: self
+                .client_name
+                .ok_or_else(|| Error::MissingField("client_name"))?
+                .into(),
+            redirect_uris: self
+                .redirect_uris
+                .unwrap_or_else(|| "urn:ietf:wg:oauth:2.0:oob".into())
+                .into(),
+            scopes: self.scopes.unwrap_or_else(|| Scopes::Read),
             website: self.website.map(|s| s.into()),
         })
     }
@@ -128,7 +123,8 @@ impl<'a> TryInto<App> for AppBuilder<'a> {
 }
 
 /// Permission scope of the application.
-/// [Details on what each permission provides](//github.com/tootsuite/documentation/blob/master/Using-the-API/OAuth-details.md)
+/// [Details on what each permission provides][1]
+/// [1]: https://github.com/tootsuite/documentation/blob/master/Using-the-API/OAuth-details.md)
 #[derive(Debug, Clone, Copy, Serialize)]
 pub enum Scopes {
     /// All Permissions, equivalent to `read write follow`
@@ -157,15 +153,19 @@ pub enum Scopes {
 impl fmt::Display for Scopes {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         use self::Scopes::*;
-        write!(f, "{}", match *self {
-            All => "read%20write%20follow",
-            Follow => "follow",
-            Read => "read",
-            ReadFollow => "read%20follow",
-            ReadWrite => "read%20write",
-            Write => "write",
-            WriteFollow => "write%20follow"
-        })
+        write!(
+            f,
+            "{}",
+            match *self {
+                All => "read%20write%20follow",
+                Follow => "follow",
+                Read => "read",
+                ReadFollow => "read%20follow",
+                ReadWrite => "read%20write",
+                Write => "write",
+                WriteFollow => "write%20follow",
+            }
+        )
     }
 }
 

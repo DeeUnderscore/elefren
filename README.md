@@ -7,7 +7,7 @@
 
 ## [Documentation](https://docs.rs/elefren/)
 
-A wrapper around the [API](https://github.com/tootsuite/mastodon/blob/master/docs/Using-the-API/API.md#tag) for [Mastodon](https://mastodon.social/)
+A wrapper around the [API](https://github.com/tootsuite/documentation/blob/master/docs/Using-the-API/API.md#tag) for [Mastodon](https://mastodon.social/)
 
 ```rust
 extern crate elefren;

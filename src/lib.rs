@@ -9,14 +9,12 @@
 //! #    try().unwrap();
 //! # }
 //! # fn try() -> elefren::Result<()> {
-//! use elefren::prelude::*;
-//! use elefren::apps::prelude::*;
+//! use elefren::{apps::prelude::*, prelude::*};
 //!
 //! let mut app = App::builder();
 //! app.client_name("elefren_test");
 //!
-//! let registration = Registration::new("https://mastodon.social")
-//!                                 .register(app)?;
+//! let registration = Registration::new("https://mastodon.social").register(app)?;
 //! let url = registration.authorize_url()?;
 //! // Here you now need to open the url in the browser
 //! // And handle a the redirect url coming back with the code.
@@ -31,47 +29,57 @@
 #![cfg_attr(test, deny(warnings))]
 #![cfg_attr(test, deny(missing_docs))]
 
-#[macro_use] extern crate serde_derive;
-#[macro_use] extern crate doc_comment;
-#[macro_use] extern crate serde_json as json;
+#[macro_use]
+extern crate serde_derive;
+#[macro_use]
+extern crate doc_comment;
+#[macro_use]
+extern crate serde_json as json;
 extern crate chrono;
 extern crate reqwest;
 extern crate serde;
 extern crate try_from;
 extern crate url;
 
-use std::borrow::Cow;
-use std::ops;
+use std::{borrow::Cow, ops};
 
-use reqwest::{Client, Response};
-use reqwest::header::{Authorization, Bearer, Headers};
+use reqwest::{
+    header::{Authorization, Bearer, Headers},
+    Client,
+    Response,
+};
 
 use entities::prelude::*;
 use page::Page;
 
-pub use status_builder::StatusBuilder;
-pub use requests::statuses::StatusesRequest;
-pub use errors::{Result, Error, ApiError};
+pub use errors::{ApiError, Error, Result};
 pub use registration::Registration;
+pub use requests::statuses::StatusesRequest;
+pub use status_builder::StatusBuilder;
 
 /// Registering your App
 pub mod apps;
-/// Constructing a status
-pub mod status_builder;
 /// Entities returned from the API
 pub mod entities;
-/// Registering your app.
-pub mod registration;
-/// Handling multiple pages of entities.
-pub mod page;
 /// Errors
 pub mod errors;
+/// Handling multiple pages of entities.
+pub mod page;
+/// Registering your app.
+pub mod registration;
 /// Requests
 pub mod requests;
-#[macro_use] mod macros;
+/// Constructing a status
+pub mod status_builder;
+#[macro_use]
+mod macros;
 /// Automatically import the things you need
 pub mod prelude {
-    pub use {Data, Mastodon, MastodonClient, StatusBuilder, StatusesRequest};
+    pub use Data;
+    pub use Mastodon;
+    pub use MastodonClient;
+    pub use StatusBuilder;
+    pub use StatusesRequest;
 }
 
 /// Your mastodon application client, handles all requests to and from Mastodon.
@@ -80,7 +88,7 @@ pub struct Mastodon {
     client: Client,
     headers: Headers,
     /// Raw data about your mastodon instance.
-    pub data: Data
+    pub data: Data,
 }
 
 /// Raw data about mastodon app. Save `Data` using `serde` to prevent needing
@@ -103,53 +111,155 @@ pub struct Data {
 /// implementations might be swapped out for testing
 #[allow(unused)]
 pub trait MastodonClient {
-    fn favourites(&self) -> Result<Page<Status>> { unimplemented!("This method was not implemented"); }
-    fn blocks(&self) -> Result<Page<Account>> { unimplemented!("This method was not implemented"); }
-    fn domain_blocks(&self) -> Result<Page<String>> { unimplemented!("This method was not implemented"); }
-    fn follow_requests(&self) -> Result<Page<Account>> { unimplemented!("This method was not implemented"); }
-    fn get_home_timeline(&self) -> Result<Page<Status>> { unimplemented!("This method was not implemented"); }
-    fn get_emojis(&self) -> Result<Page<Emoji>> { unimplemented!("This method was not implemented"); }
-    fn mutes(&self) -> Result<Page<Account>> { unimplemented!("This method was not implemented"); }
-    fn notifications(&self) -> Result<Page<Notification>> { unimplemented!("This method was not implemented"); }
-    fn reports(&self) -> Result<Page<Report>> { unimplemented!("This method was not implemented"); }
-    fn followers(&self, id: &str) -> Result<Page<Account>> { unimplemented!("This method was not implemented"); }
-    fn following(&self) -> Result<Account> { unimplemented!("This method was not implemented"); }
-    fn reblogged_by(&self) -> Result<Account> { unimplemented!("This method was not implemented"); }
-    fn favourited_by(&self) -> Result<Account> { unimplemented!("This method was not implemented"); }
-    fn unblock_domain(&self, domain: String) -> Result<Empty> { unimplemented!("This method was not implemented"); }
-    fn instance(&self) -> Result<Instance> { unimplemented!("This method was not implemented"); }
-    fn verify_credentials(&self) -> Result<Account> { unimplemented!("This method was not implemented"); }
-    fn report(&self, account_id: &str, status_ids: Vec<&str>, comment: String) -> Result<Report> { unimplemented!("This method was not implemented"); }
-    fn block_domain(&self, domain: String) -> Result<Empty> { unimplemented!("This method was not implemented"); }
-    fn authorize_follow_request(&self, id: &str) -> Result<Empty> { unimplemented!("This method was not implemented"); }
-    fn reject_follow_request(&self, id: &str) -> Result<Empty> { unimplemented!("This method was not implemented"); }
-    fn search(&self, q: String, resolve: bool) -> Result<SearchResult> { unimplemented!("This method was not implemented"); }
-    fn follows(&self, uri: Cow<'static, str>) -> Result<Account> { unimplemented!("This method was not implemented"); }
-    fn media(&self, file: Cow<'static, str>) -> Result<Attachment> { unimplemented!("This method was not implemented"); }
-    fn clear_notifications(&self) -> Result<Empty> { unimplemented!("This method was not implemented"); }
-    fn get_account(&self, id: u64) -> Result<Account> { unimplemented!("This method was not implemented"); }
-    fn follow(&self, id: u64) -> Result<Account> { unimplemented!("This method was not implemented"); }
-    fn unfollow(&self, id: u64) -> Result<Account> { unimplemented!("This method was not implemented"); }
-    fn block(&self, id: u64) -> Result<Account> { unimplemented!("This method was not implemented"); }
-    fn unblock(&self, id: u64) -> Result<Account> { unimplemented!("This method was not implemented"); }
-    fn mute(&self, id: u64) -> Result<Account> { unimplemented!("This method was not implemented"); }
-    fn unmute(&self, id: u64) -> Result<Account> { unimplemented!("This method was not implemented"); }
-    fn get_notification(&self, id: u64) -> Result<Notification> { unimplemented!("This method was not implemented"); }
-    fn get_status(&self, id: u64) -> Result<Status> { unimplemented!("This method was not implemented"); }
-    fn get_context(&self, id: u64) -> Result<Context> { unimplemented!("This method was not implemented"); }
-    fn get_card(&self, id: u64) -> Result<Card> { unimplemented!("This method was not implemented"); }
-    fn reblog(&self, id: u64) -> Result<Status> { unimplemented!("This method was not implemented"); }
-    fn unreblog(&self, id: u64) -> Result<Status> { unimplemented!("This method was not implemented"); }
-    fn favourite(&self, id: u64) -> Result<Status> { unimplemented!("This method was not implemented"); }
-    fn unfavourite(&self, id: u64) -> Result<Status> { unimplemented!("This method was not implemented"); }
-    fn delete_status(&self, id: u64) -> Result<Empty> { unimplemented!("This method was not implemented"); }
-    fn update_credentials(&self, changes: CredientialsBuilder) -> Result<Account> { unimplemented!("This method was not implemented"); }
-    fn new_status(&self, status: StatusBuilder) -> Result<Status> { unimplemented!("This method was not implemented"); }
-    fn get_public_timeline(&self, local: bool) -> Result<Vec<Status>> { unimplemented!("This method was not implemented"); }
-    fn get_tagged_timeline(&self, hashtag: String, local: bool) -> Result<Vec<Status>> { unimplemented!("This method was not implemented"); }
-    fn statuses<'a, 'b: 'a, S>(&'b self, id: &'b str, request: S) -> Result<Page<Status>> where S: Into<Option<StatusesRequest<'a>>> { unimplemented!("This method was not implemented"); }
-    fn relationships(&self, ids: &[&str]) -> Result<Page<Relationship>> { unimplemented!("This method was not implemented"); }
-    fn search_accounts(&self, query: &str, limit: Option<u64>, following: bool) -> Result<Page<Account>> { unimplemented!("This method was not implemented"); }
+    fn favourites(&self) -> Result<Page<Status>> {
+        unimplemented!("This method was not implemented");
+    }
+    fn blocks(&self) -> Result<Page<Account>> {
+        unimplemented!("This method was not implemented");
+    }
+    fn domain_blocks(&self) -> Result<Page<String>> {
+        unimplemented!("This method was not implemented");
+    }
+    fn follow_requests(&self) -> Result<Page<Account>> {
+        unimplemented!("This method was not implemented");
+    }
+    fn get_home_timeline(&self) -> Result<Page<Status>> {
+        unimplemented!("This method was not implemented");
+    }
+    fn get_emojis(&self) -> Result<Page<Emoji>> {
+        unimplemented!("This method was not implemented");
+    }
+    fn mutes(&self) -> Result<Page<Account>> {
+        unimplemented!("This method was not implemented");
+    }
+    fn notifications(&self) -> Result<Page<Notification>> {
+        unimplemented!("This method was not implemented");
+    }
+    fn reports(&self) -> Result<Page<Report>> {
+        unimplemented!("This method was not implemented");
+    }
+    fn followers(&self, id: &str) -> Result<Page<Account>> {
+        unimplemented!("This method was not implemented");
+    }
+    fn following(&self) -> Result<Account> {
+        unimplemented!("This method was not implemented");
+    }
+    fn reblogged_by(&self) -> Result<Account> {
+        unimplemented!("This method was not implemented");
+    }
+    fn favourited_by(&self) -> Result<Account> {
+        unimplemented!("This method was not implemented");
+    }
+    fn unblock_domain(&self, domain: String) -> Result<Empty> {
+        unimplemented!("This method was not implemented");
+    }
+    fn instance(&self) -> Result<Instance> {
+        unimplemented!("This method was not implemented");
+    }
+    fn verify_credentials(&self) -> Result<Account> {
+        unimplemented!("This method was not implemented");
+    }
+    fn report(&self, account_id: &str, status_ids: Vec<&str>, comment: String) -> Result<Report> {
+        unimplemented!("This method was not implemented");
+    }
+    fn block_domain(&self, domain: String) -> Result<Empty> {
+        unimplemented!("This method was not implemented");
+    }
+    fn authorize_follow_request(&self, id: &str) -> Result<Empty> {
+        unimplemented!("This method was not implemented");
+    }
+    fn reject_follow_request(&self, id: &str) -> Result<Empty> {
+        unimplemented!("This method was not implemented");
+    }
+    fn search(&self, q: String, resolve: bool) -> Result<SearchResult> {
+        unimplemented!("This method was not implemented");
+    }
+    fn follows(&self, uri: Cow<'static, str>) -> Result<Account> {
+        unimplemented!("This method was not implemented");
+    }
+    fn media(&self, file: Cow<'static, str>) -> Result<Attachment> {
+        unimplemented!("This method was not implemented");
+    }
+    fn clear_notifications(&self) -> Result<Empty> {
+        unimplemented!("This method was not implemented");
+    }
+    fn get_account(&self, id: u64) -> Result<Account> {
+        unimplemented!("This method was not implemented");
+    }
+    fn follow(&self, id: u64) -> Result<Account> {
+        unimplemented!("This method was not implemented");
+    }
+    fn unfollow(&self, id: u64) -> Result<Account> {
+        unimplemented!("This method was not implemented");
+    }
+    fn block(&self, id: u64) -> Result<Account> {
+        unimplemented!("This method was not implemented");
+    }
+    fn unblock(&self, id: u64) -> Result<Account> {
+        unimplemented!("This method was not implemented");
+    }
+    fn mute(&self, id: u64) -> Result<Account> {
+        unimplemented!("This method was not implemented");
+    }
+    fn unmute(&self, id: u64) -> Result<Account> {
+        unimplemented!("This method was not implemented");
+    }
+    fn get_notification(&self, id: u64) -> Result<Notification> {
+        unimplemented!("This method was not implemented");
+    }
+    fn get_status(&self, id: u64) -> Result<Status> {
+        unimplemented!("This method was not implemented");
+    }
+    fn get_context(&self, id: u64) -> Result<Context> {
+        unimplemented!("This method was not implemented");
+    }
+    fn get_card(&self, id: u64) -> Result<Card> {
+        unimplemented!("This method was not implemented");
+    }
+    fn reblog(&self, id: u64) -> Result<Status> {
+        unimplemented!("This method was not implemented");
+    }
+    fn unreblog(&self, id: u64) -> Result<Status> {
+        unimplemented!("This method was not implemented");
+    }
+    fn favourite(&self, id: u64) -> Result<Status> {
+        unimplemented!("This method was not implemented");
+    }
+    fn unfavourite(&self, id: u64) -> Result<Status> {
+        unimplemented!("This method was not implemented");
+    }
+    fn delete_status(&self, id: u64) -> Result<Empty> {
+        unimplemented!("This method was not implemented");
+    }
+    fn update_credentials(&self, changes: CredientialsBuilder) -> Result<Account> {
+        unimplemented!("This method was not implemented");
+    }
+    fn new_status(&self, status: StatusBuilder) -> Result<Status> {
+        unimplemented!("This method was not implemented");
+    }
+    fn get_public_timeline(&self, local: bool) -> Result<Vec<Status>> {
+        unimplemented!("This method was not implemented");
+    }
+    fn get_tagged_timeline(&self, hashtag: String, local: bool) -> Result<Vec<Status>> {
+        unimplemented!("This method was not implemented");
+    }
+    fn statuses<'a, 'b: 'a, S>(&'b self, id: &'b str, request: S) -> Result<Page<Status>>
+    where
+        S: Into<Option<StatusesRequest<'a>>>,
+    {
+        unimplemented!("This method was not implemented");
+    }
+    fn relationships(&self, ids: &[&str]) -> Result<Page<Relationship>> {
+        unimplemented!("This method was not implemented");
+    }
+    fn search_accounts(
+        &self,
+        query: &str,
+        limit: Option<u64>,
+        following: bool,
+    ) -> Result<Page<Account>> {
+        unimplemented!("This method was not implemented");
+    }
 }
 
 impl Mastodon {
@@ -167,12 +277,13 @@ impl From<Data> for Mastodon {
     fn from(data: Data) -> Mastodon {
         let mut builder = MastodonBuilder::new();
         builder.data(data);
-        builder.build().expect("We know `data` is present, so this should be fine")
+        builder
+            .build()
+            .expect("We know `data` is present, so this should be fine")
     }
 }
 
 impl MastodonClient for Mastodon {
-
     paged_routes! {
         (get) favourites: "favourites" => Status,
         (get) blocks: "blocks" => Account,
@@ -225,12 +336,11 @@ impl MastodonClient for Mastodon {
         (delete) delete_status: "statuses/{}" => Empty,
     }
 
-    fn update_credentials(&self, changes: CredientialsBuilder)
-        -> Result<Account>
-    {
-
+    fn update_credentials(&self, changes: CredientialsBuilder) -> Result<Account> {
         let url = self.route("/api/v1/accounts/update_credentials");
-        let response = self.client.patch(&url)
+        let response = self
+            .client
+            .patch(&url)
             .headers(self.headers.clone())
             .multipart(changes.into_form()?)
             .send()?;
@@ -248,8 +358,9 @@ impl MastodonClient for Mastodon {
 
     /// Post a new status to the account.
     fn new_status(&self, status: StatusBuilder) -> Result<Status> {
-
-        let response = self.client.post(&self.route("/api/v1/statuses"))
+        let response = self
+            .client
+            .post(&self.route("/api/v1/statuses"))
             .headers(self.headers.clone())
             .json(&status)
             .send()?;
@@ -317,14 +428,14 @@ impl MastodonClient for Mastodon {
     /// #   token: "".into(),
     /// # };
     /// let client = Mastodon::from(data);
-    /// let request = StatusesRequest::default()
-    ///                               .only_media();
+    /// let request = StatusesRequest::default().only_media();
     /// let statuses = client.statuses("user-id", request)?;
     /// # Ok(())
     /// # }
     /// ```
     fn statuses<'a, 'b: 'a, S>(&'b self, id: &'b str, request: S) -> Result<Page<Status>>
-            where S: Into<Option<StatusesRequest<'a>>>
+    where
+        S: Into<Option<StatusesRequest<'a>>>,
     {
         let mut url = format!("{}/api/v1/accounts/{}/statuses", self.base, id);
 
@@ -332,9 +443,7 @@ impl MastodonClient for Mastodon {
             url = format!("{}{}", url, request.to_querystring());
         }
 
-        let response = self.client.get(&url)
-            .headers(self.headers.clone())
-            .send()?;
+        let response = self.client.get(&url).headers(self.headers.clone()).send()?;
 
         Page::new(self, response)
     }
@@ -356,9 +465,7 @@ impl MastodonClient for Mastodon {
             url.pop();
         }
 
-        let response = self.client.get(&url)
-            .headers(self.headers.clone())
-            .send()?;
+        let response = self.client.get(&url).headers(self.headers.clone()).send()?;
 
         Page::new(self, response)
     }
@@ -366,21 +473,21 @@ impl MastodonClient for Mastodon {
     /// Search for accounts by their name.
     /// Will lookup an account remotely if the search term is in the
     /// `username@domain` format and not yet in the database.
-    fn search_accounts(&self,
-                           query: &str,
-                           limit: Option<u64>,
-                           following: bool)
-        -> Result<Page<Account>>
-    {
-        let url = format!("{}/api/v1/accounts/search?q={}&limit={}&following={}",
-                          self.base,
-                          query,
-                          limit.unwrap_or(40),
-                          following);
+    fn search_accounts(
+        &self,
+        query: &str,
+        limit: Option<u64>,
+        following: bool,
+    ) -> Result<Page<Account>> {
+        let url = format!(
+            "{}/api/v1/accounts/search?q={}&limit={}&following={}",
+            self.base,
+            query,
+            limit.unwrap_or(40),
+            following
+        );
 
-        let response = self.client.get(&url)
-            .headers(self.headers.clone())
-            .send()?;
+        let response = self.client.get(&url).headers(self.headers.clone()).send()?;
 
         Page::new(self, response)
     }
@@ -421,12 +528,14 @@ impl MastodonBuilder {
     pub fn build(self) -> Result<Mastodon> {
         Ok(if let Some(data) = self.data {
             let mut headers = Headers::new();
-            headers.set(Authorization(Bearer { token: (*data.token).to_owned() }));
+            headers.set(Authorization(Bearer {
+                token: (*data.token).to_owned(),
+            }));
 
             Mastodon {
                 client: self.client.unwrap_or_else(|| Client::new()),
-                headers: headers,
-                data: data,
+                headers,
+                data,
             }
         } else {
             return Err(Error::DataMissing);
@@ -436,9 +545,7 @@ impl MastodonBuilder {
 
 // Convert the HTTP response body from JSON. Pass up deserialization errors
 // transparently.
-fn deserialise<T: for<'de> serde::Deserialize<'de>>(mut response: Response)
-    -> Result<T>
-{
+fn deserialise<T: for<'de> serde::Deserialize<'de>>(mut response: Response) -> Result<T> {
     use std::io::Read;
 
     let mut vec = Vec::new();

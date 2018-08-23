@@ -1,9 +1,11 @@
-use super::{Mastodon, Result, deserialise};
-use reqwest::Response;
-use reqwest::header::{Link, RelationType};
+use super::{deserialise, Mastodon, Result};
+use entities::itemsiter::ItemsIter;
+use reqwest::{
+    header::{Link, RelationType},
+    Response,
+};
 use serde::Deserialize;
 use url::Url;
-use entities::itemsiter::ItemsIter;
 
 pub struct Page<'a, T: for<'de> Deserialize<'de>> {
     mastodon: &'a Mastodon,
@@ -38,29 +40,32 @@ macro_rules! pages {
 }
 
 impl<'a, T: for<'de> Deserialize<'de>> Page<'a, T> {
+    pages! {
+        next: next_page,
+        prev: prev_page
+    }
+
     pub fn new(mastodon: &'a Mastodon, response: Response) -> Result<Self> {
         let (prev, next) = get_links(&response)?;
         Ok(Page {
             initial_items: deserialise(response)?,
             next,
             prev,
-            mastodon
+            mastodon,
         })
-    }
-
-    pages! {
-        next: next_page,
-        prev: prev_page
     }
 }
 
 impl<'a, T: Clone + for<'de> Deserialize<'de>> Page<'a, T> {
     /// Returns an iterator that provides a stream of `T`s
     ///
-    /// This abstracts away the process of iterating over each item in a page, then making an http
-    /// call, then iterating over each item in the new page, etc. The iterator provides a stream of
-    /// `T`s, calling `self.next_page()` when necessary to get more of them, until there are no more
-    /// items.
+    /// This abstracts away the process of iterating over each item in a page,
+    /// then making an http call, then iterating over each item in the new
+    /// page, etc. The iterator provides a stream of `T`s, calling
+    /// `self.next_page()`
+    /// when necessary to get
+    /// more of them, until
+    /// there are no more items.
     ///
     /// # Example
     ///
@@ -86,7 +91,8 @@ impl<'a, T: Clone + for<'de> Deserialize<'de>> Page<'a, T> {
     /// # }
     /// ```
     pub fn items_iter(self) -> impl Iterator<Item = T> + 'a
-            where T: 'a
+    where
+        T: 'a,
     {
         ItemsIter::new(self)
     }

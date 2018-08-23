@@ -5,10 +5,7 @@ use std::borrow::Cow;
 /// ```
 /// # extern crate elefren;
 /// # use elefren::StatusesRequest;
-/// let request = StatusesRequest::new()
-///                               .only_media()
-///                               .pinned()
-///                               .since_id("foo");
+/// let request = StatusesRequest::new().only_media().pinned().since_id("foo");
 /// # assert_eq!(&request.to_querystring()[..], "?only_media=1&pinned=1&since_id=foo");
 /// ```
 #[derive(Clone, Debug, Default)]
@@ -90,5 +87,3 @@ impl<'a> StatusesRequest<'a> {
         }
     }
 }
-
-

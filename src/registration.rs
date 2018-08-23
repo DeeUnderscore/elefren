@@ -1,8 +1,12 @@
 use reqwest::Client;
 use try_from::TryInto;
 
-use {Data, Error, Mastodon, MastodonBuilder, Result};
 use apps::{App, Scopes};
+use Data;
+use Error;
+use Mastodon;
+use MastodonBuilder;
+use Result;
 
 /// Handles registering your mastodon app to your instance. It is recommended
 /// you cache your data struct to avoid registering on every run.
@@ -47,8 +51,7 @@ impl Registration {
     /// ```no_run
     /// # extern crate elefren;
     /// # fn main () -> elefren::Result<()> {
-    /// use elefren::prelude::*;
-    /// use elefren::apps::prelude::*;
+    /// use elefren::{apps::prelude::*, prelude::*};
     ///
     /// let mut builder = App::builder();
     /// builder.client_name("elefren_test");
@@ -67,15 +70,12 @@ impl Registration {
     /// # }
     /// ```
     pub fn register<I: TryInto<App>>(self, app: I) -> Result<Registered>
-            where Error: From<<I as TryInto<App>>::Err>
+    where
+        Error: From<<I as TryInto<App>>::Err>,
     {
         let app = app.try_into()?;
         let url = format!("{}/api/v1/apps", self.base);
-        let oauth: OAuth = self.client
-                               .post(&url)
-                               .form(&app)
-                               .send()?
-                               .json()?;
+        let oauth: OAuth = self.client.post(&url).form(&app).send()?.json()?;
 
         Ok(Registered {
             base: self.base,
@@ -94,10 +94,7 @@ impl Registered {
     pub fn authorize_url(&self) -> Result<String> {
         let url = format!(
             "{}/oauth/authorize?client_id={}&redirect_uri={}&scope={}&response_type=code",
-            self.base,
-            self.client_id,
-            self.redirect,
-            self.scopes,
+            self.base, self.client_id, self.redirect, self.scopes,
         );
 
         Ok(url)

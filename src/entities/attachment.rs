@@ -6,7 +6,7 @@ pub struct Attachment {
     /// ID of the attachment.
     pub id: String,
     /// The media type of an attachment.
-    #[serde(rename="type")]
+    #[serde(rename = "type")]
     pub media_type: MediaType,
     /// URL of the locally hosted version of the image.
     pub url: String,
@@ -43,7 +43,6 @@ pub struct ImageDetails {
     size: String,
     /// The aspect ratio of the attachment.
     aspect: f64,
-
 }
 
 /// The type of media attachment.

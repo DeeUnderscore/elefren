@@ -165,5 +165,3 @@ macro_rules! paged_routes_with_id {
         route!{$($rest)*}
     };
 }
-
-

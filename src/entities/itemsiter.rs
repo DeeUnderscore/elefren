@@ -18,7 +18,7 @@ use serde::Deserialize;
 /// let client = Mastodon::from(data);
 /// let statuses = client.statuses("user-id", None)?;
 /// for status in statuses.items_iter() {
-///   // do something with `status`
+///     // do something with `status`
 /// }
 /// # Ok(())
 /// # }
@@ -33,7 +33,7 @@ pub(crate) struct ItemsIter<'a, T: Clone + for<'de> Deserialize<'de>> {
 impl<'a, T: Clone + for<'de> Deserialize<'de>> ItemsIter<'a, T> {
     pub(crate) fn new(page: Page<'a, T>) -> ItemsIter<'a, T> {
         ItemsIter {
-            page: page,
+            page,
             buffer: vec![],
             cur_idx: 0,
             use_initial: true,
@@ -41,8 +41,7 @@ impl<'a, T: Clone + for<'de> Deserialize<'de>> ItemsIter<'a, T> {
     }
 
     fn need_next_page(&self) -> bool {
-        self.buffer.is_empty() ||
-            self.cur_idx == self.buffer.len()
+        self.buffer.is_empty() || self.cur_idx == self.buffer.len()
     }
 
     fn fill_next_page(&mut self) -> Option<()> {
@@ -61,7 +60,7 @@ impl<'a, T: Clone + for<'de> Deserialize<'de>> ItemsIter<'a, T> {
     }
 }
 
-impl<'a, T: Clone+ for<'de> Deserialize<'de>> Iterator for ItemsIter<'a, T> {
+impl<'a, T: Clone + for<'de> Deserialize<'de>> Iterator for ItemsIter<'a, T> {
     type Item = T;
 
     fn next(&mut self) -> Option<Self::Item> {

@@ -1,12 +1,7 @@
-use std::{
-    fmt,
-    error,
-    io::Error as IoError
-};
+use std::{error, fmt, io::Error as IoError};
 
 use json::Error as SerdeError;
-use reqwest::Error as HttpError;
-use reqwest::StatusCode;
+use reqwest::{Error as HttpError, StatusCode};
 use url::ParseError as UrlError;
 
 /// Convience type over `std::result::Result` with `Error` as the error type.
@@ -52,11 +47,12 @@ impl fmt::Display for Error {
 impl error::Error for Error {
     fn description(&self) -> &str {
         match *self {
-            Error::Api(ref e) => {
-                e.error_description.as_ref().map(|i| &**i)
-                    .or(e.error.as_ref().map(|i| &**i))
-                    .unwrap_or("Unknown API Error")
-            },
+            Error::Api(ref e) => e
+                .error_description
+                .as_ref()
+                .map(|i| &**i)
+                .or(e.error.as_ref().map(|i| &**i))
+                .unwrap_or("Unknown API Error"),
             Error::Serde(ref e) => e.description(),
             Error::Http(ref e) => e.description(),
             Error::Io(ref e) => e.description(),

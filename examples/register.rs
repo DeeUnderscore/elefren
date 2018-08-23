@@ -3,19 +3,12 @@ extern crate toml;
 
 pub use self::elefren::{Data, MastodonClient};
 
-use std::{
-    error::Error,
-    fs,
-    io,
-};
+use std::{error::Error, fs, io};
 
 use self::elefren::{
-    apps::{
-        App,
-        Scopes
-    },
+    apps::{App, Scopes},
     Mastodon,
-    Registration
+    Registration,
 };
 
 #[allow(dead_code)]
@@ -23,7 +16,6 @@ fn main() -> Result<(), Box<Error>> {
     register()?;
     Ok(())
 }
-
 
 #[allow(dead_code)]
 pub fn get_mastodon_data() -> Result<Mastodon, Box<Error>> {
@@ -38,8 +30,8 @@ pub fn get_mastodon_data() -> Result<Mastodon, Box<Error>> {
 pub fn register() -> Result<Mastodon, Box<Error>> {
     let mut app = App::builder();
     app.client_name("elefren-examples")
-           .scopes(Scopes::All)
-           .website("https://github.com/pwoolcoc/elefren");
+        .scopes(Scopes::All)
+        .website("https://github.com/pwoolcoc/elefren");
 
     let website = read_line("Please enter your mastodon instance url:")?;
     let registration = Registration::new(website.trim());
@@ -67,4 +59,3 @@ pub fn read_line(message: &str) -> Result<String, Box<Error>> {
 
     Ok(input)
 }
-

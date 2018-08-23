@@ -2,9 +2,9 @@
 
 use chrono::prelude::*;
 use reqwest::multipart::Form;
-use ::Result;
-use std::path::Path;
 use serde::de::{self, Deserialize, Deserializer, Unexpected};
+use std::path::Path;
+use Result;
 
 /// A struct representing an Account.
 #[derive(Debug, Clone, Deserialize)]
@@ -57,9 +57,7 @@ pub struct Source {
     note: String,
 }
 
-fn string_or_bool<'de, D: Deserializer<'de>>(val: D)
-    -> ::std::result::Result<bool, D::Error>
-{
+fn string_or_bool<'de, D: Deserializer<'de>>(val: D) -> ::std::result::Result<bool, D::Error> {
     #[derive(Clone, Debug, Deserialize)]
     #[serde(untagged)]
     pub enum BoolOrString {
@@ -68,16 +66,19 @@ fn string_or_bool<'de, D: Deserializer<'de>>(val: D)
     }
 
     Ok(match BoolOrString::deserialize(val)? {
-            BoolOrString::Bool(b) => b,
-            BoolOrString::Str(ref s) => {
-                if s == "true" {
-                    true
-                } else if s == "false" {
-                    false
-                } else {
-                    return Err(de::Error::invalid_value(Unexpected::Str(s), &"true or false"));
-                }
+        BoolOrString::Bool(b) => b,
+        BoolOrString::Str(ref s) => {
+            if s == "true" {
+                true
+            } else if s == "false" {
+                false
+            } else {
+                return Err(de::Error::invalid_value(
+                    Unexpected::Str(s),
+                    &"true or false",
+                ));
             }
+        },
     })
 }
 
