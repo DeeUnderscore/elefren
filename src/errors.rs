@@ -2,6 +2,10 @@ use std::{error, fmt, io::Error as IoError};
 
 use json::Error as SerdeError;
 use reqwest::{Error as HttpError, StatusCode};
+#[cfg(feature = "toml")]
+use tomlcrate::de::Error as TomlDeError;
+#[cfg(feature = "toml")]
+use tomlcrate::ser::Error as TomlSerError;
 use url::ParseError as UrlError;
 
 /// Convience type over `std::result::Result` with `Error` as the error type.
@@ -36,6 +40,12 @@ pub enum Error {
     DataMissing,
     /// AppBuilder error
     MissingField(&'static str),
+    #[cfg(feature = "toml")]
+    /// Error serializing to toml
+    TomlSer(TomlSerError),
+    #[cfg(feature = "toml")]
+    /// Error deserializing from toml
+    TomlDe(TomlDeError),
 }
 
 impl fmt::Display for Error {
@@ -65,6 +75,10 @@ impl error::Error for Error {
             Error::AccessTokenRequired => "AccessTokenRequired",
             Error::DataMissing => "DataMissing",
             Error::MissingField(_) => "MissingField",
+            #[cfg(feature = "toml")]
+            Error::TomlSer(ref e) => e.description(),
+            #[cfg(feature = "toml")]
+            Error::TomlDe(ref e) => e.description(),
         }
     }
 }
@@ -79,8 +93,9 @@ pub struct ApiError {
 }
 
 macro_rules! from {
-    ($($typ:ident, $variant:ident,)*) => {
+    ($($(#[$met:meta])* $typ:ident, $variant:ident,)*) => {
         $(
+            $(#[$met])*
             impl From<$typ> for Error {
                 fn from(from: $typ) -> Self {
                     use Error::*;
@@ -97,4 +112,6 @@ from! {
     SerdeError, Serde,
     UrlError, Url,
     ApiError, Api,
+    #[cfg(feature = "toml")] TomlSerError, TomlSer,
+    #[cfg(feature = "toml")] TomlDeError, TomlDe,
 }

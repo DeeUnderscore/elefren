@@ -41,6 +41,9 @@ extern crate serde;
 extern crate try_from;
 extern crate url;
 
+#[cfg(feature = "toml")]
+extern crate toml as tomlcrate;
+
 use std::{borrow::Cow, ops};
 
 use reqwest::{
@@ -60,7 +63,8 @@ pub use status_builder::StatusBuilder;
 
 /// Registering your App
 pub mod apps;
-mod data;
+/// Working with client auth data
+pub mod data;
 /// Entities returned from the API
 pub mod entities;
 /// Errors
