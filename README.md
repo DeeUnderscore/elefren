@@ -1,5 +1,6 @@
 # Elefren. A API Wrapper for the Mastodon API.
 
+[![Build Status](https://travis-ci.org/pwoolcoc/elefren.svg?branch=master)](https://travis-ci.org/pwoolcoc/elefren)
 [![crates.io](https://img.shields.io/crates/v/elefren.svg)](https://crates.io/crates/elefren)
 [![Docs](https://docs.rs/elefren/badge.svg)](https://docs.rs/elefren)
 [![MIT/APACHE-2.0](https://img.shields.io/crates/l/elefren.svg)](https://crates.io/crates/elefren)
