@@ -11,7 +11,7 @@ use std::{
 
 use self::elefren::{
     apps::{
-        AppBuilder,
+        App,
         Scopes
     },
     Mastodon,
@@ -36,23 +36,21 @@ pub fn get_mastodon_data() -> Result<Mastodon, Box<Error>> {
 }
 
 pub fn register() -> Result<Mastodon, Box<Error>> {
-    let app = AppBuilder {
-        client_name: "elefren-examples",
-        redirect_uris: "urn:ietf:wg:oauth:2.0:oob",
-        scopes: Scopes::All,
-        website: Some("https://github.com/pwoolcoc/elefren"),
-    };
+    let mut app = App::builder();
+    app.client_name("elefren-examples")
+           .scopes(Scopes::All)
+           .website("https://github.com/pwoolcoc/elefren");
 
     let website = read_line("Please enter your mastodon instance url:")?;
-    let mut registration = Registration::new(website.trim());
-    registration.register(app)?;
-    let url = registration.authorise()?;
+    let registration = Registration::new(website.trim());
+    let registered = registration.register(app)?;
+    let url = registered.authorize_url()?;
 
     println!("Click this link to authorize on Mastodon: {}", url);
     let input = read_line("Paste the returned authorization code: ")?;
 
     let code = input.trim();
-    let mastodon = registration.create_access_token(code.to_string())?;
+    let mastodon = registered.complete(code.to_string())?;
 
     // Save app data for using on the next run.
     let toml = toml::to_string(&*mastodon)?;

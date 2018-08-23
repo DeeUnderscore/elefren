@@ -1,39 +1,130 @@
 use std::fmt;
+use std::borrow::Cow;
 
+use try_from::TryInto;
+
+use errors::{Error, Result};
+
+/// Provides the necessary types for registering an App and getting the
+/// necessary auth information
 pub mod prelude {
     pub use {
         apps::{
-            AppBuilder,
+            App,
             Scopes
         },
         registration::Registration
     };
 }
 
+/// Represents an application that can be registered with a mastodon instance
+#[derive(Debug, Default, Serialize)]
+pub struct App {
+    client_name: String,
+    redirect_uris: String,
+    scopes: Scopes,
+    #[serde(skip_serializing_if="Option::is_none")]
+    website: Option<String>,
+}
+
+impl App {
+    pub fn builder<'a>() -> AppBuilder<'a> {
+        AppBuilder::new()
+    }
+
+    pub fn scopes(&self) -> Scopes {
+        self.scopes
+    }
+}
+
 /// Builder struct for defining your application.
 /// ```
+/// use std::error::Error;
 /// use elefren::apps::prelude::*;
 ///
-/// let app = AppBuilder {
-///     client_name: "elefren_test",
-///     redirect_uris: "urn:ietf:wg:oauth:2.0:oob",
-///     scopes: Scopes::Read,
-///     website: None,
-/// };
+/// # fn main() -> Result<(), Box<Error>> {
+/// let mut builder = App::builder();
+/// builder.client_name("elefren_test");
+/// let app = builder.build()?;
+/// #   Ok(())
+/// # }
 /// ```
 #[derive(Debug, Default, Serialize)]
 pub struct AppBuilder<'a> {
+    client_name: Option<Cow<'a, str>>,
+    redirect_uris: Option<Cow<'a, str>>,
+    scopes: Option<Scopes>,
+    website: Option<Cow<'a, str>>,
+}
+
+impl<'a> AppBuilder<'a> {
+    pub fn new() -> Self {
+        Default::default()
+    }
+
     /// Name of the application. Will be displayed when the user is deciding to
     /// grant permission.
-    pub client_name: &'a str,
+    ///
+    /// In order to turn this builder into an App, this needs to be provided
+    pub fn client_name<I: Into<Cow<'a, str>>>(&mut self, name: I) -> &mut Self {
+        self.client_name = Some(name.into());
+        self
+    }
+
     /// Where the user should be redirected after authorization
-    /// (for no redirect, use `urn:ietf:wg:oauth:2.0:oob`)
-    pub redirect_uris: &'a str,
+    ///
+    /// If none is specified, the default is `urn:ietf:wg:oauth:2.0:oob`
+    pub fn redirect_uris<I: Into<Cow<'a, str>>>(&mut self, uris: I) -> &mut Self {
+        self.redirect_uris = Some(uris.into());
+        self
+    }
+
     /// Permission scope of the application.
-    pub scopes: Scopes,
+    ///
+    /// IF none is specified, the default is Scopes::Read
+    pub fn scopes(&mut self, scopes: Scopes) -> &mut Self {
+        self.scopes = Some(scopes);
+        self
+    }
+
     /// URL to the homepage of your application.
-    #[serde(skip_serializing_if="Option::is_none")]
-    pub website: Option<&'a str>,
+    pub fn website<I: Into<Cow<'a, str>>>(&mut self, website: I) -> &mut Self {
+        self.website = Some(website.into());
+        self
+    }
+
+    /// Attempts to convert this build into an `App`
+    ///
+    /// Will fail if no `client_name` was provided
+    pub fn build(self) -> Result<App> {
+        Ok(App {
+            client_name: self.client_name
+                             .ok_or_else(|| Error::MissingField("client_name"))?
+                             .into(),
+            redirect_uris: self.redirect_uris
+                               .unwrap_or_else(|| "urn:ietf:wg:oauth:2.0:oob".into())
+                               .into(),
+            scopes: self.scopes
+                        .unwrap_or_else(|| Scopes::Read),
+            website: self.website.map(|s| s.into()),
+        })
+    }
+}
+
+impl TryInto<App> for App {
+    type Err = Error;
+
+    fn try_into(self) -> Result<App> {
+        Ok(self)
+    }
+}
+
+impl<'a> TryInto<App> for AppBuilder<'a> {
+    type Err = Error;
+
+    fn try_into(self) -> Result<App> {
+        Ok(self.build()?)
+    }
 }
 
 /// Permission scope of the application.

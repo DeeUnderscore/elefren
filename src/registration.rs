@@ -1,17 +1,14 @@
 use reqwest::Client;
+use try_from::TryInto;
 
-use super::{Error, Mastodon, Result};
-use apps::{AppBuilder, Scopes};
+use {Data, Error, Mastodon, MastodonBuilder, Result};
+use apps::{App, Scopes};
 
 /// Handles registering your mastodon app to your instance. It is recommended
 /// you cache your data struct to avoid registering on every run.
 pub struct Registration {
     base: String,
     client: Client,
-    client_id: Option<String>,
-    client_secret: Option<String>,
-    redirect: Option<String>,
-    scopes: Scopes,
 }
 
 #[derive(Deserialize)]
@@ -42,10 +39,6 @@ impl Registration {
         Registration {
             base: base.into(),
             client: Client::new(),
-            client_id: None,
-            client_secret: None,
-            redirect: None,
-            scopes: Scopes::Read,
         }
     }
 
@@ -53,92 +46,96 @@ impl Registration {
     ///
     /// ```no_run
     /// # extern crate elefren;
-    /// # fn main() {
-    /// #    try().unwrap();
-    /// # }
-    /// # fn try() -> elefren::Result<()> {
+    /// # fn main () -> elefren::Result<()> {
     /// use elefren::prelude::*;
     /// use elefren::apps::prelude::*;
     ///
-    /// let app = AppBuilder {
-    ///     client_name: "elefren_test",
-    ///     redirect_uris: "urn:ietf:wg:oauth:2.0:oob",
-    ///     scopes: Scopes::Read,
-    ///     website: None,
-    /// };
+    /// let mut builder = App::builder();
+    /// builder.client_name("elefren_test");
+    /// let app = builder.build()?;
     ///
-    /// let mut registration = Registration::new("https://mastodon.social");
-    /// registration.register(app)?;
-    /// let url = registration.authorise()?;
+    /// let registration = Registration::new("https://mastodon.social");
+    /// let registered = registration.register(app)?;
+    /// let url = registered.authorize_url()?;
     /// // Here you now need to open the url in the browser
     /// // And handle a the redirect url coming back with the code.
     /// let code = String::from("RETURNED_FROM_BROWSER");
-    /// let mastodon = registration.create_access_token(code)?;
+    /// let mastodon = registered.complete(code)?;
     ///
     /// println!("{:?}", mastodon.get_home_timeline()?.initial_items);
     /// # Ok(())
     /// # }
     /// ```
-    pub fn register(&mut self, app_builder: AppBuilder) -> Result<()> {
+    pub fn register<I: TryInto<App>>(self, app: I) -> Result<Registered>
+            where Error: From<<I as TryInto<App>>::Err>
+    {
+        let app = app.try_into()?;
         let url = format!("{}/api/v1/apps", self.base);
-        self.scopes = app_builder.scopes;
-        let app: OAuth = self.client.post(&url).form(&app_builder).send()?.json()?;
+        let oauth: OAuth = self.client
+                               .post(&url)
+                               .form(&app)
+                               .send()?
+                               .json()?;
 
-        self.client_id = Some(app.client_id);
-        self.client_secret = Some(app.client_secret);
-        self.redirect = Some(app.redirect_uri);
-
-        Ok(())
+        Ok(Registered {
+            base: self.base,
+            client: self.client,
+            client_id: oauth.client_id,
+            client_secret: oauth.client_secret,
+            redirect: oauth.redirect_uri,
+            scopes: app.scopes(),
+        })
     }
+}
 
+impl Registered {
     /// Returns the full url needed for authorisation. This needs to be opened
     /// in a browser.
-    pub fn authorise(&mut self) -> Result<String> {
-        self.is_registered()?;
-
+    pub fn authorize_url(&self) -> Result<String> {
         let url = format!(
             "{}/oauth/authorize?client_id={}&redirect_uri={}&scope={}&response_type=code",
             self.base,
-            self.client_id.clone().unwrap(),
-            self.redirect.clone().unwrap(),
+            self.client_id,
+            self.redirect,
             self.scopes,
         );
 
         Ok(url)
     }
 
-    fn is_registered(&self) -> Result<()> {
-        if self.client_id.is_none() {
-            Err(Error::ClientIdRequired)
-        } else if self.client_secret.is_none() {
-            Err(Error::ClientSecretRequired)
-        } else {
-            Ok(())
-        }
-    }
-
     /// Create an access token from the client id, client secret, and code
     /// provided by the authorisation url.
-    pub fn create_access_token(self, code: String) -> Result<Mastodon> {
-        self.is_registered()?;
+    pub fn complete(self, code: String) -> Result<Mastodon> {
         let url = format!(
             "{}/oauth/token?client_id={}&client_secret={}&code={}&grant_type=authorization_code&redirect_uri={}",
             self.base,
-            self.client_id.clone().unwrap(),
-            self.client_secret.clone().unwrap(),
+            self.client_id,
+            self.client_secret,
             code,
-            self.redirect.clone().unwrap()
+            self.redirect
         );
 
         let token: AccessToken = self.client.post(&url).send()?.json()?;
 
-        Ok(Mastodon::from_registration(self.base,
-                                       self.client_id.unwrap(),
-                                       self.client_secret.unwrap(),
-                                       self.redirect.unwrap(),
-                                       token.access_token,
-                                       self.client))
+        let data = Data {
+            base: self.base.into(),
+            client_id: self.client_id.into(),
+            client_secret: self.client_secret.into(),
+            redirect: self.redirect.into(),
+            token: token.access_token.into(),
+        };
+
+        let mut builder = MastodonBuilder::new();
+        builder.client(self.client).data(data);
+        Ok(builder.build()?)
     }
 }
 
-
+pub struct Registered {
+    base: String,
+    client: Client,
+    client_id: String,
+    client_secret: String,
+    redirect: String,
+    scopes: Scopes,
+}

@@ -12,20 +12,16 @@
 //! use elefren::prelude::*;
 //! use elefren::apps::prelude::*;
 //!
-//! let app = AppBuilder {
-//!     client_name: "elefren_test",
-//!     redirect_uris: "urn:ietf:wg:oauth:2.0:oob",
-//!     scopes: Scopes::Read,
-//!     website: None,
-//! };
+//! let mut app = App::builder();
+//! app.client_name("elefren_test");
 //!
-//! let mut registration = Registration::new("https://mastodon.social");
-//! registration.register(app)?;
-//! let url = registration.authorise()?;
+//! let registration = Registration::new("https://mastodon.social")
+//!                                 .register(app)?;
+//! let url = registration.authorize_url()?;
 //! // Here you now need to open the url in the browser
 //! // And handle a the redirect url coming back with the code.
 //! let code = String::from("RETURNED_FROM_BROWSER");
-//! let mastodon = registration.create_access_token(code)?;
+//! let mastodon = registration.complete(code)?;
 //!
 //! println!("{:?}", mastodon.get_home_timeline()?.initial_items);
 //! # Ok(())
@@ -41,6 +37,7 @@
 extern crate chrono;
 extern crate reqwest;
 extern crate serde;
+extern crate try_from;
 extern crate url;
 
 use std::borrow::Cow;
@@ -156,34 +153,6 @@ pub trait MastodonClient {
 }
 
 impl Mastodon {
-    fn from_registration<I>(base: I,
-                         client_id: I,
-                         client_secret: I,
-                         redirect: I,
-                         token: I,
-                         client: Client)
-        -> Self
-        where I: Into<Cow<'static, str>>
-        {
-            let data = Data {
-                base: base.into(),
-                client_id: client_id.into(),
-                client_secret: client_secret.into(),
-                redirect: redirect.into(),
-                token: token.into(),
-
-            };
-
-            let mut headers = Headers::new();
-            headers.set(Authorization(Bearer { token: (*data.token).to_owned() }));
-
-            Mastodon {
-                client: client,
-                headers: headers,
-                data: data,
-            }
-        }
-
     methods![get, post, delete,];
 
     fn route(&self, url: &str) -> String {
