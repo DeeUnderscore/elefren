@@ -10,7 +10,7 @@ script:
   - cargo build
   - cargo build --features toml
   - cargo build --features all
-  - cargo test -- features all
+  - cargo test --features all
 matrix:
   allow_failures:
     - rust: nightly
