@@ -52,6 +52,7 @@ use reqwest::{
 use entities::prelude::*;
 use page::Page;
 
+pub use data::Data;
 pub use errors::{ApiError, Error, Result};
 pub use registration::Registration;
 pub use requests::statuses::StatusesRequest;
@@ -59,6 +60,7 @@ pub use status_builder::StatusBuilder;
 
 /// Registering your App
 pub mod apps;
+mod data;
 /// Entities returned from the API
 pub mod entities;
 /// Errors
@@ -75,7 +77,7 @@ pub mod status_builder;
 mod macros;
 /// Automatically import the things you need
 pub mod prelude {
-    pub use Data;
+    pub use data::Data;
     pub use Mastodon;
     pub use MastodonClient;
     pub use StatusBuilder;
@@ -89,22 +91,6 @@ pub struct Mastodon {
     headers: Headers,
     /// Raw data about your mastodon instance.
     pub data: Data,
-}
-
-/// Raw data about mastodon app. Save `Data` using `serde` to prevent needing
-/// to authenticate on every run.
-#[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
-pub struct Data {
-    /// Base url of instance eg. `https://mastodon.social`.
-    pub base: Cow<'static, str>,
-    /// The client's id given by the instance.
-    pub client_id: Cow<'static, str>,
-    /// The client's secret given by the instance.
-    pub client_secret: Cow<'static, str>,
-    /// Url to redirect back to your application from the instance signup.
-    pub redirect: Cow<'static, str>,
-    /// The client's access token.
-    pub token: Cow<'static, str>,
 }
 
 /// Represents the set of methods that a Mastodon Client can do, so that
