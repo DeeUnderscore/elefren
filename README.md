@@ -1,4 +1,6 @@
-# Elefren. A API Wrapper for the Mastodon API.
+# Elefren
+
+## A Wrapper for the Mastodon API.
 
 [![Build Status](https://travis-ci.org/pwoolcoc/elefren.svg?branch=master)](https://travis-ci.org/pwoolcoc/elefren)
 [![crates.io](https://img.shields.io/crates/v/elefren.svg)](https://crates.io/crates/elefren)
@@ -57,7 +59,7 @@ fn register() -> Mastodon {
     app.client_name("elefren-examples");
 
     let registration = Registration::new("https://mastodon.social");
-                                        .register(app).unwrap();
+                                    .register(app).unwrap();
     let url = registration.authorize_url().unwrap();
 
     println!("Click this link to authorize on Mastodon: {}", url);
