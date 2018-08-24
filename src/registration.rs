@@ -1,4 +1,4 @@
-use reqwest::Client;
+use reqwest::{Client, RequestBuilder, Response};
 use try_from::TryInto;
 
 use apps::{App, Scopes};
@@ -7,12 +7,14 @@ use Error;
 use Mastodon;
 use MastodonBuilder;
 use Result;
+use http_send::{HttpSend, HttpSender};
 
 /// Handles registering your mastodon app to your instance. It is recommended
 /// you cache your data struct to avoid registering on every run.
-pub struct Registration {
+pub struct Registration<H: HttpSend> {
     base: String,
     client: Client,
+    http_sender: H,
 }
 
 #[derive(Deserialize)]
@@ -32,7 +34,7 @@ struct AccessToken {
     access_token: String,
 }
 
-impl Registration {
+impl Registration<HttpSender> {
     /// Construct a new registration process to the instance of the `base` url.
     /// ```
     /// use elefren::apps::prelude::*;
@@ -43,7 +45,26 @@ impl Registration {
         Registration {
             base: base.into(),
             client: Client::new(),
+            http_sender: HttpSender,
         }
+    }
+}
+
+impl<H: HttpSend> Registration<H> {
+    #[allow(dead_code)]
+    pub(crate) fn with_sender<I: Into<String>>(base: I, http_sender: H) -> Self {
+        Registration {
+            base: base.into(),
+            client: Client::new(),
+            http_sender: http_sender,
+        }
+    }
+
+    fn send(&self, req: &mut RequestBuilder) -> Result<Response> {
+        Ok(self.http_sender.send(
+                &self.client,
+                req
+        )?)
     }
 
     /// Register the application with the server from the `base` url.
@@ -69,13 +90,15 @@ impl Registration {
     /// # Ok(())
     /// # }
     /// ```
-    pub fn register<I: TryInto<App>>(self, app: I) -> Result<Registered>
+    pub fn register<I: TryInto<App>>(self, app: I) -> Result<Registered<H>>
     where
         Error: From<<I as TryInto<App>>::Err>,
     {
         let app = app.try_into()?;
         let url = format!("{}/api/v1/apps", self.base);
-        let oauth: OAuth = self.client.post(&url).form(&app).send()?.json()?;
+        let oauth: OAuth = self.send(
+                self.client.post(&url).form(&app)
+        )?.json()?;
 
         Ok(Registered {
             base: self.base,
@@ -84,11 +107,19 @@ impl Registration {
             client_secret: oauth.client_secret,
             redirect: oauth.redirect_uri,
             scopes: app.scopes(),
+            http_sender: self.http_sender,
         })
     }
 }
 
-impl Registered {
+impl<H: HttpSend> Registered<H> {
+    fn send(&self, req: &mut RequestBuilder) -> Result<Response> {
+        Ok(self.http_sender.send(
+                &self.client,
+                req
+        )?)
+    }
+
     /// Returns the full url needed for authorisation. This needs to be opened
     /// in a browser.
     pub fn authorize_url(&self) -> Result<String> {
@@ -102,7 +133,7 @@ impl Registered {
 
     /// Create an access token from the client id, client secret, and code
     /// provided by the authorisation url.
-    pub fn complete(self, code: String) -> Result<Mastodon> {
+    pub fn complete(self, code: String) -> Result<Mastodon<H>> {
         let url = format!(
             "{}/oauth/token?client_id={}&client_secret={}&code={}&grant_type=authorization_code&redirect_uri={}",
             self.base,
@@ -112,7 +143,9 @@ impl Registered {
             self.redirect
         );
 
-        let token: AccessToken = self.client.post(&url).send()?.json()?;
+        let token: AccessToken = self.send(
+                &mut self.client.post(&url)
+        )?.json()?;
 
         let data = Data {
             base: self.base.into(),
@@ -122,17 +155,18 @@ impl Registered {
             token: token.access_token.into(),
         };
 
-        let mut builder = MastodonBuilder::new();
+        let mut builder = MastodonBuilder::new(self.http_sender);
         builder.client(self.client).data(data);
         Ok(builder.build()?)
     }
 }
 
-pub struct Registered {
+pub struct Registered<H: HttpSend> {
     base: String,
     client: Client,
     client_id: String,
     client_secret: String,
     redirect: String,
     scopes: Scopes,
+    http_sender: H,
 }

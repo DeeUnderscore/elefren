@@ -1,4 +1,5 @@
 use page::Page;
+use http_send::HttpSend;
 use serde::Deserialize;
 
 /// Abstracts away the `next_page` logic into a single stream of items
@@ -23,15 +24,15 @@ use serde::Deserialize;
 /// # Ok(())
 /// # }
 /// ```
-pub(crate) struct ItemsIter<'a, T: Clone + for<'de> Deserialize<'de>> {
-    page: Page<'a, T>,
+pub(crate) struct ItemsIter<'a, T: Clone + for<'de> Deserialize<'de>, H: 'a + HttpSend> {
+    page: Page<'a, T, H>,
     buffer: Vec<T>,
     cur_idx: usize,
     use_initial: bool,
 }
 
-impl<'a, T: Clone + for<'de> Deserialize<'de>> ItemsIter<'a, T> {
-    pub(crate) fn new(page: Page<'a, T>) -> ItemsIter<'a, T> {
+impl<'a, T: Clone + for<'de> Deserialize<'de>, H: HttpSend> ItemsIter<'a, T, H> {
+    pub(crate) fn new(page: Page<'a, T, H>) -> ItemsIter<'a, T, H> {
         ItemsIter {
             page,
             buffer: vec![],
@@ -60,7 +61,7 @@ impl<'a, T: Clone + for<'de> Deserialize<'de>> ItemsIter<'a, T> {
     }
 }
 
-impl<'a, T: Clone + for<'de> Deserialize<'de>> Iterator for ItemsIter<'a, T> {
+impl<'a, T: Clone + for<'de> Deserialize<'de>, H: HttpSend> Iterator for ItemsIter<'a, T, H> {
     type Item = T;
 
     fn next(&mut self) -> Option<Self::Item> {

@@ -7,8 +7,10 @@ use reqwest::{
 use serde::Deserialize;
 use url::Url;
 
-pub struct Page<'a, T: for<'de> Deserialize<'de>> {
-    mastodon: &'a Mastodon,
+use http_send::HttpSend;
+
+pub struct Page<'a, T: for<'de> Deserialize<'de>, H: 'a + HttpSend> {
+    mastodon: &'a Mastodon<H>,
     next: Option<Url>,
     prev: Option<Url>,
     /// Initial set of items
@@ -25,9 +27,9 @@ macro_rules! pages {
                     None => return Ok(None),
                 };
 
-                let response = self.mastodon.client.get(url)
-                    .headers(self.mastodon.headers.clone())
-                    .send()?;
+                let response = self.mastodon.send(
+                    &mut self.mastodon.client.get(url)
+                )?;
 
                 let (prev, next) = get_links(&response)?;
                 self.next = next;
@@ -39,13 +41,13 @@ macro_rules! pages {
     }
 }
 
-impl<'a, T: for<'de> Deserialize<'de>> Page<'a, T> {
+impl<'a, T: for<'de> Deserialize<'de>, H: HttpSend> Page<'a, T, H> {
     pages! {
         next: next_page,
         prev: prev_page
     }
 
-    pub fn new(mastodon: &'a Mastodon, response: Response) -> Result<Self> {
+    pub fn new(mastodon: &'a Mastodon<H>, response: Response) -> Result<Self> {
         let (prev, next) = get_links(&response)?;
         Ok(Page {
             initial_items: deserialise(response)?,
@@ -56,7 +58,7 @@ impl<'a, T: for<'de> Deserialize<'de>> Page<'a, T> {
     }
 }
 
-impl<'a, T: Clone + for<'de> Deserialize<'de>> Page<'a, T> {
+impl<'a, T: Clone + for<'de> Deserialize<'de>, H: HttpSend> Page<'a, T, H> {
     /// Returns an iterator that provides a stream of `T`s
     ///
     /// This abstracts away the process of iterating over each item in a page,

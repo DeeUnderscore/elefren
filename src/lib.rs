@@ -50,10 +50,12 @@ use reqwest::{
     header::{Authorization, Bearer, Headers},
     Client,
     Response,
+    RequestBuilder,
 };
 
 use entities::prelude::*;
 use page::Page;
+use http_send::{HttpSend, HttpSender};
 
 pub use data::Data;
 pub use errors::{ApiError, Error, Result};
@@ -69,6 +71,8 @@ pub mod data;
 pub mod entities;
 /// Errors
 pub mod errors;
+/// Contains trait for converting `reqwest::Request`s to `reqwest::Response`s
+pub mod http_send;
 /// Handling multiple pages of entities.
 pub mod page;
 /// Registering your app.
@@ -90,8 +94,9 @@ pub mod prelude {
 
 /// Your mastodon application client, handles all requests to and from Mastodon.
 #[derive(Clone, Debug)]
-pub struct Mastodon {
+pub struct Mastodon<H: HttpSend = HttpSender> {
     client: Client,
+    http_sender: H,
     headers: Headers,
     /// Raw data about your mastodon instance.
     pub data: Data,
@@ -100,35 +105,35 @@ pub struct Mastodon {
 /// Represents the set of methods that a Mastodon Client can do, so that
 /// implementations might be swapped out for testing
 #[allow(unused)]
-pub trait MastodonClient {
-    fn favourites(&self) -> Result<Page<Status>> {
+pub trait MastodonClient<H: HttpSend = HttpSender> {
+    fn favourites(&self) -> Result<Page<Status, H>> {
         unimplemented!("This method was not implemented");
     }
-    fn blocks(&self) -> Result<Page<Account>> {
+    fn blocks(&self) -> Result<Page<Account, H>> {
         unimplemented!("This method was not implemented");
     }
-    fn domain_blocks(&self) -> Result<Page<String>> {
+    fn domain_blocks(&self) -> Result<Page<String, H>> {
         unimplemented!("This method was not implemented");
     }
-    fn follow_requests(&self) -> Result<Page<Account>> {
+    fn follow_requests(&self) -> Result<Page<Account, H>> {
         unimplemented!("This method was not implemented");
     }
-    fn get_home_timeline(&self) -> Result<Page<Status>> {
+    fn get_home_timeline(&self) -> Result<Page<Status, H>> {
         unimplemented!("This method was not implemented");
     }
-    fn get_emojis(&self) -> Result<Page<Emoji>> {
+    fn get_emojis(&self) -> Result<Page<Emoji, H>> {
         unimplemented!("This method was not implemented");
     }
-    fn mutes(&self) -> Result<Page<Account>> {
+    fn mutes(&self) -> Result<Page<Account, H>> {
         unimplemented!("This method was not implemented");
     }
-    fn notifications(&self) -> Result<Page<Notification>> {
+    fn notifications(&self) -> Result<Page<Notification, H>> {
         unimplemented!("This method was not implemented");
     }
-    fn reports(&self) -> Result<Page<Report>> {
+    fn reports(&self) -> Result<Page<Report, H>> {
         unimplemented!("This method was not implemented");
     }
-    fn followers(&self, id: &str) -> Result<Page<Account>> {
+    fn followers(&self, id: &str) -> Result<Page<Account, H>> {
         unimplemented!("This method was not implemented");
     }
     fn following(&self) -> Result<Account> {
@@ -233,13 +238,13 @@ pub trait MastodonClient {
     fn get_tagged_timeline(&self, hashtag: String, local: bool) -> Result<Vec<Status>> {
         unimplemented!("This method was not implemented");
     }
-    fn statuses<'a, 'b: 'a, S>(&'b self, id: &'b str, request: S) -> Result<Page<Status>>
+    fn statuses<'a, 'b: 'a, S>(&'b self, id: &'b str, request: S) -> Result<Page<Status, H>>
     where
         S: Into<Option<StatusesRequest<'a>>>,
     {
         unimplemented!("This method was not implemented");
     }
-    fn relationships(&self, ids: &[&str]) -> Result<Page<Relationship>> {
+    fn relationships(&self, ids: &[&str]) -> Result<Page<Relationship, H>> {
         unimplemented!("This method was not implemented");
     }
     fn search_accounts(
@@ -247,25 +252,30 @@ pub trait MastodonClient {
         query: &str,
         limit: Option<u64>,
         following: bool,
-    ) -> Result<Page<Account>> {
+    ) -> Result<Page<Account, H>> {
         unimplemented!("This method was not implemented");
     }
 }
 
-impl Mastodon {
+impl<H: HttpSend> Mastodon<H> {
     methods![get, post, delete,];
 
     fn route(&self, url: &str) -> String {
-        let mut s = (*self.base).to_owned();
-        s += url;
-        s
+        format!("{}{}", self.base, url)
+    }
+
+    pub(crate) fn send(&self, req: &mut RequestBuilder) -> Result<Response> {
+        Ok(self.http_sender.send(
+                &self.client,
+                req.headers(self.headers.clone())
+        )?)
     }
 }
 
-impl From<Data> for Mastodon {
+impl From<Data> for Mastodon<HttpSender> {
     /// Creates a mastodon instance from the data struct.
-    fn from(data: Data) -> Mastodon {
-        let mut builder = MastodonBuilder::new();
+    fn from(data: Data) -> Mastodon<HttpSender> {
+        let mut builder = MastodonBuilder::new(HttpSender);
         builder.data(data);
         builder
             .build()
@@ -273,7 +283,7 @@ impl From<Data> for Mastodon {
     }
 }
 
-impl MastodonClient for Mastodon {
+impl<H: HttpSend> MastodonClient<H> for Mastodon<H> {
     paged_routes! {
         (get) favourites: "favourites" => Status,
         (get) blocks: "blocks" => Account,
@@ -328,12 +338,11 @@ impl MastodonClient for Mastodon {
 
     fn update_credentials(&self, changes: CredientialsBuilder) -> Result<Account> {
         let url = self.route("/api/v1/accounts/update_credentials");
-        let response = self
-            .client
-            .patch(&url)
-            .headers(self.headers.clone())
-            .multipart(changes.into_form()?)
-            .send()?;
+        let response = self.send(
+                self.client
+                    .patch(&url)
+                    .multipart(changes.into_form()?)
+        )?;
 
         let status = response.status().clone();
 
@@ -348,12 +357,11 @@ impl MastodonClient for Mastodon {
 
     /// Post a new status to the account.
     fn new_status(&self, status: StatusBuilder) -> Result<Status> {
-        let response = self
-            .client
-            .post(&self.route("/api/v1/statuses"))
-            .headers(self.headers.clone())
-            .json(&status)
-            .send()?;
+        let response = self.send(
+            self.client
+                .post(&self.route("/api/v1/statuses"))
+                .json(&status)
+        )?;
 
         deserialise(response)
     }
@@ -423,7 +431,7 @@ impl MastodonClient for Mastodon {
     /// # Ok(())
     /// # }
     /// ```
-    fn statuses<'a, 'b: 'a, S>(&'b self, id: &'b str, request: S) -> Result<Page<Status>>
+    fn statuses<'a, 'b: 'a, S>(&'b self, id: &'b str, request: S) -> Result<Page<Status, H>>
     where
         S: Into<Option<StatusesRequest<'a>>>,
     {
@@ -433,14 +441,16 @@ impl MastodonClient for Mastodon {
             url = format!("{}{}", url, request.to_querystring());
         }
 
-        let response = self.client.get(&url).headers(self.headers.clone()).send()?;
+        let response = self.send(
+                &mut self.client.get(&url)
+        )?;
 
         Page::new(self, response)
     }
 
     /// Returns the client account's relationship to a list of other accounts.
     /// Such as whether they follow them or vice versa.
-    fn relationships(&self, ids: &[&str]) -> Result<Page<Relationship>> {
+    fn relationships(&self, ids: &[&str]) -> Result<Page<Relationship, H>> {
         let mut url = self.route("/api/v1/accounts/relationships?");
 
         if ids.len() == 1 {
@@ -455,7 +465,9 @@ impl MastodonClient for Mastodon {
             url.pop();
         }
 
-        let response = self.client.get(&url).headers(self.headers.clone()).send()?;
+        let response = self.send(
+                &mut self.client.get(&url)
+        )?;
 
         Page::new(self, response)
     }
@@ -468,7 +480,7 @@ impl MastodonClient for Mastodon {
         query: &str,
         limit: Option<u64>,
         following: bool,
-    ) -> Result<Page<Account>> {
+    ) -> Result<Page<Account, H>> {
         let url = format!(
             "{}/api/v1/accounts/search?q={}&limit={}&following={}",
             self.base,
@@ -477,13 +489,15 @@ impl MastodonClient for Mastodon {
             following
         );
 
-        let response = self.client.get(&url).headers(self.headers.clone()).send()?;
+        let response = self.send(
+                &mut self.client.get(&url)
+        )?;
 
         Page::new(self, response)
     }
 }
 
-impl ops::Deref for Mastodon {
+impl<H: HttpSend> ops::Deref for Mastodon<H> {
     type Target = Data;
 
     fn deref(&self) -> &Self::Target {
@@ -491,14 +505,16 @@ impl ops::Deref for Mastodon {
     }
 }
 
-struct MastodonBuilder {
+struct MastodonBuilder<H: HttpSend> {
     client: Option<Client>,
+    http_sender: H,
     data: Option<Data>,
 }
 
-impl MastodonBuilder {
-    pub fn new() -> Self {
+impl<H: HttpSend> MastodonBuilder<H> {
+    pub fn new(sender: H) -> Self {
         MastodonBuilder {
+            http_sender: sender,
             client: None,
             data: None,
         }
@@ -515,7 +531,7 @@ impl MastodonBuilder {
         self
     }
 
-    pub fn build(self) -> Result<Mastodon> {
+    pub fn build(self) -> Result<Mastodon<H>> {
         Ok(if let Some(data) = self.data {
             let mut headers = Headers::new();
             headers.set(Authorization(Bearer {
@@ -524,6 +540,7 @@ impl MastodonBuilder {
 
             Mastodon {
                 client: self.client.unwrap_or_else(|| Client::new()),
+                http_sender: self.http_sender,
                 headers,
                 data,
             }

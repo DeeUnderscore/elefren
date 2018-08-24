@@ -4,9 +4,9 @@ macro_rules! methods {
             fn $method<T: for<'de> serde::Deserialize<'de>>(&self, url: String)
             -> Result<T>
             {
-                let response = self.client.$method(&url)
-                    .headers(self.headers.clone())
-                    .send()?;
+                let response = self.send(
+                        &mut self.client.$method(&url)
+                )?;
 
                 deserialise(response)
             }
@@ -22,11 +22,11 @@ macro_rules! paged_routes {
                 "Equivalent to `/api/v1/",
                 $url,
                 "`\n# Errors\nIf `access_token` is not set."),
-            fn $name(&self) -> Result<Page<$ret>> {
+            fn $name(&self) -> Result<Page<$ret, H>> {
                 let url = self.route(concat!("/api/v1/", $url));
-                let response = self.client.$method(&url)
-                    .headers(self.headers.clone())
-                    .send()?;
+                let response = self.send(
+                        &mut self.client.$method(&url)
+                )?;
 
                 Page::new(self, response)
             }
@@ -55,10 +55,11 @@ macro_rules! route {
                         .file(stringify!($param), $param.as_ref())?
                      )*;
 
-                let response = self.client.post(&self.route(concat!("/api/v1/", $url)))
-                    .headers(self.headers.clone())
-                    .multipart(form_data)
-                    .send()?;
+                let response = self.send(
+                        self.client
+                            .post(&self.route(concat!("/api/v1/", $url)))
+                            .multipart(form_data)
+                )?;
 
                 let status = response.status().clone();
 
@@ -90,10 +91,10 @@ macro_rules! route {
                     )*
                 });
 
-                let response = self.client.$method(&self.route(concat!("/api/v1/", $url)))
-                    .headers(self.headers.clone())
-                    .json(&form_data)
-                    .send()?;
+                let response = self.send(
+                        self.client.$method(&self.route(concat!("/api/v1/", $url)))
+                            .json(&form_data)
+                )?;
 
                 let status = response.status().clone();
 
@@ -152,11 +153,11 @@ macro_rules! paged_routes_with_id {
                 "Equivalent to `/api/v1/",
                 $url,
                 "`\n# Errors\nIf `access_token` is not set."),
-            fn $name(&self, id: &str) -> Result<Page<$ret>> {
+            fn $name(&self, id: &str) -> Result<Page<$ret, H>> {
                 let url = self.route(&format!(concat!("/api/v1/", $url), id));
-                let response = self.client.$method(&url)
-                    .headers(self.headers.clone())
-                    .send()?;
+                let response = self.send(
+                        &mut self.client.$method(&url)
+                )?;
 
                 Page::new(self, response)
             }
