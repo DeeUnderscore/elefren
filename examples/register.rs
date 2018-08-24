@@ -66,4 +66,4 @@ pub fn read_line(message: &str) -> Result<String, Box<Error>> {
 }
 
 #[cfg(not(feature = "toml"))]
-fn main() { }
+fn main() {}

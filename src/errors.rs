@@ -119,9 +119,9 @@ from! {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::io;
-    use reqwest;
     use json;
+    use reqwest;
+    use std::io;
 
     macro_rules! assert_is {
         ($err:ident, $variant:pat) => {
@@ -129,7 +129,7 @@ mod tests {
                 $variant => true,
                 _ => false,
             });
-        }
+        };
     }
 
     #[test]
@@ -162,7 +162,10 @@ mod tests {
 
     #[test]
     fn from_api_error() {
-        let err: ApiError = ApiError { error: None, error_description: None };
+        let err: ApiError = ApiError {
+            error: None,
+            error_description: None,
+        };
         let err: Error = Error::from(err);
         assert_is!(err, Error::Api(..));
     }

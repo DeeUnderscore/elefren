@@ -17,5 +17,8 @@ fn main() -> Result<(), Box<error::Error>> {
 
 #[cfg(not(feature = "toml"))]
 fn main() {
-    println!("examples require the `toml` feature, run this command for this example:\n\ncargo run --example print_your_profile --features toml\n");
+    println!(
+        "examples require the `toml` feature, run this command for this example:\n\ncargo run \
+         --example print_your_profile --features toml\n"
+    );
 }
