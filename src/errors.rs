@@ -115,3 +115,72 @@ from! {
     #[cfg(feature = "toml")] TomlSerError, TomlSer,
     #[cfg(feature = "toml")] TomlDeError, TomlDe,
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::io;
+    use reqwest;
+    use json;
+
+    macro_rules! assert_is {
+        ($err:ident, $variant:pat) => {
+            assert!(match $err {
+                $variant => true,
+                _ => false,
+            });
+        }
+    }
+
+    #[test]
+    fn from_http_error() {
+        let err: HttpError = reqwest::get("not an actual URL").unwrap_err();
+        let err: Error = Error::from(err);
+        assert_is!(err, Error::Http(..));
+    }
+
+    #[test]
+    fn from_io_error() {
+        let err: IoError = io::Error::new(io::ErrorKind::Other, "other error");
+        let err: Error = Error::from(err);
+        assert_is!(err, Error::Io(..));
+    }
+
+    #[test]
+    fn from_serde_error() {
+        let err: SerdeError = json::from_str::<()>("not valid json").unwrap_err();
+        let err: Error = Error::from(err);
+        assert_is!(err, Error::Serde(..));
+    }
+
+    #[test]
+    fn from_url_error() {
+        let err: UrlError = UrlError::EmptyHost;
+        let err: Error = Error::from(err);
+        assert_is!(err, Error::Url(..));
+    }
+
+    #[test]
+    fn from_api_error() {
+        let err: ApiError = ApiError { error: None, error_description: None };
+        let err: Error = Error::from(err);
+        assert_is!(err, Error::Api(..));
+    }
+
+    #[cfg(feature = "toml")]
+    #[test]
+    fn from_toml_ser_error() {
+        let err: TomlSerError = TomlSerError::DateInvalid;
+        let err: Error = Error::from(err);
+        assert_is!(err, Error::TomlSer(..));
+    }
+
+    #[cfg(feature = "toml")]
+    #[test]
+    fn from_toml_de_error() {
+        use tomlcrate;
+        let err: TomlDeError = tomlcrate::from_str::<()>("not valid toml").unwrap_err();
+        let err: Error = Error::from(err);
+        assert_is!(err, Error::TomlDe(..));
+    }
+}
