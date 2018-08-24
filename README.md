@@ -17,7 +17,7 @@ To add `elefren` to your project, add the following to the
 `[dependencies]` section of your `Cargo.toml`
 
 ```toml
-elefren = { git = "https://github.com/pwoolcoc/elefren" }
+elefren = "0.12"
 ```
 
 ## Usage
