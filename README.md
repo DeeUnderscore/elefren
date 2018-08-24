@@ -25,56 +25,55 @@ elefren = "0.12"
 
 To use this crate in your project, add this to your crate root (lib.rs, main.rs, etc):
 
-```rust
+```rust,ignore
 extern crate elefren;
 ```
 
 ## Example
 
-```rust
+```rust,no_run
 extern crate elefren;
 
 use std::io;
-use std::fs::File;
-use std::io::prelude::*;
+use std::error::Error;
 
-use elefren::{Data, Mastodon, Registration};
-use elefren::apps::{AppBuilder, Scopes};
+use elefren::prelude::*;
+use elefren::apps::prelude::*;
 use elefren::data::toml; // requires `features = ["toml"]`
 
-fn main() {
-    let mastodon = match toml::from_file("mastodon-data.toml") {
-        Ok(data) => {
-            Mastodon::from(data)
-        },
-        Err(_) => register(),
+fn main() -> Result<(), Box<Error>> {
+    let mastodon = if let Ok(data) = toml::from_file("mastodon-data.toml") {
+        Mastodon::from(data)
+    } else {
+        register()?
     };
 
-    let you = mastodon.verify_credentials().unwrap();
+    let you = mastodon.verify_credentials()?;
 
     println!("{:#?}", you);
+
+    Ok(())
 }
 
-fn register() -> Mastodon {
+fn register() -> Result<Mastodon, Box<Error>> {
     let mut app = App::builder();
     app.client_name("elefren-examples");
 
-    let registration = Registration::new("https://mastodon.social");
-                                    .register(app).unwrap();
-    let url = registration.authorize_url().unwrap();
+    let registration = Registration::new("https://mastodon.social")
+                                    .register(app)?;
+    let url = registration.authorize_url()?;
 
     println!("Click this link to authorize on Mastodon: {}", url);
     println!("Paste the returned authorization code: ");
 
     let mut input = String::new();
-    io::stdin().read_line(&mut input).unwrap();
+    io::stdin().read_line(&mut input)?;
 
     let code = input.trim().to_string();
-    let mastodon = registration.complete(code).unwrap();
+    let mastodon = registration.complete(code)?;
 
     // Save app data for using on the next run.
-    toml::to_file(&*mastodon, "mastodon-data.toml").unwrap();
+    toml::to_file(&*mastodon, "mastodon-data.toml")?;
 
-    mastodon
+    Ok(mastodon)
 }
-```
