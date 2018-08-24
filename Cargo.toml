@@ -28,5 +28,11 @@ features = ["serde"]
 default-features = []
 all = ["toml"]
 
+[build-dependencies]
+skeptic = "0.13.3"
+
+[dev-dependencies]
+skeptic = "0.13.3"
+
 [package.metadata.docs.rs]
 features = ["all"]

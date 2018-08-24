@@ -2,3 +2,4 @@ target
 Cargo.lock
 .env
 mastodon-data.toml
+libtest.rmeta
