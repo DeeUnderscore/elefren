@@ -1,3 +1,5 @@
+#![cfg_attr(not(feature = "toml"), allow(dead_code))]
+#![cfg_attr(not(feature = "toml"), allow(unused_imports))]
 extern crate elefren;
 
 pub use self::elefren::{Data, MastodonClient};
@@ -6,18 +8,22 @@ use std::{error::Error, io};
 
 use self::elefren::{
     apps::{App, Scopes},
-    data::toml,
     Mastodon,
     Registration,
 };
 
+#[cfg(feature = "toml")]
+use self::elefren::data::toml;
+
 #[allow(dead_code)]
+#[cfg(feature = "toml")]
 fn main() -> Result<(), Box<Error>> {
     register()?;
     Ok(())
 }
 
 #[allow(dead_code)]
+#[cfg(feature = "toml")]
 pub fn get_mastodon_data() -> Result<Mastodon, Box<Error>> {
     if let Ok(data) = toml::from_file("mastodon-data.toml") {
         Ok(Mastodon::from(data))
@@ -26,6 +32,7 @@ pub fn get_mastodon_data() -> Result<Mastodon, Box<Error>> {
     }
 }
 
+#[cfg(feature = "toml")]
 pub fn register() -> Result<Mastodon, Box<Error>> {
     let mut app = App::builder();
     app.client_name("elefren-examples")
@@ -48,6 +55,7 @@ pub fn register() -> Result<Mastodon, Box<Error>> {
     Ok(mastodon)
 }
 
+#[cfg(feature = "toml")]
 pub fn read_line(message: &str) -> Result<String, Box<Error>> {
     println!("{}", message);
 
@@ -56,3 +64,6 @@ pub fn read_line(message: &str) -> Result<String, Box<Error>> {
 
     Ok(input.trim().to_string())
 }
+
+#[cfg(not(feature = "toml"))]
+fn main() { }
