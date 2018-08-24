@@ -2,12 +2,12 @@ use reqwest::{Client, RequestBuilder, Response};
 use try_from::TryInto;
 
 use apps::{App, Scopes};
+use http_send::{HttpSend, HttpSender};
 use Data;
 use Error;
 use Mastodon;
 use MastodonBuilder;
 use Result;
-use http_send::{HttpSend, HttpSender};
 
 /// Handles registering your mastodon app to your instance. It is recommended
 /// you cache your data struct to avoid registering on every run.
@@ -56,15 +56,12 @@ impl<H: HttpSend> Registration<H> {
         Registration {
             base: base.into(),
             client: Client::new(),
-            http_sender: http_sender,
+            http_sender,
         }
     }
 
     fn send(&self, req: &mut RequestBuilder) -> Result<Response> {
-        Ok(self.http_sender.send(
-                &self.client,
-                req
-        )?)
+        Ok(self.http_sender.send(&self.client, req)?)
     }
 
     /// Register the application with the server from the `base` url.
@@ -96,9 +93,7 @@ impl<H: HttpSend> Registration<H> {
     {
         let app = app.try_into()?;
         let url = format!("{}/api/v1/apps", self.base);
-        let oauth: OAuth = self.send(
-                self.client.post(&url).form(&app)
-        )?.json()?;
+        let oauth: OAuth = self.send(self.client.post(&url).form(&app))?.json()?;
 
         Ok(Registered {
             base: self.base,
@@ -114,10 +109,7 @@ impl<H: HttpSend> Registration<H> {
 
 impl<H: HttpSend> Registered<H> {
     fn send(&self, req: &mut RequestBuilder) -> Result<Response> {
-        Ok(self.http_sender.send(
-                &self.client,
-                req
-        )?)
+        Ok(self.http_sender.send(&self.client, req)?)
     }
 
     /// Returns the full url needed for authorisation. This needs to be opened
@@ -143,9 +135,7 @@ impl<H: HttpSend> Registered<H> {
             self.redirect
         );
 
-        let token: AccessToken = self.send(
-                &mut self.client.post(&url)
-        )?.json()?;
+        let token: AccessToken = self.send(&mut self.client.post(&url))?.json()?;
 
         let data = Data {
             base: self.base.into(),

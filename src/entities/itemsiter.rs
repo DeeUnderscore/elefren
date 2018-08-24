@@ -1,5 +1,5 @@
-use page::Page;
 use http_send::HttpSend;
+use page::Page;
 use serde::Deserialize;
 
 /// Abstracts away the `next_page` logic into a single stream of items

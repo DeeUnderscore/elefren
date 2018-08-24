@@ -6,9 +6,9 @@ use std::{error::Error, io};
 
 use self::elefren::{
     apps::{App, Scopes},
+    data::toml,
     Mastodon,
     Registration,
-    data::toml,
 };
 
 #[allow(dead_code)]

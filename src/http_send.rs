@@ -1,5 +1,5 @@
-use Result;
 use reqwest::{Client, Request, RequestBuilder, Response};
+use Result;
 
 pub trait HttpSend {
     fn execute(&self, client: &Client, request: Request) -> Result<Response>;

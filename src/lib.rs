@@ -49,13 +49,13 @@ use std::{borrow::Cow, ops};
 use reqwest::{
     header::{Authorization, Bearer, Headers},
     Client,
-    Response,
     RequestBuilder,
+    Response,
 };
 
 use entities::prelude::*;
-use page::Page;
 use http_send::{HttpSend, HttpSender};
+use page::Page;
 
 pub use data::Data;
 pub use errors::{ApiError, Error, Result};
@@ -265,10 +265,9 @@ impl<H: HttpSend> Mastodon<H> {
     }
 
     pub(crate) fn send(&self, req: &mut RequestBuilder) -> Result<Response> {
-        Ok(self.http_sender.send(
-                &self.client,
-                req.headers(self.headers.clone())
-        )?)
+        Ok(self
+            .http_sender
+            .send(&self.client, req.headers(self.headers.clone()))?)
     }
 }
 
@@ -338,11 +337,7 @@ impl<H: HttpSend> MastodonClient<H> for Mastodon<H> {
 
     fn update_credentials(&self, changes: CredientialsBuilder) -> Result<Account> {
         let url = self.route("/api/v1/accounts/update_credentials");
-        let response = self.send(
-                self.client
-                    .patch(&url)
-                    .multipart(changes.into_form()?)
-        )?;
+        let response = self.send(self.client.patch(&url).multipart(changes.into_form()?))?;
 
         let status = response.status().clone();
 
@@ -360,7 +355,7 @@ impl<H: HttpSend> MastodonClient<H> for Mastodon<H> {
         let response = self.send(
             self.client
                 .post(&self.route("/api/v1/statuses"))
-                .json(&status)
+                .json(&status),
         )?;
 
         deserialise(response)
@@ -441,9 +436,7 @@ impl<H: HttpSend> MastodonClient<H> for Mastodon<H> {
             url = format!("{}{}", url, request.to_querystring());
         }
 
-        let response = self.send(
-                &mut self.client.get(&url)
-        )?;
+        let response = self.send(&mut self.client.get(&url))?;
 
         Page::new(self, response)
     }
@@ -465,9 +458,7 @@ impl<H: HttpSend> MastodonClient<H> for Mastodon<H> {
             url.pop();
         }
 
-        let response = self.send(
-                &mut self.client.get(&url)
-        )?;
+        let response = self.send(&mut self.client.get(&url))?;
 
         Page::new(self, response)
     }
@@ -489,9 +480,7 @@ impl<H: HttpSend> MastodonClient<H> for Mastodon<H> {
             following
         );
 
-        let response = self.send(
-                &mut self.client.get(&url)
-        )?;
+        let response = self.send(&mut self.client.get(&url))?;
 
         Page::new(self, response)
     }
