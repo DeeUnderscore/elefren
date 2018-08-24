@@ -40,9 +40,9 @@ pub struct ImageDetails {
     /// height of attachment.
     height: u64,
     /// A string of `widthxheight`.
-    size: String,
+    size: Option<String>,
     /// The aspect ratio of the attachment.
-    aspect: f64,
+    aspect: Option<f64>,
 }
 
 /// The type of media attachment.
