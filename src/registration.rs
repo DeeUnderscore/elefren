@@ -4,7 +4,10 @@ use reqwest::{Client, RequestBuilder, Response};
 
 use apps::{App, AppBuilder, Scopes};
 use http_send::{HttpSend, HttpSender};
-use {Data, Mastodon, MastodonBuilder, Result};
+use Data;
+use Mastodon;
+use MastodonBuilder;
+use Result;
 
 /// Handles registering your mastodon app to your instance. It is recommended
 /// you cache your data struct to avoid registering on every run.
@@ -92,8 +95,8 @@ impl<'a, H: HttpSend> Registration<'a, H> {
     /// use elefren::{apps::prelude::*, prelude::*};
     ///
     /// let registration = Registration::new("https://mastodon.social")
-    ///                                 .client_name("elefren_test")
-    ///                                 .register()?;
+    ///     .client_name("elefren_test")
+    ///     .register()?;
     /// let url = registration.authorize_url()?;
     /// // Here you now need to open the url in the browser
     /// // And handle a the redirect url coming back with the code.
@@ -192,7 +195,10 @@ mod tests {
         r.client_name("foo-test");
 
         assert_eq!(r.base, "https://example.com".to_string());
-        assert_eq!(&mut r.app_builder, AppBuilder::new().client_name("foo-test"));
+        assert_eq!(
+            &mut r.app_builder,
+            AppBuilder::new().client_name("foo-test")
+        );
     }
 
     #[test]
@@ -201,7 +207,10 @@ mod tests {
         r.redirect_uris("https://foo.com");
 
         assert_eq!(r.base, "https://example.com".to_string());
-        assert_eq!(&mut r.app_builder, AppBuilder::new().redirect_uris("https://foo.com"));
+        assert_eq!(
+            &mut r.app_builder,
+            AppBuilder::new().redirect_uris("https://foo.com")
+        );
     }
 
     #[test]
@@ -219,6 +228,9 @@ mod tests {
         r.website("https://website.example.com");
 
         assert_eq!(r.base, "https://example.com".to_string());
-        assert_eq!(&mut r.app_builder, AppBuilder::new().website("https://website.example.com"));
+        assert_eq!(
+            &mut r.app_builder,
+            AppBuilder::new().website("https://website.example.com")
+        );
     }
 }

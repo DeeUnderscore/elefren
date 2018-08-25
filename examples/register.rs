@@ -2,8 +2,7 @@
 #![cfg_attr(not(feature = "toml"), allow(unused_imports))]
 extern crate elefren;
 
-pub use self::elefren::prelude::*;
-pub use self::elefren::apps::prelude::*;
+pub use self::elefren::{apps::prelude::*, prelude::*};
 
 use std::{error::Error, io};
 
@@ -31,10 +30,10 @@ pub fn get_mastodon_data() -> Result<Mastodon, Box<Error>> {
 pub fn register() -> Result<Mastodon, Box<Error>> {
     let website = read_line("Please enter your mastodon instance url:")?;
     let registration = Registration::new(website.trim())
-                                    .client_name("elefren-examples")
-                                    .scopes(Scopes::All)
-                                    .website("https://github.com/pwoolcoc/elefren")
-                                    .register()?;
+        .client_name("elefren-examples")
+        .scopes(Scopes::All)
+        .website("https://github.com/pwoolcoc/elefren")
+        .register()?;
     let url = registration.authorize_url()?;
 
     println!("Click this link to authorize on Mastodon: {}", url);
