@@ -3,3 +3,6 @@ authors = ["Paul Woolcock"]
 multilingual = false
 src = "src"
 title = "Elefren Guide"
+
+[build]
+build-dir = "guide"
