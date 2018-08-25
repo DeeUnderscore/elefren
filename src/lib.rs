@@ -64,12 +64,14 @@ pub use status_builder::StatusBuilder;
 
 /// Registering your App
 pub mod apps;
-/// Working with client auth data
+/// Contains the struct that holds the client auth data
 pub mod data;
 /// Entities returned from the API
 pub mod entities;
 /// Errors
 pub mod errors;
+/// Collection of helpers for serializing/deserializing `Data` objects
+pub mod helpers;
 /// Contains trait for converting `reqwest::Request`s to `reqwest::Response`s
 pub mod http_send;
 /// Handling multiple pages of entities.

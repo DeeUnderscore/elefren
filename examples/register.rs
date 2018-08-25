@@ -7,7 +7,7 @@ pub use self::elefren::{apps::prelude::*, prelude::*};
 use std::{error::Error, io};
 
 #[cfg(feature = "toml")]
-use self::elefren::data::toml;
+use self::elefren::helpers::toml;
 
 #[allow(dead_code)]
 #[cfg(feature = "toml")]

@@ -39,7 +39,7 @@ use std::error::Error;
 
 use elefren::prelude::*;
 use elefren::apps::prelude::*;
-use elefren::data::toml; // requires `features = ["toml"]`
+use elefren::helpers::toml; // requires `features = ["toml"]`
 
 fn main() -> Result<(), Box<Error>> {
     let mastodon = if let Ok(data) = toml::from_file("mastodon-data.toml") {
