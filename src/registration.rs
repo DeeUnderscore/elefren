@@ -9,6 +9,8 @@ use Mastodon;
 use MastodonBuilder;
 use Result;
 
+const DEFAULT_REDIRECT_URI: &'static str = "urn:ietf:wg:oauth:2.0:oob";
+
 /// Handles registering your mastodon app to your instance. It is recommended
 /// you cache your data struct to avoid registering on every run.
 pub struct Registration<'a, H: HttpSend> {
@@ -27,7 +29,7 @@ struct OAuth {
 }
 
 fn default_redirect_uri() -> String {
-    "urn:ietf:wg:oauth:2.0:oob".to_string()
+    DEFAULT_REDIRECT_URI.to_string()
 }
 
 #[derive(Deserialize)]
@@ -232,5 +234,10 @@ mod tests {
             &mut r.app_builder,
             AppBuilder::new().website("https://website.example.com")
         );
+    }
+
+    #[test]
+    fn test_default_redirect_uri() {
+        assert_eq!(&default_redirect_uri()[..], DEFAULT_REDIRECT_URI);
     }
 }
