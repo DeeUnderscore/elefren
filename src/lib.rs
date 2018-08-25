@@ -86,11 +86,11 @@ pub mod status_builder;
 mod macros;
 /// Automatically import the things you need
 pub mod prelude {
+    pub use apps::Scopes;
     pub use Data;
     pub use Mastodon;
     pub use MastodonClient;
     pub use Registration;
-    pub use apps::Scopes;
     pub use StatusBuilder;
     pub use StatusesRequest;
 }
