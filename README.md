@@ -56,11 +56,9 @@ fn main() -> Result<(), Box<Error>> {
 }
 
 fn register() -> Result<Mastodon, Box<Error>> {
-    let mut app = App::builder();
-    app.client_name("elefren-examples");
-
     let registration = Registration::new("https://mastodon.social")
-                                    .register(app)?;
+                                    .client_name("elefren-examples")
+                                    .register()?;
     let url = registration.authorize_url()?;
 
     println!("Click this link to authorize on Mastodon: {}", url);

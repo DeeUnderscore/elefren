@@ -1,7 +1,5 @@
 use std::{borrow::Cow, fmt};
 
-use try_from::TryInto;
-
 use errors::{Error, Result};
 
 /// Provides the necessary types for registering an App and getting the
@@ -43,7 +41,7 @@ impl App {
 /// #   Ok(())
 /// # }
 /// ```
-#[derive(Debug, Default, Serialize)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize)]
 pub struct AppBuilder<'a> {
     client_name: Option<Cow<'a, str>>,
     redirect_uris: Option<Cow<'a, str>>,
@@ -106,26 +104,10 @@ impl<'a> AppBuilder<'a> {
     }
 }
 
-impl TryInto<App> for App {
-    type Err = Error;
-
-    fn try_into(self) -> Result<App> {
-        Ok(self)
-    }
-}
-
-impl<'a> TryInto<App> for AppBuilder<'a> {
-    type Err = Error;
-
-    fn try_into(self) -> Result<App> {
-        Ok(self.build()?)
-    }
-}
-
 /// Permission scope of the application.
 /// [Details on what each permission provides][1]
 /// [1]: https://github.com/tootsuite/documentation/blob/master/Using-the-API/OAuth-details.md)
-#[derive(Debug, Clone, Copy, Serialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Serialize)]
 pub enum Scopes {
     /// All Permissions, equivalent to `read write follow`
     #[serde(rename = "read write follow")]

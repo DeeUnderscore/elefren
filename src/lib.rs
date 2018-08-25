@@ -11,10 +11,9 @@
 //! # fn try() -> elefren::Result<()> {
 //! use elefren::{apps::prelude::*, prelude::*};
 //!
-//! let mut app = App::builder();
-//! app.client_name("elefren_test");
-//!
-//! let registration = Registration::new("https://mastodon.social").register(app)?;
+//! let registration = Registration::new("https://mastodon.social")
+//!                                 .client_name("elefren_test")
+//!                                 .register()?;
 //! let url = registration.authorize_url()?;
 //! // Here you now need to open the url in the browser
 //! // And handle a the redirect url coming back with the code.

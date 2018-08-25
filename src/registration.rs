@@ -1,19 +1,17 @@
-use reqwest::{Client, RequestBuilder, Response};
-use try_from::TryInto;
+use std::borrow::Cow;
 
-use apps::{App, Scopes};
+use reqwest::{Client, RequestBuilder, Response};
+
+use apps::{App, AppBuilder, Scopes};
 use http_send::{HttpSend, HttpSender};
-use Data;
-use Error;
-use Mastodon;
-use MastodonBuilder;
-use Result;
+use {Data, Mastodon, MastodonBuilder, Result};
 
 /// Handles registering your mastodon app to your instance. It is recommended
 /// you cache your data struct to avoid registering on every run.
-pub struct Registration<H: HttpSend> {
+pub struct Registration<'a, H: HttpSend> {
     base: String,
     client: Client,
+    app_builder: AppBuilder<'a>,
     http_sender: H,
 }
 
@@ -34,7 +32,7 @@ struct AccessToken {
     access_token: String,
 }
 
-impl Registration<HttpSender> {
+impl<'a> Registration<'a, HttpSender> {
     /// Construct a new registration process to the instance of the `base` url.
     /// ```
     /// use elefren::apps::prelude::*;
@@ -45,19 +43,41 @@ impl Registration<HttpSender> {
         Registration {
             base: base.into(),
             client: Client::new(),
+            app_builder: AppBuilder::new(),
             http_sender: HttpSender,
         }
     }
 }
 
-impl<H: HttpSend> Registration<H> {
+impl<'a, H: HttpSend> Registration<'a, H> {
     #[allow(dead_code)]
     pub(crate) fn with_sender<I: Into<String>>(base: I, http_sender: H) -> Self {
         Registration {
             base: base.into(),
             client: Client::new(),
+            app_builder: AppBuilder::new(),
             http_sender,
         }
+    }
+
+    pub fn client_name<I: Into<Cow<'a, str>>>(&mut self, name: I) -> &mut Self {
+        self.app_builder.client_name(name.into());
+        self
+    }
+
+    pub fn redirect_uris<I: Into<Cow<'a, str>>>(&mut self, uris: I) -> &mut Self {
+        self.app_builder.redirect_uris(uris);
+        self
+    }
+
+    pub fn scopes(&mut self, scopes: Scopes) -> &mut Self {
+        self.app_builder.scopes(scopes);
+        self
+    }
+
+    pub fn website<I: Into<Cow<'a, str>>>(&mut self, website: I) -> &mut Self {
+        self.app_builder.website(website);
+        self
     }
 
     fn send(&self, req: &mut RequestBuilder) -> Result<Response> {
@@ -71,38 +91,32 @@ impl<H: HttpSend> Registration<H> {
     /// # fn main () -> elefren::Result<()> {
     /// use elefren::{apps::prelude::*, prelude::*};
     ///
-    /// let mut builder = App::builder();
-    /// builder.client_name("elefren_test");
-    /// let app = builder.build()?;
-    ///
-    /// let registration = Registration::new("https://mastodon.social");
-    /// let registered = registration.register(app)?;
-    /// let url = registered.authorize_url()?;
+    /// let registration = Registration::new("https://mastodon.social")
+    ///                                 .client_name("elefren_test")
+    ///                                 .register()?;
+    /// let url = registration.authorize_url()?;
     /// // Here you now need to open the url in the browser
     /// // And handle a the redirect url coming back with the code.
     /// let code = String::from("RETURNED_FROM_BROWSER");
-    /// let mastodon = registered.complete(code)?;
+    /// let mastodon = registration.complete(code)?;
     ///
     /// println!("{:?}", mastodon.get_home_timeline()?.initial_items);
     /// # Ok(())
     /// # }
     /// ```
-    pub fn register<I: TryInto<App>>(self, app: I) -> Result<Registered<H>>
-    where
-        Error: From<<I as TryInto<App>>::Err>,
-    {
-        let app = app.try_into()?;
+    pub fn register(&mut self) -> Result<Registered<H>> {
+        let app: App = self.app_builder.clone().build()?;
         let url = format!("{}/api/v1/apps", self.base);
         let oauth: OAuth = self.send(self.client.post(&url).form(&app))?.json()?;
 
         Ok(Registered {
-            base: self.base,
-            client: self.client,
+            base: self.base.clone(),
+            client: self.client.clone(),
             client_id: oauth.client_id,
             client_secret: oauth.client_secret,
             redirect: oauth.redirect_uri,
             scopes: app.scopes(),
-            http_sender: self.http_sender,
+            http_sender: self.http_sender.clone(),
         })
     }
 }
@@ -159,4 +173,52 @@ pub struct Registered<H: HttpSend> {
     redirect: String,
     scopes: Scopes,
     http_sender: H,
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_registration_new() {
+        let r = Registration::new("https://example.com");
+        assert_eq!(r.base, "https://example.com".to_string());
+        assert_eq!(r.app_builder, AppBuilder::new());
+    }
+
+    #[test]
+    fn test_set_client_name() {
+        let mut r = Registration::new("https://example.com");
+        r.client_name("foo-test");
+
+        assert_eq!(r.base, "https://example.com".to_string());
+        assert_eq!(&mut r.app_builder, AppBuilder::new().client_name("foo-test"));
+    }
+
+    #[test]
+    fn test_set_redirect_uris() {
+        let mut r = Registration::new("https://example.com");
+        r.redirect_uris("https://foo.com");
+
+        assert_eq!(r.base, "https://example.com".to_string());
+        assert_eq!(&mut r.app_builder, AppBuilder::new().redirect_uris("https://foo.com"));
+    }
+
+    #[test]
+    fn test_set_scopes() {
+        let mut r = Registration::new("https://example.com");
+        r.scopes(Scopes::All);
+
+        assert_eq!(r.base, "https://example.com".to_string());
+        assert_eq!(&mut r.app_builder, AppBuilder::new().scopes(Scopes::All));
+    }
+
+    #[test]
+    fn test_set_website() {
+        let mut r = Registration::new("https://example.com");
+        r.website("https://website.example.com");
+
+        assert_eq!(r.base, "https://example.com".to_string());
+        assert_eq!(&mut r.app_builder, AppBuilder::new().website("https://website.example.com"));
+    }
 }

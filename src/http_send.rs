@@ -1,7 +1,7 @@
 use reqwest::{Client, Request, RequestBuilder, Response};
 use Result;
 
-pub trait HttpSend {
+pub trait HttpSend: Clone {
     fn execute(&self, client: &Client, request: Request) -> Result<Response>;
     fn send(&self, client: &Client, builder: &mut RequestBuilder) -> Result<Response> {
         let request = builder.build()?;
@@ -9,6 +9,7 @@ pub trait HttpSend {
     }
 }
 
+#[derive(Clone)]
 pub struct HttpSender;
 
 impl HttpSend for HttpSender {

@@ -2,15 +2,10 @@
 #![cfg_attr(not(feature = "toml"), allow(unused_imports))]
 extern crate elefren;
 
-pub use self::elefren::{Data, MastodonClient};
+pub use self::elefren::prelude::*;
+pub use self::elefren::apps::prelude::*;
 
 use std::{error::Error, io};
-
-use self::elefren::{
-    apps::{App, Scopes},
-    Mastodon,
-    Registration,
-};
 
 #[cfg(feature = "toml")]
 use self::elefren::data::toml;
@@ -34,20 +29,18 @@ pub fn get_mastodon_data() -> Result<Mastodon, Box<Error>> {
 
 #[cfg(feature = "toml")]
 pub fn register() -> Result<Mastodon, Box<Error>> {
-    let mut app = App::builder();
-    app.client_name("elefren-examples")
-        .scopes(Scopes::All)
-        .website("https://github.com/pwoolcoc/elefren");
-
     let website = read_line("Please enter your mastodon instance url:")?;
-    let registration = Registration::new(website.trim());
-    let registered = registration.register(app)?;
-    let url = registered.authorize_url()?;
+    let registration = Registration::new(website.trim())
+                                    .client_name("elefren-examples")
+                                    .scopes(Scopes::All)
+                                    .website("https://github.com/pwoolcoc/elefren")
+                                    .register()?;
+    let url = registration.authorize_url()?;
 
     println!("Click this link to authorize on Mastodon: {}", url);
     let code = read_line("Paste the returned authorization code: ")?;
 
-    let mastodon = registered.complete(code)?;
+    let mastodon = registration.complete(code)?;
 
     // Save app data for using on the next run.
     toml::to_file(&*mastodon, "mastodon-data.toml")?;
