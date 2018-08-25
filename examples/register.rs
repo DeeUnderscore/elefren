@@ -2,7 +2,7 @@
 #![cfg_attr(not(feature = "toml"), allow(unused_imports))]
 extern crate elefren;
 
-pub use self::elefren::{apps::prelude::*, prelude::*};
+pub use self::elefren::prelude::*;
 
 use std::{error::Error, io};
 

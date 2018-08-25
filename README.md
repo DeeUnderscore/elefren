@@ -38,7 +38,6 @@ use std::io;
 use std::error::Error;
 
 use elefren::prelude::*;
-use elefren::apps::prelude::*;
 use elefren::helpers::toml; // requires `features = ["toml"]`
 
 fn main() -> Result<(), Box<Error>> {

@@ -38,7 +38,7 @@ struct AccessToken {
 impl<'a> Registration<'a, HttpSender> {
     /// Construct a new registration process to the instance of the `base` url.
     /// ```
-    /// use elefren::apps::prelude::*;
+    /// use elefren::prelude::*;
     ///
     /// let registration = Registration::new("https://mastodon.social");
     /// ```
@@ -92,7 +92,7 @@ impl<'a, H: HttpSend> Registration<'a, H> {
     /// ```no_run
     /// # extern crate elefren;
     /// # fn main () -> elefren::Result<()> {
-    /// use elefren::{apps::prelude::*, prelude::*};
+    /// use elefren::prelude::*;
     ///
     /// let registration = Registration::new("https://mastodon.social")
     ///     .client_name("elefren_test")

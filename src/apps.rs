@@ -2,13 +2,6 @@ use std::{borrow::Cow, fmt};
 
 use errors::{Error, Result};
 
-/// Provides the necessary types for registering an App and getting the
-/// necessary auth information
-pub mod prelude {
-    pub use apps::{App, Scopes};
-    pub use registration::Registration;
-}
-
 /// Represents an application that can be registered with a mastodon instance
 #[derive(Debug, Default, Serialize)]
 pub struct App {
@@ -31,7 +24,7 @@ impl App {
 
 /// Builder struct for defining your application.
 /// ```
-/// use elefren::apps::prelude::*;
+/// use elefren::apps::App;
 /// use std::error::Error;
 ///
 /// # fn main() -> Result<(), Box<Error>> {

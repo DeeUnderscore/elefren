@@ -9,7 +9,7 @@
 //! #    try().unwrap();
 //! # }
 //! # fn try() -> elefren::Result<()> {
-//! use elefren::{apps::prelude::*, prelude::*};
+//! use elefren::prelude::*;
 //!
 //! let registration = Registration::new("https://mastodon.social")
 //!     .client_name("elefren_test")
@@ -86,9 +86,11 @@ pub mod status_builder;
 mod macros;
 /// Automatically import the things you need
 pub mod prelude {
-    pub use data::Data;
+    pub use Data;
     pub use Mastodon;
     pub use MastodonClient;
+    pub use Registration;
+    pub use apps::Scopes;
     pub use StatusBuilder;
     pub use StatusesRequest;
 }
