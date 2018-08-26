@@ -3,9 +3,19 @@ environment:
     - TARGET: x86_64-pc-windows-msvc
       OTHER_TARGET: i686-pc-windows-msvc
       MAKE_TARGETS: test-unit-x86_64-pc-windows-msvc
+      TOOLCHAIN: stable
+    - TARGET: x86_64-pc-windows-msvc
+      OTHER_TARGET: i686-pc-windows-msvc
+      MAKE_TARGETS: test-unit-x86_64-pc-windows-msvc
+      TOOLCHAIN: beta
+    - TARGET: x86_64-pc-windows-msvc
+      OTHER_TARGET: i686-pc-windows-msvc
+      MAKE_TARGETS: test-unit-x86_64-pc-windows-msvc
+      TOOLCHAIN: nightly
+
 install:
   - appveyor-retry appveyor DownloadFile https://win.rustup.rs/ -FileName rustup-init.exe
-  - rustup-init.exe -y --default-host x86_64-pc-windows-msvc --default-toolchain nightly
+  - rustup-init.exe -y --default-host x86_64-pc-windows-msvc --default-toolchain %TOOLCHAIN%
   - set PATH=%PATH%;C:\Users\appveyor\.cargo\bin
   - rustup target add %OTHER_TARGET%
   - rustc -V
