@@ -4,11 +4,14 @@ dist: trusty
 addons:
   apt:
     packages:
-       libssl-dev
+      - libssl-dev
 env:
   - ELEFREN_FEATURES="--features toml"
   - ELEFREN_FEATURES="--features all"
   - ELEFREN_FEATURES=""
+os:
+  - linux
+  - osx
 rust:
   - stable
   - beta
@@ -21,7 +24,7 @@ script:
     if [[ "$TRAVIS_RUST_VERSION" == "nightly"* ]]; then cargo fmt --all -- --check; fi
   - cargo test $ELEFREN_FEATURES
 after_success: |
-  if [[ "$TRAVIS_RUST_VERSION" == stable ]] 2> /dev/null && [ -z "$ELEFREN_FEATURES" ]; then
+  if [[ "$TRAVIS_RUST_VERSION" == stable ]] 2> /dev/null && [ -z "$ELEFREN_FEATURES" ] 2>/dev/null && [[ "$TRAVIS_OS_NAME" == "linux" ]]; then
     RUSTFLAGS="--cfg procmacro2_semver_exempt" cargo install cargo-tarpaulin
     cargo tarpaulin --ciserver travis-ci --coveralls $TRAVIS_JOB_ID --features toml
   fi
