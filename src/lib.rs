@@ -43,6 +43,9 @@ extern crate url;
 #[cfg(feature = "toml")]
 extern crate toml as tomlcrate;
 
+#[cfg(test)]
+extern crate tempfile;
+
 use std::{borrow::Cow, ops};
 
 use reqwest::{

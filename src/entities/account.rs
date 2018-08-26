@@ -122,3 +122,86 @@ impl<'a> CredentialsBuilder<'a> {
         Ok(form)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use tempfile::NamedTempFile;
+
+    #[test]
+    fn test_credentials_builder_to_form() {
+        let avatar = NamedTempFile::new().expect("Couldn't make avatar file");
+        let header = NamedTempFile::new().expect("Couldn't make header file");
+        let tests = [
+            (None, None, None, None),
+            (Some("my-display-name"), None, None, None),
+            (None, Some("my-note"), None, None),
+            (None, None, Some(avatar.path().clone()), None),
+            (None, None, None, Some(header.path().clone())),
+            (Some("my-display-name"), Some("my-note"), None, None),
+            (
+                Some("my-display-name"),
+                None,
+                Some(avatar.path().clone()),
+                None,
+            ),
+            (None, Some("my-note"), Some(avatar.path().clone()), None),
+            (None, Some("my-note"), None, Some(header.path().clone())),
+            (
+                None,
+                None,
+                Some(avatar.path().clone()),
+                Some(header.path().clone()),
+            ),
+            (
+                Some("my-display-name"),
+                None,
+                None,
+                Some(header.path().clone()),
+            ),
+            (
+                Some("my-display-name"),
+                Some("my-note"),
+                Some(avatar.path().clone()),
+                None,
+            ),
+            (
+                Some("my-display-name"),
+                Some("my-note"),
+                None,
+                Some(header.path().clone()),
+            ),
+            (
+                Some("my-display-name"),
+                None,
+                Some(avatar.path().clone()),
+                Some(header.path().clone()),
+            ),
+            (
+                None,
+                Some("my-note"),
+                Some(avatar.path().clone()),
+                Some(header.path().clone()),
+            ),
+            (
+                Some("my-display-name"),
+                Some("my-note"),
+                Some(avatar.path().clone()),
+                Some(header.path().clone()),
+            ),
+        ];
+
+        for test in tests.into_iter() {
+            let (display_name, note, avatar, header) = test;
+            let credentials_builder = CredentialsBuilder {
+                display_name: *display_name,
+                note: *note,
+                avatar: *avatar,
+                header: *header,
+            };
+            let _form = credentials_builder
+                .into_form()
+                .expect("could not create form");
+        }
+    }
+}
