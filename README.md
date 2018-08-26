@@ -3,6 +3,7 @@
 ## A Wrapper for the Mastodon API.
 
 [![Build Status](https://travis-ci.org/pwoolcoc/elefren.svg?branch=master)](https://travis-ci.org/pwoolcoc/elefren)
+[![Build Status](https://ci.appveyor.com/api/projects/status/qeigk3nmmps52wxv?svg=true)](https://ci.appveyor.com/project/pwoolcoc/elefren)
 [![Coverage Status](https://coveralls.io/repos/github/pwoolcoc/elefren/badge.svg?branch=master&service=github)](https://coveralls.io/github/pwoolcoc/elefren?branch=master)
 [![crates.io](https://img.shields.io/crates/v/elefren.svg)](https://crates.io/crates/elefren)
 [![Docs](https://docs.rs/elefren/badge.svg)](https://docs.rs/elefren)
