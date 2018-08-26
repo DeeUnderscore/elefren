@@ -5,7 +5,6 @@ addons:
   apt:
     packages:
        libssl-dev
-cache: cargo
 env:
   - ELEFREN_FEATURES="--features toml"
   - ELEFREN_FEATURES="--features all"
