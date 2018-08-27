@@ -33,7 +33,7 @@ pub fn register() -> Result<Mastodon, Box<Error>> {
         .client_name("elefren-examples")
         .scopes(Scopes::All)
         .website("https://github.com/pwoolcoc/elefren")
-        .register()?;
+        .build()?;
     let url = registration.authorize_url()?;
 
     println!("Click this link to authorize on Mastodon: {}", url);

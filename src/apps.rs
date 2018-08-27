@@ -1,5 +1,7 @@
 use std::{borrow::Cow, fmt};
 
+use try_from::TryInto;
+
 use errors::{Error, Result};
 
 /// Represents an application that can be registered with a mastodon instance
@@ -94,6 +96,22 @@ impl<'a> AppBuilder<'a> {
             scopes: self.scopes.unwrap_or_else(|| Scopes::Read),
             website: self.website.map(|s| s.into()),
         })
+    }
+}
+
+impl TryInto<App> for App {
+    type Err = Error;
+
+    fn try_into(self) -> Result<App> {
+        Ok(self)
+    }
+}
+
+impl<'a> TryInto<App> for AppBuilder<'a> {
+    type Err = Error;
+
+    fn try_into(self) -> Result<App> {
+        Ok(self.build()?)
     }
 }
 

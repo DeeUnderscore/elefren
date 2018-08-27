@@ -1,5 +1,6 @@
 use std::borrow::Cow;
 
+use try_from::TryInto;
 use reqwest::{Client, RequestBuilder, Response};
 
 use apps::{App, AppBuilder, Scopes};
@@ -8,6 +9,7 @@ use Data;
 use Mastodon;
 use MastodonBuilder;
 use Result;
+use Error;
 
 const DEFAULT_REDIRECT_URI: &'static str = "urn:ietf:wg:oauth:2.0:oob";
 
@@ -89,16 +91,19 @@ impl<'a, H: HttpSend> Registration<'a, H> {
         Ok(self.http_sender.send(&self.client, req)?)
     }
 
-    /// Register the application with the server from the `base` url.
+    /// Register the given application
     ///
     /// ```no_run
     /// # extern crate elefren;
     /// # fn main () -> elefren::Result<()> {
     /// use elefren::prelude::*;
+    /// use elefren::apps::App;
+    ///
+    /// let mut app = App::builder();
+    /// app.client_name("elefren_test");
     ///
     /// let registration = Registration::new("https://mastodon.social")
-    ///     .client_name("elefren_test")
-    ///     .register()?;
+    ///     .register(app)?;
     /// let url = registration.authorize_url()?;
     /// // Here you now need to open the url in the browser
     /// // And handle a the redirect url coming back with the code.
@@ -109,10 +114,11 @@ impl<'a, H: HttpSend> Registration<'a, H> {
     /// # Ok(())
     /// # }
     /// ```
-    pub fn register(&mut self) -> Result<Registered<H>> {
-        let app: App = self.app_builder.clone().build()?;
-        let url = format!("{}/api/v1/apps", self.base);
-        let oauth: OAuth = self.send(self.client.post(&url).form(&app))?.json()?;
+    pub fn register<I: TryInto<App>>(&mut self, app: I) -> Result<Registered<H>>
+        where Error: From<<I as TryInto<App>>::Err>
+    {
+        let app = app.try_into()?;
+        let oauth = self.send_app(&app)?;
 
         Ok(Registered {
             base: self.base.clone(),
@@ -123,6 +129,46 @@ impl<'a, H: HttpSend> Registration<'a, H> {
             scopes: app.scopes(),
             http_sender: self.http_sender.clone(),
         })
+    }
+
+    /// Register the application with the server from the `base` url.
+    ///
+    /// ```no_run
+    /// # extern crate elefren;
+    /// # fn main () -> elefren::Result<()> {
+    /// use elefren::prelude::*;
+    ///
+    /// let registration = Registration::new("https://mastodon.social")
+    ///     .client_name("elefren_test")
+    ///     .build()?;
+    /// let url = registration.authorize_url()?;
+    /// // Here you now need to open the url in the browser
+    /// // And handle a the redirect url coming back with the code.
+    /// let code = String::from("RETURNED_FROM_BROWSER");
+    /// let mastodon = registration.complete(&code)?;
+    ///
+    /// println!("{:?}", mastodon.get_home_timeline()?.initial_items);
+    /// # Ok(())
+    /// # }
+    /// ```
+    pub fn build(&mut self) -> Result<Registered<H>> {
+        let app: App = self.app_builder.clone().build()?;
+        let oauth = self.send_app(&app)?;
+
+        Ok(Registered {
+            base: self.base.clone(),
+            client: self.client.clone(),
+            client_id: oauth.client_id,
+            client_secret: oauth.client_secret,
+            redirect: oauth.redirect_uri,
+            scopes: app.scopes(),
+            http_sender: self.http_sender.clone(),
+        })
+    }
+
+    fn send_app(&self, app: &App) -> Result<OAuth> {
+        let url = format!("{}/api/v1/apps", self.base);
+        Ok(self.send(self.client.post(&url).form(&app))?.json()?)
     }
 }
 

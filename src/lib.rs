@@ -13,7 +13,7 @@
 //!
 //! let registration = Registration::new("https://mastodon.social")
 //!     .client_name("elefren_test")
-//!     .register()?;
+//!     .build()?;
 //! let url = registration.authorize_url()?;
 //! // Here you now need to open the url in the browser
 //! // And handle a the redirect url coming back with the code.
