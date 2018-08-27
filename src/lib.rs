@@ -229,7 +229,7 @@ pub trait MastodonClient<H: HttpSend = HttpSender> {
     fn delete_status(&self, id: u64) -> Result<Empty> {
         unimplemented!("This method was not implemented");
     }
-    fn update_credentials(&self, changes: CredientialsBuilder) -> Result<Account> {
+    fn update_credentials(&self, changes: CredentialsBuilder) -> Result<Account> {
         unimplemented!("This method was not implemented");
     }
     fn new_status(&self, status: StatusBuilder) -> Result<Status> {
@@ -338,7 +338,7 @@ impl<H: HttpSend> MastodonClient<H> for Mastodon<H> {
         (delete) delete_status: "statuses/{}" => Empty,
     }
 
-    fn update_credentials(&self, changes: CredientialsBuilder) -> Result<Account> {
+    fn update_credentials(&self, changes: CredentialsBuilder) -> Result<Account> {
         let url = self.route("/api/v1/accounts/update_credentials");
         let response = self.send(self.client.patch(&url).multipart(changes.into_form()?))?;
 

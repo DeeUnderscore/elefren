@@ -82,14 +82,14 @@ fn string_or_bool<'de, D: Deserializer<'de>>(val: D) -> ::std::result::Result<bo
     })
 }
 
-pub struct CredientialsBuilder<'a> {
+pub struct CredentialsBuilder<'a> {
     display_name: Option<&'a str>,
     note: Option<&'a str>,
     avatar: Option<&'a Path>,
     header: Option<&'a Path>,
 }
 
-impl<'a> CredientialsBuilder<'a> {
+impl<'a> CredentialsBuilder<'a> {
     pub fn into_form(self) -> Result<Form> {
         let mut form = Form::new();
         macro_rules! add_to_form {

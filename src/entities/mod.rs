@@ -21,7 +21,7 @@ pub mod prelude {
     //! structs by adding a glob import to the top of mastodon heavy
     //! modules:
     pub use super::{
-        account::{Account, CredientialsBuilder, Source},
+        account::{Account, CredentialsBuilder, Source},
         attachment::{Attachment, MediaType},
         card::Card,
         context::Context,
