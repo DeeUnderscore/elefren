@@ -1,3 +1,5 @@
+use std::fmt;
+
 /// A builder pattern struct for constructing a status.
 #[derive(Debug, Default, Clone, Serialize, PartialEq)]
 pub struct StatusBuilder {
@@ -41,9 +43,9 @@ impl StatusBuilder {
     ///
     /// let status = StatusBuilder::new("Hello World!");
     /// ```
-    pub fn new<I: Into<String>>(status: I) -> Self {
+    pub fn new<D: fmt::Display>(status: D) -> Self {
         StatusBuilder {
-            status: status.into(),
+            status: status.to_string(),
             ..Self::default()
         }
     }
