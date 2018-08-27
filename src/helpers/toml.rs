@@ -60,7 +60,7 @@ pub fn to_writer<W: Write>(data: &Data, writer: W) -> Result<()> {
 /// fine-grained control
 pub fn to_file<P: AsRef<Path>>(data: &Data, path: P) -> Result<()> {
     let mut options = OpenOptions::new();
-    options.write(true).truncate(true);
+    options.create(true).write(true).truncate(true);
     to_file_with_options(data, path, options)?;
     Ok(())
 }
