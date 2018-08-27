@@ -4,19 +4,19 @@ use std::{
     path::Path,
 };
 
-use tomlcrate;
+use serde_json;
 
 use data::Data;
 use Result;
 
 /// Attempts to deserialize a Data struct from a string
 pub fn from_str(s: &str) -> Result<Data> {
-    Ok(tomlcrate::from_str(s)?)
+    Ok(serde_json::from_str(s)?)
 }
 
 /// Attempts to deserialize a Data struct from a slice of bytes
 pub fn from_slice(s: &[u8]) -> Result<Data> {
-    Ok(tomlcrate::from_slice(s)?)
+    Ok(serde_json::from_slice(s)?)
 }
 
 /// Attempts to deserialize a Data struct from something that implements
@@ -36,12 +36,12 @@ pub fn from_file<P: AsRef<Path>>(path: P) -> Result<Data> {
 
 /// Attempts to serialize a Data struct to a String
 pub fn to_string(data: &Data) -> Result<String> {
-    Ok(tomlcrate::to_string_pretty(data)?)
+    Ok(serde_json::to_string_pretty(data)?)
 }
 
 /// Attempts to serialize a Data struct to a Vec of bytes
 pub fn to_vec(data: &Data) -> Result<Vec<u8>> {
-    Ok(tomlcrate::to_vec(data)?)
+    Ok(serde_json::to_vec(data)?)
 }
 
 /// Attempts to serialize a Data struct to something that implements the
@@ -83,18 +83,21 @@ mod tests {
     use std::{fs::OpenOptions, io::Cursor};
     use tempfile::{tempdir, NamedTempFile};
 
+    const DOC: &'static str = indoc!(
+        r#"
+            {
+                "base": "https://example.com",
+                "client_id": "adbc01234",
+                "client_secret": "0987dcba",
+                "redirect": "urn:ietf:wg:oauth:2.0:oob",
+                "token": "fedc5678"
+            }
+    "#
+    );
+
     #[test]
     fn test_from_str() {
-        let doc = indoc!(
-            r#"
-                base = "https://example.com"
-                client_id = "adbc01234"
-                client_secret = "0987dcba"
-                redirect = "urn:ietf:wg:oauth:2.0:oob"
-                token = "fedc5678"
-        "#
-        );
-        let desered = from_str(&doc).expect("Couldn't deserialize Data");
+        let desered = from_str(DOC).expect("Couldn't deserialize Data");
         assert_eq!(
             desered,
             Data {
@@ -108,16 +111,7 @@ mod tests {
     }
     #[test]
     fn test_from_slice() {
-        let doc = indoc!(
-            r#"
-                base = "https://example.com"
-                client_id = "adbc01234"
-                client_secret = "0987dcba"
-                redirect = "urn:ietf:wg:oauth:2.0:oob"
-                token = "fedc5678"
-        "#
-        );
-        let doc = doc.as_bytes();
+        let doc = DOC.as_bytes();
         let desered = from_slice(&doc).expect("Couldn't deserialize Data");
         assert_eq!(
             desered,
@@ -132,16 +126,7 @@ mod tests {
     }
     #[test]
     fn test_from_reader() {
-        let doc = indoc!(
-            r#"
-                base = "https://example.com"
-                client_id = "adbc01234"
-                client_secret = "0987dcba"
-                redirect = "urn:ietf:wg:oauth:2.0:oob"
-                token = "fedc5678"
-        "#
-        );
-        let doc = doc.as_bytes();
+        let doc = DOC.as_bytes();
         let doc = Cursor::new(doc);
         let desered = from_reader(doc).expect("Couldn't deserialize Data");
         assert_eq!(
@@ -157,17 +142,8 @@ mod tests {
     }
     #[test]
     fn test_from_file() {
-        let doc = indoc!(
-            r#"
-                base = "https://example.com"
-                client_id = "adbc01234"
-                client_secret = "0987dcba"
-                redirect = "urn:ietf:wg:oauth:2.0:oob"
-                token = "fedc5678"
-        "#
-        );
         let mut datafile = NamedTempFile::new().expect("Couldn't create tempfile");
-        write!(&mut datafile, "{}", doc).expect("Couldn't write Data to file");
+        write!(&mut datafile, "{}", DOC).expect("Couldn't write Data to file");
         let desered = from_file(datafile.path()).expect("Couldn't deserialize Data");
         assert_eq!(
             desered,
@@ -231,7 +207,7 @@ mod tests {
             token: "fedc5678".into(),
         };
         let tempdir = tempdir().expect("Couldn't create tempdir");
-        let filename = tempdir.path().join("mastodon-data.toml");
+        let filename = tempdir.path().join("mastodon-data.json");
         to_file(&data, &filename).expect("Couldn't write to file");
         let desered = from_file(&filename).expect("Couldn't deserialize Data");
         assert_eq!(data, desered);

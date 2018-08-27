@@ -1,7 +1,7 @@
 use std::{error, fmt, io::Error as IoError};
 
-use json::Error as SerdeError;
 use reqwest::{Error as HttpError, StatusCode};
+use serde_json::Error as SerdeError;
 #[cfg(feature = "toml")]
 use tomlcrate::de::Error as TomlDeError;
 #[cfg(feature = "toml")]
@@ -119,8 +119,8 @@ from! {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use json;
     use reqwest;
+    use serde_json;
     use std::io;
 
     macro_rules! assert_is {
@@ -148,7 +148,7 @@ mod tests {
 
     #[test]
     fn from_serde_error() {
-        let err: SerdeError = json::from_str::<()>("not valid json").unwrap_err();
+        let err: SerdeError = serde_json::from_str::<()>("not valid json").unwrap_err();
         let err: Error = Error::from(err);
         assert_is!(err, Error::Serde(..));
     }

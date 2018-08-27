@@ -43,7 +43,7 @@ extern crate serde_derive;
 #[macro_use]
 extern crate doc_comment;
 #[macro_use]
-extern crate serde_json as json;
+extern crate serde_json;
 extern crate chrono;
 extern crate reqwest;
 extern crate serde;
@@ -57,7 +57,10 @@ extern crate toml as tomlcrate;
 extern crate tempfile;
 
 #[cfg(test)]
-#[cfg_attr(all(test, feature = "toml"), macro_use)]
+#[cfg_attr(
+    all(test, any(feature = "toml", feature = "json")),
+    macro_use
+)]
 extern crate indoc;
 
 use std::{borrow::Cow, ops};
@@ -567,12 +570,12 @@ fn deserialise<T: for<'de> serde::Deserialize<'de>>(mut response: Response) -> R
     let mut vec = Vec::new();
     response.read_to_end(&mut vec)?;
 
-    match json::from_slice(&vec) {
+    match serde_json::from_slice(&vec) {
         Ok(t) => Ok(t),
         // If deserializing into the desired type fails try again to
         // see if this is an error response.
         Err(e) => {
-            if let Ok(error) = json::from_slice(&vec) {
+            if let Ok(error) = serde_json::from_slice(&vec) {
                 return Err(Error::Api(error));
             }
             Err(e.into())

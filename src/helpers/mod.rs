@@ -9,3 +9,15 @@
 /// features = ["toml"]
 /// ```
 pub mod toml;
+
+#[cfg(feature = "json")]
+/// Helpers for serializing to/deserializing from json
+///
+/// In order to use this module, set the "json" feature in your Cargo.toml:
+///
+/// ```toml,ignore
+/// [dependencies.elefen]
+/// version = "0.12"
+/// features = ["json"]
+/// ```
+pub mod json;

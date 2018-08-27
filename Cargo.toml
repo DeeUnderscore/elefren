@@ -26,7 +26,8 @@ features = ["serde"]
 
 [features]
 default-features = []
-all = ["toml"]
+json = []
+all = ["toml", "json"]
 
 [build-dependencies]
 skeptic = "0.13.3"
