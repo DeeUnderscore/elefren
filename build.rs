@@ -12,7 +12,7 @@ fn main() {
     // make a dummy one
     use std::{env, fs::OpenOptions, path::Path};
     let out_dir = Path::new(&env::var("OUT_DIR").expect("no out_dir set")).join("skeptic-tests.rs");
-    let f = OpenOptions::new()
+    OpenOptions::new()
         .create(true)
         .write(true)
         .open(out_dir)
