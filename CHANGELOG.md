@@ -1,3 +1,53 @@
+# 0.13 (2018/08/27)
+
+## Features
+
+- `Registration` now duplicates the `AppBuilder` API, so you can
+  replace:
+
+  ```
+  let app = App::builder();
+  app.client_name("test-client");
+
+  let registration = Registration::new("http://example.com")
+                                  .register(app)?;
+  ```
+
+  with this:
+
+  ```
+  let registration = Registration::new("http://example.com")
+                                  .client_name("test-client")
+                                  .build()?;
+  ```
+
+  You can still call use the `Registration` & `AppBuilder` APIs like
+  before, but any App passed to `.register` will supercede anything app
+  config set on the `Registration` object itself.
+
+  In future releases, this will become a hard error.
+
+- `elefren::status_builder::StatusBuilder::new()` now takes anything
+  that implements `Display` instead of specifically an owned `String`
+
+## Breaking Changes
+
+- The `elefren::data::toml` module has been moved to
+  `elefren::helpers::toml`
+- Because of the changes to `Registration`, the `elefren::apps::prelude`
+  module has been removed. The types that are still necessary from that
+  prelude have been moved to `elefren::prelude`, but
+  `elefren::apps::App` will have to be imported separately
+- `elefren::entities::account::CredientialsBuilder` has been moved to
+  `elefren::entities::account::CredentialsBuilder` (note the spelling
+  difference)
+- `Registered::complete` now takes a `&str` instead of a `String`
+
+## Compatibility
+
+- `elefren::entities::instance::Instance` now has the `max_toot_chars`
+  property, for use with the Pleroma and Glitch-soc APIs
+
 # 0.12 (2018/08/23)
 
 ## Features
