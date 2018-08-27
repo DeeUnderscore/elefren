@@ -5,6 +5,9 @@ addons:
   apt:
     packages:
       - libssl-dev
+cache:
+  directories:
+  - $HOME/.cargo
 env:
   - ELEFREN_FEATURES="--features toml"
   - ELEFREN_FEATURES="--features all"
@@ -25,7 +28,9 @@ script:
   - cargo test $ELEFREN_FEATURES
 after_success: |
   if [[ "$TRAVIS_RUST_VERSION" == stable ]] 2> /dev/null && [ -z "$ELEFREN_FEATURES" ] 2>/dev/null && [[ "$TRAVIS_OS_NAME" == "linux" ]]; then
-    RUSTFLAGS="--cfg procmacro2_semver_exempt" cargo install cargo-tarpaulin
+    if [[ -z "$(which cargo-tarpaulin)" ]]; then
+        RUSTFLAGS="--cfg procmacro2_semver_exempt" cargo install cargo-tarpaulin
+    fi
     cargo tarpaulin --ciserver travis-ci --coveralls $TRAVIS_JOB_ID --features toml
   fi
 matrix:
