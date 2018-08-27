@@ -25,6 +25,8 @@ pub struct Instance {
     pub languages: Option<Vec<String>>,
     /// Contact account for the server.
     pub contact_account: Option<Account>,
+    /// The maximum number of characters allowed in a status
+    pub max_toot_chars: Option<u32>,
 }
 
 /// Object containing url for streaming api.
