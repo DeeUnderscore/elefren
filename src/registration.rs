@@ -103,7 +103,7 @@ impl<'a, H: HttpSend> Registration<'a, H> {
     /// // Here you now need to open the url in the browser
     /// // And handle a the redirect url coming back with the code.
     /// let code = String::from("RETURNED_FROM_BROWSER");
-    /// let mastodon = registration.complete(code)?;
+    /// let mastodon = registration.complete(&code)?;
     ///
     /// println!("{:?}", mastodon.get_home_timeline()?.initial_items);
     /// # Ok(())
@@ -144,7 +144,7 @@ impl<H: HttpSend> Registered<H> {
 
     /// Create an access token from the client id, client secret, and code
     /// provided by the authorisation url.
-    pub fn complete(self, code: String) -> Result<Mastodon<H>> {
+    pub fn complete(self, code: &str) -> Result<Mastodon<H>> {
         let url = format!(
             "{}/oauth/token?client_id={}&client_secret={}&code={}&grant_type=authorization_code&redirect_uri={}",
             self.base,

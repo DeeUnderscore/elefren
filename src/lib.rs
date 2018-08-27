@@ -18,7 +18,7 @@
 //! // Here you now need to open the url in the browser
 //! // And handle a the redirect url coming back with the code.
 //! let code = String::from("RETURNED_FROM_BROWSER");
-//! let mastodon = registration.complete(code)?;
+//! let mastodon = registration.complete(&code)?;
 //!
 //! println!("{:?}", mastodon.get_home_timeline()?.initial_items);
 //! # Ok(())

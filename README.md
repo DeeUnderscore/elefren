@@ -68,7 +68,7 @@ fn register() -> Result<Mastodon, Box<Error>> {
     io::stdin().read_line(&mut input)?;
 
     let code = input.trim().to_string();
-    let mastodon = registration.complete(code)?;
+    let mastodon = registration.complete(&code)?;
 
     // Save app data for using on the next run.
     toml::to_file(&*mastodon, "mastodon-data.toml")?;

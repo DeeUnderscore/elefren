@@ -39,7 +39,7 @@ pub fn register() -> Result<Mastodon, Box<Error>> {
     println!("Click this link to authorize on Mastodon: {}", url);
     let code = read_line("Paste the returned authorization code: ")?;
 
-    let mastodon = registration.complete(code)?;
+    let mastodon = registration.complete(&code)?;
 
     // Save app data for using on the next run.
     toml::to_file(&*mastodon, "mastodon-data.toml")?;
