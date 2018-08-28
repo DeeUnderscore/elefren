@@ -1,15 +1,15 @@
 use std::borrow::Cow;
 
-use try_from::TryInto;
 use reqwest::{Client, RequestBuilder, Response};
+use try_from::TryInto;
 
 use apps::{App, AppBuilder, Scopes};
 use http_send::{HttpSend, HttpSender};
 use Data;
+use Error;
 use Mastodon;
 use MastodonBuilder;
 use Result;
-use Error;
 
 const DEFAULT_REDIRECT_URI: &'static str = "urn:ietf:wg:oauth:2.0:oob";
 
@@ -96,14 +96,12 @@ impl<'a, H: HttpSend> Registration<'a, H> {
     /// ```no_run
     /// # extern crate elefren;
     /// # fn main () -> elefren::Result<()> {
-    /// use elefren::prelude::*;
-    /// use elefren::apps::App;
+    /// use elefren::{apps::App, prelude::*};
     ///
     /// let mut app = App::builder();
     /// app.client_name("elefren_test");
     ///
-    /// let registration = Registration::new("https://mastodon.social")
-    ///     .register(app)?;
+    /// let registration = Registration::new("https://mastodon.social").register(app)?;
     /// let url = registration.authorize_url()?;
     /// // Here you now need to open the url in the browser
     /// // And handle a the redirect url coming back with the code.
@@ -115,7 +113,8 @@ impl<'a, H: HttpSend> Registration<'a, H> {
     /// # }
     /// ```
     pub fn register<I: TryInto<App>>(&mut self, app: I) -> Result<Registered<H>>
-        where Error: From<<I as TryInto<App>>::Err>
+    where
+        Error: From<<I as TryInto<App>>::Err>,
     {
         let app = app.try_into()?;
         let oauth = self.send_app(&app)?;
