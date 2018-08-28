@@ -56,6 +56,10 @@ extern crate toml as tomlcrate;
 #[cfg(test)]
 extern crate tempfile;
 
+#[cfg(test)]
+#[cfg_attr(all(test, feature = "toml"), macro_use)]
+extern crate indoc;
+
 use std::{borrow::Cow, ops};
 
 use reqwest::{

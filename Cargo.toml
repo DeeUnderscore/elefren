@@ -34,6 +34,7 @@ skeptic = "0.13.3"
 [dev-dependencies]
 skeptic = "0.13.3"
 tempfile = "3.0.3"
+indoc = "0.2.6"
 
 [package.metadata.docs.rs]
 features = ["all"]

@@ -76,3 +76,180 @@ pub fn to_file_with_options<P: AsRef<Path>>(
     to_writer(data, file)?;
     Ok(())
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::{fs::OpenOptions, io::Cursor};
+    use tempfile::{tempdir, NamedTempFile};
+
+    #[test]
+    fn test_from_str() {
+        let doc = indoc!(
+            r#"
+                base = "https://example.com"
+                client_id = "adbc01234"
+                client_secret = "0987dcba"
+                redirect = "urn:ietf:wg:oauth:2.0:oob"
+                token = "fedc5678"
+        "#
+        );
+        let desered = from_str(&doc).expect("Couldn't deserialize Data");
+        assert_eq!(
+            desered,
+            Data {
+                base: "https://example.com".into(),
+                client_id: "adbc01234".into(),
+                client_secret: "0987dcba".into(),
+                redirect: "urn:ietf:wg:oauth:2.0:oob".into(),
+                token: "fedc5678".into(),
+            }
+        );
+    }
+    #[test]
+    fn test_from_slice() {
+        let doc = indoc!(
+            r#"
+                base = "https://example.com"
+                client_id = "adbc01234"
+                client_secret = "0987dcba"
+                redirect = "urn:ietf:wg:oauth:2.0:oob"
+                token = "fedc5678"
+        "#
+        );
+        let doc = doc.as_bytes();
+        let desered = from_slice(&doc).expect("Couldn't deserialize Data");
+        assert_eq!(
+            desered,
+            Data {
+                base: "https://example.com".into(),
+                client_id: "adbc01234".into(),
+                client_secret: "0987dcba".into(),
+                redirect: "urn:ietf:wg:oauth:2.0:oob".into(),
+                token: "fedc5678".into(),
+            }
+        );
+    }
+    #[test]
+    fn test_from_reader() {
+        let doc = indoc!(
+            r#"
+                base = "https://example.com"
+                client_id = "adbc01234"
+                client_secret = "0987dcba"
+                redirect = "urn:ietf:wg:oauth:2.0:oob"
+                token = "fedc5678"
+        "#
+        );
+        let doc = doc.as_bytes();
+        let doc = Cursor::new(doc);
+        let desered = from_reader(doc).expect("Couldn't deserialize Data");
+        assert_eq!(
+            desered,
+            Data {
+                base: "https://example.com".into(),
+                client_id: "adbc01234".into(),
+                client_secret: "0987dcba".into(),
+                redirect: "urn:ietf:wg:oauth:2.0:oob".into(),
+                token: "fedc5678".into(),
+            }
+        );
+    }
+    #[test]
+    fn test_from_file() {
+        let mut datafile = NamedTempFile::new().expect("Couldn't create tempfile");
+        let doc = indoc!(
+            r#"
+                base = "https://example.com"
+                client_id = "adbc01234"
+                client_secret = "0987dcba"
+                redirect = "urn:ietf:wg:oauth:2.0:oob"
+                token = "fedc5678"
+        "#
+        );
+        write!(&mut datafile, "{}", doc).expect("Couldn't write Data to file");
+        let desered = from_file(datafile.path()).expect("Couldn't deserialize Data");
+        assert_eq!(
+            desered,
+            Data {
+                base: "https://example.com".into(),
+                client_id: "adbc01234".into(),
+                client_secret: "0987dcba".into(),
+                redirect: "urn:ietf:wg:oauth:2.0:oob".into(),
+                token: "fedc5678".into(),
+            }
+        );
+    }
+    #[test]
+    fn test_to_string() {
+        let data = Data {
+            base: "https://example.com".into(),
+            client_id: "adbc01234".into(),
+            client_secret: "0987dcba".into(),
+            redirect: "urn:ietf:wg:oauth:2.0:oob".into(),
+            token: "fedc5678".into(),
+        };
+        let s = to_string(&data).expect("Couldn't serialize Data");
+        let desered = from_str(&s).expect("Couldn't deserialize Data");
+        assert_eq!(data, desered);
+    }
+    #[test]
+    fn test_to_vec() {
+        let data = Data {
+            base: "https://example.com".into(),
+            client_id: "adbc01234".into(),
+            client_secret: "0987dcba".into(),
+            redirect: "urn:ietf:wg:oauth:2.0:oob".into(),
+            token: "fedc5678".into(),
+        };
+        let v = to_vec(&data).expect("Couldn't write to vec");
+        let desered = from_slice(&v).expect("Couldn't deserialize data");
+        assert_eq!(data, desered);
+    }
+    #[test]
+    fn test_to_writer() {
+        let data = Data {
+            base: "https://example.com".into(),
+            client_id: "adbc01234".into(),
+            client_secret: "0987dcba".into(),
+            redirect: "urn:ietf:wg:oauth:2.0:oob".into(),
+            token: "fedc5678".into(),
+        };
+        let mut buffer = Vec::new();
+        to_writer(&data, &mut buffer).expect("Couldn't write to writer");
+        let reader = Cursor::new(buffer);
+        let desered = from_reader(reader).expect("Couldn't deserialize Data");
+        assert_eq!(data, desered);
+    }
+    #[test]
+    fn test_to_file() {
+        let data = Data {
+            base: "https://example.com".into(),
+            client_id: "adbc01234".into(),
+            client_secret: "0987dcba".into(),
+            redirect: "urn:ietf:wg:oauth:2.0:oob".into(),
+            token: "fedc5678".into(),
+        };
+        let tempdir = tempdir().expect("Couldn't create tempdir");
+        let filename = tempdir.path().join("mastodon-data.toml");
+        to_file(&data, &filename).expect("Couldn't write to file");
+        let desered = from_file(&filename).expect("Couldn't deserialize Data");
+        assert_eq!(data, desered);
+    }
+    #[test]
+    fn test_to_file_with_options() {
+        let data = Data {
+            base: "https://example.com".into(),
+            client_id: "adbc01234".into(),
+            client_secret: "0987dcba".into(),
+            redirect: "urn:ietf:wg:oauth:2.0:oob".into(),
+            token: "fedc5678".into(),
+        };
+        let file = NamedTempFile::new().expect("Couldn't create tempfile");
+        let mut options = OpenOptions::new();
+        options.write(true).create(false).truncate(true);
+        to_file_with_options(&data, file.path(), options).expect("Couldn't write to file");
+        let desered = from_file(file.path()).expect("Couldn't deserialize Data");
+        assert_eq!(data, desered);
+    }
+}
