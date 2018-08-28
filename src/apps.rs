@@ -181,8 +181,7 @@ mod tests {
     #[test]
     fn test_app_scopes() {
         let mut builder = App::builder();
-        builder.client_name("test")
-            .scopes(Scopes::All);
+        builder.client_name("test").scopes(Scopes::All);
         let app = builder.build().expect("Couldn't build App");
         assert_eq!(app.scopes(), Scopes::All);
     }
@@ -195,13 +194,15 @@ mod tests {
         builder.scopes(Scopes::ReadWrite);
         builder.website("https://example.com");
         let app = builder.build().expect("Couldn't build App");
-        assert_eq!(app,
-                App {
-                    client_name: "foo-test".to_string(),
-                    redirect_uris: "http://example.com".to_string(),
-                    scopes: Scopes::ReadWrite,
-                    website: Some("https://example.com".to_string()),
-                });
+        assert_eq!(
+            app,
+            App {
+                client_name: "foo-test".to_string(),
+                redirect_uris: "http://example.com".to_string(),
+                scopes: Scopes::ReadWrite,
+                website: Some("https://example.com".to_string()),
+            }
+        );
     }
 
     #[test]
@@ -214,7 +215,8 @@ mod tests {
     #[should_panic]
     fn test_app_builder_build_fails_if_no_client_name_2() {
         let mut builder = App::builder();
-        builder.website("https://example.com")
+        builder
+            .website("https://example.com")
             .redirect_uris("https://example.com")
             .scopes(Scopes::All);
         builder.build().expect("no client-name");
@@ -236,7 +238,8 @@ mod tests {
     #[test]
     fn test_app_builder_try_into_app() {
         let mut builder = App::builder();
-        builder.client_name("foo-test")
+        builder
+            .client_name("foo-test")
             .redirect_uris("http://example.com")
             .scopes(Scopes::All);
         let expected = App {
@@ -245,13 +248,14 @@ mod tests {
             scopes: Scopes::All,
             website: None,
         };
-        let result = builder.try_into().expect("Couldn't make AppBuilder into App");
+        let result = builder
+            .try_into()
+            .expect("Couldn't make AppBuilder into App");
         assert_eq!(expected, result);
     }
 
     #[test]
     fn test_scopes_display() {
-
         let values = [
             Scopes::All,
             Scopes::Follow,
