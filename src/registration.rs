@@ -15,6 +15,7 @@ const DEFAULT_REDIRECT_URI: &'static str = "urn:ietf:wg:oauth:2.0:oob";
 
 /// Handles registering your mastodon app to your instance. It is recommended
 /// you cache your data struct to avoid registering on every run.
+#[derive(Debug, Clone)]
 pub struct Registration<'a, H: HttpSend = HttpSender> {
     base: String,
     client: Client,
@@ -215,6 +216,7 @@ impl<H: HttpSend> Registered<H> {
     }
 }
 
+#[derive(Debug, Clone)]
 pub struct Registered<H: HttpSend> {
     base: String,
     client: Client,

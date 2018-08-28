@@ -20,18 +20,15 @@ pub struct Notification {
 }
 
 /// The type of notification.
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Debug, Clone, Copy, Deserialize)]
+#[serde(rename_all = "lowercase")]
 pub enum NotificationType {
     /// Someone mentioned the application client in another status.
-    #[serde(rename = "mention")]
     Mention,
     /// Someone reblogged one of the application client's statuses.
-    #[serde(rename = "reblog")]
     Reblog,
     /// Someone favourited one of the application client's statuses.
-    #[serde(rename = "favourite")]
     Favourite,
     /// Someone followed the application client.
-    #[serde(rename = "follow")]
     Follow,
 }

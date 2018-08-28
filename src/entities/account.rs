@@ -82,6 +82,7 @@ fn string_or_bool<'de, D: Deserializer<'de>>(val: D) -> ::std::result::Result<bo
     })
 }
 
+#[derive(Debug)]
 pub struct CredentialsBuilder<'a> {
     display_name: Option<&'a str>,
     note: Option<&'a str>,

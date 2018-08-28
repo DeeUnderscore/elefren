@@ -9,6 +9,7 @@ use url::Url;
 
 use http_send::HttpSend;
 
+#[derive(Debug, Clone)]
 pub struct Page<'a, T: for<'de> Deserialize<'de>, H: 'a + HttpSend> {
     mastodon: &'a Mastodon<H>,
     next: Option<Url>,

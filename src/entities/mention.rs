@@ -1,3 +1,4 @@
+#[derive(Debug, Clone)]
 pub struct Mention {
     /// URL of user's profile (can be remote)
     pub url: String,

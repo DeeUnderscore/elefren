@@ -37,7 +37,7 @@ pub struct StreamingApi {
 }
 
 /// Statistics about the Mastodon instance.
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Debug, Clone, Copy, Deserialize)]
 pub struct Stats {
     user_count: u64,
     status_count: u64,

@@ -24,6 +24,7 @@ use serde::Deserialize;
 /// # Ok(())
 /// # }
 /// ```
+#[derive(Debug, Clone)]
 pub(crate) struct ItemsIter<'a, T: Clone + for<'de> Deserialize<'de>, H: 'a + HttpSend> {
     page: Page<'a, T, H>,
     buffer: Vec<T>,

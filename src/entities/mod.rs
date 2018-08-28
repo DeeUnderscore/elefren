@@ -13,7 +13,7 @@ pub mod search_result;
 pub mod status;
 
 /// An empty JSON object.
-#[derive(Deserialize)]
+#[derive(Deserialize, Debug, Copy, Clone, PartialEq)]
 pub struct Empty {}
 
 pub mod prelude {
