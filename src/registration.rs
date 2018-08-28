@@ -236,6 +236,15 @@ mod tests {
         let r = Registration::new("https://example.com");
         assert_eq!(r.base, "https://example.com".to_string());
         assert_eq!(r.app_builder, AppBuilder::new());
+        assert_eq!(r.http_sender, HttpSender);
+    }
+
+    #[test]
+    fn test_registration_with_sender() {
+        let r = Registration::with_sender("https://example.com", HttpSender);
+        assert_eq!(r.base, "https://example.com".to_string());
+        assert_eq!(r.app_builder, AppBuilder::new());
+        assert_eq!(r.http_sender, HttpSender);
     }
 
     #[test]

@@ -77,7 +77,7 @@ mod tests {
 
     #[test]
     fn test_default_visibility() {
-        let v = Visibility::default();
+        let v: Visibility = Default::default();
         assert_eq!(v, Visibility::Public);
     }
 }

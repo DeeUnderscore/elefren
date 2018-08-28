@@ -5,7 +5,7 @@ use try_from::TryInto;
 use errors::{Error, Result};
 
 /// Represents an application that can be registered with a mastodon instance
-#[derive(Debug, Default, Serialize)]
+#[derive(Clone, Debug, Default, Serialize, PartialEq)]
 pub struct App {
     client_name: String,
     redirect_uris: String,
@@ -165,5 +165,124 @@ impl fmt::Display for Scopes {
 impl Default for Scopes {
     fn default() -> Self {
         Scopes::Read
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_app_builder() {
+        let builder = App::builder();
+        assert_eq!(builder, AppBuilder::new());
+    }
+
+    #[test]
+    fn test_app_scopes() {
+        let mut builder = App::builder();
+        builder.client_name("test")
+            .scopes(Scopes::All);
+        let app = builder.build().expect("Couldn't build App");
+        assert_eq!(app.scopes(), Scopes::All);
+    }
+
+    #[test]
+    fn test_app_builder_all_methods() {
+        let mut builder = AppBuilder::new();
+        builder.client_name("foo-test");
+        builder.redirect_uris("http://example.com");
+        builder.scopes(Scopes::ReadWrite);
+        builder.website("https://example.com");
+        let app = builder.build().expect("Couldn't build App");
+        assert_eq!(app,
+                App {
+                    client_name: "foo-test".to_string(),
+                    redirect_uris: "http://example.com".to_string(),
+                    scopes: Scopes::ReadWrite,
+                    website: Some("https://example.com".to_string()),
+                });
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_app_builder_build_fails_if_no_client_name_1() {
+        App::builder().build().expect("no client-name");
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_app_builder_build_fails_if_no_client_name_2() {
+        let mut builder = App::builder();
+        builder.website("https://example.com")
+            .redirect_uris("https://example.com")
+            .scopes(Scopes::All);
+        builder.build().expect("no client-name");
+    }
+
+    #[test]
+    fn test_app_try_into_app() {
+        let app = App {
+            client_name: "foo-test".to_string(),
+            redirect_uris: "http://example.com".to_string(),
+            scopes: Scopes::All,
+            website: None,
+        };
+        let expected = app.clone();
+        let result = app.try_into().expect("Couldn't make App into App");
+        assert_eq!(expected, result);
+    }
+
+    #[test]
+    fn test_app_builder_try_into_app() {
+        let mut builder = App::builder();
+        builder.client_name("foo-test")
+            .redirect_uris("http://example.com")
+            .scopes(Scopes::All);
+        let expected = App {
+            client_name: "foo-test".to_string(),
+            redirect_uris: "http://example.com".to_string(),
+            scopes: Scopes::All,
+            website: None,
+        };
+        let result = builder.try_into().expect("Couldn't make AppBuilder into App");
+        assert_eq!(expected, result);
+    }
+
+    #[test]
+    fn test_scopes_display() {
+
+        let values = [
+            Scopes::All,
+            Scopes::Follow,
+            Scopes::Read,
+            Scopes::ReadFollow,
+            Scopes::ReadWrite,
+            Scopes::Write,
+            Scopes::WriteFollow,
+        ];
+
+        let expecteds = [
+            "read%20write%20follow".to_string(),
+            "follow".to_string(),
+            "read".to_string(),
+            "read%20follow".to_string(),
+            "read%20write".to_string(),
+            "write".to_string(),
+            "write%20follow".to_string(),
+        ];
+
+        let tests = values.into_iter().zip(expecteds.into_iter());
+
+        for (value, expected) in tests {
+            let result = value.to_string();
+            assert_eq!(&result, expected);
+        }
+    }
+
+    #[test]
+    fn test_scopes_default() {
+        let default: Scopes = Default::default();
+        assert_eq!(default, Scopes::Read);
     }
 }
