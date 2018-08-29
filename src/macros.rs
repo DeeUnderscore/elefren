@@ -19,9 +19,27 @@ macro_rules! paged_routes {
     (($method:ident) $name:ident: $url:expr => $ret:ty, $($rest:tt)*) => {
         doc_comment! {
             concat!(
-                "Equivalent to `/api/v1/",
-                $url,
-                "`\n# Errors\nIf `access_token` is not set."),
+            "Equivalent to `/api/v1/",
+            $url,
+            "`\n# Errors\nIf `access_token` is not set.",
+            "\n",
+            "```no_run",
+            "# extern crate elefren;\n",
+            "# use elefren::prelude::*;\n",
+            "# fn main() -> Result<(), Box<::std::error::Error>> {\n",
+            "# let data = Data {\n",
+            "#     base: \"https://example.com\".into(),\n",
+            "#     client_id: \"taosuah\".into(),\n",
+            "#     client_secret: \"htnjdiuae\".into(),\n",
+            "#     redirect: \"https://example.com\".into(),\n",
+            "#     token: \"tsaohueaheis\".into(),\n",
+            "# };\n",
+            "let client = Mastodon::from(data);\n",
+            "client.", stringify!($name), "();\n",
+            "#   Ok(())\n",
+            "# }\n",
+            "```"
+            ),
             fn $name(&self) -> Result<Page<$ret, H>> {
                 let url = self.route(concat!("/api/v1/", $url));
                 let response = self.send(
@@ -81,8 +99,8 @@ macro_rules! route {
             concat!(
                 "Equivalent to `/api/v1/",
                 $url,
-                "`\n# Errors\nIf `access_token` is not set."),
-
+                "`\n# Errors\nIf `access_token` is not set.",
+            ),
             fn $name(&self, $($param: $typ,)*) -> Result<$ret> {
 
                 let form_data = json!({
@@ -116,7 +134,25 @@ macro_rules! route {
             concat!(
                 "Equivalent to `/api/v1/",
                 $url,
-                "`\n# Errors\nIf `access_token` is not set."),
+                "`\n# Errors\nIf `access_token` is not set.",
+                "\n",
+                "```no_run",
+                "# extern crate elefren;\n",
+                "# use elefren::prelude::*;\n",
+                "# fn main() -> Result<(), Box<::std::error::Error>> {\n",
+                "# let data = Data {\n",
+                "#     base: \"https://example.com\".into(),\n",
+                "#     client_id: \"taosuah\".into(),\n",
+                "#     client_secret: \"htnjdiuae\".into(),\n",
+                "#     redirect: \"https://example.com\".into(),\n",
+                "#     token: \"tsaohueaheis\".into(),\n",
+                "# };\n",
+                "let client = Mastodon::from(data);\n",
+                "client.", stringify!($name), "();\n",
+                "#   Ok(())\n",
+                "# }\n",
+                "```"
+            ),
             fn $name(&self) -> Result<$ret> {
                 self.$method(self.route(concat!("/api/v1/", $url)))
             }
@@ -136,7 +172,25 @@ macro_rules! route_id {
                 concat!(
                     "Equivalent to `/api/v1/",
                     $url,
-                    "`\n# Errors\nIf `access_token` is not set."),
+                    "`\n# Errors\nIf `access_token` is not set.",
+                    "\n",
+                    "```no_run",
+                    "# extern crate elefren;\n",
+                    "# use elefren::prelude::*;\n",
+                    "# fn main() -> Result<(), Box<::std::error::Error>> {\n",
+                    "# let data = Data {\n",
+                    "#     base: \"https://example.com\".into(),\n",
+                    "#     client_id: \"taosuah\".into(),\n",
+                    "#     client_secret: \"htnjdiuae\".into(),\n",
+                    "#     redirect: \"https://example.com\".into(),\n",
+                    "#     token: \"tsaohueaheis\".into(),\n",
+                    "# };\n",
+                    "let client = Mastodon::from(data);\n",
+                    "client.", stringify!($name), "(42);\n",
+                    "#   Ok(())\n",
+                    "# }\n",
+                    "```"
+                ),
                 fn $name(&self, id: u64) -> Result<$ret> {
                     self.$method(self.route(&format!(concat!("/api/v1/", $url), id)))
                 }
@@ -152,7 +206,25 @@ macro_rules! paged_routes_with_id {
             concat!(
                 "Equivalent to `/api/v1/",
                 $url,
-                "`\n# Errors\nIf `access_token` is not set."),
+                "`\n# Errors\nIf `access_token` is not set.",
+                "\n",
+                "```no_run",
+                "# extern crate elefren;\n",
+                "# use elefren::prelude::*;\n",
+                "# fn main() -> Result<(), Box<::std::error::Error>> {\n",
+                "# let data = Data {\n",
+                "#     base: \"https://example.com\".into(),\n",
+                "#     client_id: \"taosuah\".into(),\n",
+                "#     client_secret: \"htnjdiuae\".into(),\n",
+                "#     redirect: \"https://example.com\".into(),\n",
+                "#     token: \"tsaohueaheis\".into(),\n",
+                "# };\n",
+                "let client = Mastodon::from(data);\n",
+                "client.", stringify!($name), "(\"some-id\");\n",
+                "#   Ok(())\n",
+                "# }\n",
+                "```"
+            ),
             fn $name(&self, id: &str) -> Result<Page<$ret, H>> {
                 let url = self.route(&format!(concat!("/api/v1/", $url), id));
                 let response = self.send(
