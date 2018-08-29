@@ -3,7 +3,8 @@ use std::borrow::Cow;
 use reqwest::{Client, RequestBuilder, Response};
 use try_from::TryInto;
 
-use apps::{App, AppBuilder, Scopes};
+use apps::{App, AppBuilder};
+use scopes::Scopes;
 use http_send::{HttpSend, HttpSender};
 use Data;
 use Error;

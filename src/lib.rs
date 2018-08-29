@@ -102,13 +102,15 @@ pub mod page;
 pub mod registration;
 /// Requests
 pub mod requests;
+/// OAuth Scopes
+pub mod scopes;
 /// Constructing a status
 pub mod status_builder;
 #[macro_use]
 mod macros;
 /// Automatically import the things you need
 pub mod prelude {
-    pub use apps::Scopes;
+    pub use scopes::Scopes;
     pub use Data;
     pub use Mastodon;
     pub use MastodonClient;
