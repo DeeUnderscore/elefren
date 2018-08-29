@@ -1,3 +1,19 @@
+<a name="v0.14.0"></a>
+## v0.14.0 (2018-08-29)
+
+#### Features
+
+* **helpers:**  add json helper module ([46871da4](46871da4))
+
+#### Breaking Changes
+
+* **client:**  fix broken paged\_routes\_with\_id methods ([c66c305d](c66c305d), closes [#42](42))
+
+#### Bug Fixes
+
+* **client:**  fix broken paged\_routes\_with\_id methods ([c66c305d](c66c305d), closes [#42](42))
+
+
 # 0.13 (2018/08/27)
 
 ## Features
