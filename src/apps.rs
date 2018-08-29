@@ -2,8 +2,8 @@ use std::borrow::Cow;
 
 use try_from::TryInto;
 
-use scopes::Scopes;
 use errors::{Error, Result};
+use scopes::Scopes;
 
 /// Represents an application that can be registered with a mastodon instance
 #[derive(Clone, Debug, Default, Serialize, PartialEq)]
@@ -37,19 +37,19 @@ impl App {
     /// ```
     /// # extern crate elefren;
     /// # use elefren::Error;
-    /// use elefren::apps::{App, Scopes};
+    /// use elefren::{apps::App, scopes::Scopes};
     ///
     /// # fn main() -> Result<(), Error> {
     /// let mut builder = App::builder();
     /// builder.client_name("elefren-test");
     /// let app = builder.build()?;
     /// let scopes = app.scopes();
-    /// assert_eq!(scopes, Scopes::Read);
+    /// assert_eq!(scopes, &Scopes::read_all());
     /// #   Ok(())
     /// # }
     /// ```
-    pub fn scopes(&self) -> Scopes {
-        self.scopes
+    pub fn scopes(&self) -> &Scopes {
+        &self.scopes
     }
 }
 
@@ -98,7 +98,7 @@ impl<'a> AppBuilder<'a> {
 
     /// Permission scope of the application.
     ///
-    /// IF none is specified, the default is Scopes::Read
+    /// IF none is specified, the default is Scopes::read_all()
     pub fn scopes(&mut self, scopes: Scopes) -> &mut Self {
         self.scopes = Some(scopes);
         self
@@ -123,7 +123,7 @@ impl<'a> AppBuilder<'a> {
                 .redirect_uris
                 .unwrap_or_else(|| "urn:ietf:wg:oauth:2.0:oob".into())
                 .into(),
-            scopes: self.scopes.unwrap_or_else(|| Scopes::Read),
+            scopes: self.scopes.unwrap_or_else(|| Scopes::read_all()),
             website: self.website.map(|s| s.into()),
         })
     }
@@ -158,9 +158,9 @@ mod tests {
     #[test]
     fn test_app_scopes() {
         let mut builder = App::builder();
-        builder.client_name("test").scopes(Scopes::All);
+        builder.client_name("test").scopes(Scopes::all());
         let app = builder.build().expect("Couldn't build App");
-        assert_eq!(app.scopes(), Scopes::All);
+        assert_eq!(app.scopes(), &Scopes::all());
     }
 
     #[test]
@@ -168,7 +168,7 @@ mod tests {
         let mut builder = AppBuilder::new();
         builder.client_name("foo-test");
         builder.redirect_uris("http://example.com");
-        builder.scopes(Scopes::ReadWrite);
+        builder.scopes(Scopes::read_all() | Scopes::write_all());
         builder.website("https://example.com");
         let app = builder.build().expect("Couldn't build App");
         assert_eq!(
@@ -176,7 +176,7 @@ mod tests {
             App {
                 client_name: "foo-test".to_string(),
                 redirect_uris: "http://example.com".to_string(),
-                scopes: Scopes::ReadWrite,
+                scopes: Scopes::read_all() | Scopes::write_all(),
                 website: Some("https://example.com".to_string()),
             }
         );
@@ -195,7 +195,7 @@ mod tests {
         builder
             .website("https://example.com")
             .redirect_uris("https://example.com")
-            .scopes(Scopes::All);
+            .scopes(Scopes::all());
         builder.build().expect("no client-name");
     }
 
@@ -204,7 +204,7 @@ mod tests {
         let app = App {
             client_name: "foo-test".to_string(),
             redirect_uris: "http://example.com".to_string(),
-            scopes: Scopes::All,
+            scopes: Scopes::all(),
             website: None,
         };
         let expected = app.clone();
@@ -218,11 +218,11 @@ mod tests {
         builder
             .client_name("foo-test")
             .redirect_uris("http://example.com")
-            .scopes(Scopes::All);
+            .scopes(Scopes::all());
         let expected = App {
             client_name: "foo-test".to_string(),
             redirect_uris: "http://example.com".to_string(),
-            scopes: Scopes::All,
+            scopes: Scopes::all(),
             website: None,
         };
         let result = builder

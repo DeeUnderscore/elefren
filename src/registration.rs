@@ -4,8 +4,8 @@ use reqwest::{Client, RequestBuilder, Response};
 use try_from::TryInto;
 
 use apps::{App, AppBuilder};
-use scopes::Scopes;
 use http_send::{HttpSend, HttpSender};
+use scopes::Scopes;
 use Data;
 use Error;
 use Mastodon;
@@ -136,7 +136,7 @@ impl<'a, H: HttpSend> Registration<'a, H> {
             client_id: oauth.client_id,
             client_secret: oauth.client_secret,
             redirect: oauth.redirect_uri,
-            scopes: app.scopes(),
+            scopes: app.scopes().clone(),
             http_sender: self.http_sender.clone(),
         })
     }
@@ -171,7 +171,7 @@ impl<'a, H: HttpSend> Registration<'a, H> {
             client_id: oauth.client_id,
             client_secret: oauth.client_secret,
             redirect: oauth.redirect_uri,
-            scopes: app.scopes(),
+            scopes: app.scopes().clone(),
             http_sender: self.http_sender.clone(),
         })
     }
@@ -286,10 +286,10 @@ mod tests {
     #[test]
     fn test_set_scopes() {
         let mut r = Registration::new("https://example.com");
-        r.scopes(Scopes::All);
+        r.scopes(Scopes::all());
 
         assert_eq!(r.base, "https://example.com".to_string());
-        assert_eq!(&mut r.app_builder, AppBuilder::new().scopes(Scopes::All));
+        assert_eq!(&mut r.app_builder, AppBuilder::new().scopes(Scopes::all()));
     }
 
     #[test]
