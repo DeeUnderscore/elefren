@@ -83,18 +83,19 @@ mod tests {
     use std::{fs::OpenOptions, io::Cursor};
     use tempfile::{tempdir, NamedTempFile};
 
+    const DOC: &'static str = indoc!(
+        r#"
+            base = "https://example.com"
+            client_id = "adbc01234"
+            client_secret = "0987dcba"
+            redirect = "urn:ietf:wg:oauth:2.0:oob"
+            token = "fedc5678"
+    "#
+    );
+
     #[test]
     fn test_from_str() {
-        let doc = indoc!(
-            r#"
-                base = "https://example.com"
-                client_id = "adbc01234"
-                client_secret = "0987dcba"
-                redirect = "urn:ietf:wg:oauth:2.0:oob"
-                token = "fedc5678"
-        "#
-        );
-        let desered = from_str(&doc).expect("Couldn't deserialize Data");
+        let desered = from_str(DOC).expect("Couldn't deserialize Data");
         assert_eq!(
             desered,
             Data {
@@ -108,16 +109,7 @@ mod tests {
     }
     #[test]
     fn test_from_slice() {
-        let doc = indoc!(
-            r#"
-                base = "https://example.com"
-                client_id = "adbc01234"
-                client_secret = "0987dcba"
-                redirect = "urn:ietf:wg:oauth:2.0:oob"
-                token = "fedc5678"
-        "#
-        );
-        let doc = doc.as_bytes();
+        let doc = DOC.as_bytes();
         let desered = from_slice(&doc).expect("Couldn't deserialize Data");
         assert_eq!(
             desered,
@@ -132,16 +124,7 @@ mod tests {
     }
     #[test]
     fn test_from_reader() {
-        let doc = indoc!(
-            r#"
-                base = "https://example.com"
-                client_id = "adbc01234"
-                client_secret = "0987dcba"
-                redirect = "urn:ietf:wg:oauth:2.0:oob"
-                token = "fedc5678"
-        "#
-        );
-        let doc = doc.as_bytes();
+        let doc = DOC.as_bytes();
         let doc = Cursor::new(doc);
         let desered = from_reader(doc).expect("Couldn't deserialize Data");
         assert_eq!(
@@ -157,17 +140,8 @@ mod tests {
     }
     #[test]
     fn test_from_file() {
-        let doc = indoc!(
-            r#"
-                base = "https://example.com"
-                client_id = "adbc01234"
-                client_secret = "0987dcba"
-                redirect = "urn:ietf:wg:oauth:2.0:oob"
-                token = "fedc5678"
-        "#
-        );
         let mut datafile = NamedTempFile::new().expect("Couldn't create tempfile");
-        write!(&mut datafile, "{}", doc).expect("Couldn't write Data to file");
+        write!(&mut datafile, "{}", DOC).expect("Couldn't write Data to file");
         let desered = from_file(datafile.path()).expect("Couldn't deserialize Data");
         assert_eq!(
             desered,
