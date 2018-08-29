@@ -159,13 +159,13 @@ pub trait MastodonClient<H: HttpSend = HttpSender> {
     fn followers(&self, id: &str) -> Result<Page<Account, H>> {
         unimplemented!("This method was not implemented");
     }
-    fn following(&self) -> Result<Account> {
+    fn following(&self, id: &str) -> Result<Page<Account, H>> {
         unimplemented!("This method was not implemented");
     }
-    fn reblogged_by(&self) -> Result<Account> {
+    fn reblogged_by(&self, id: &str) -> Result<Page<Account, H>> {
         unimplemented!("This method was not implemented");
     }
-    fn favourited_by(&self) -> Result<Account> {
+    fn favourited_by(&self, id: &str) -> Result<Page<Account, H>> {
         unimplemented!("This method was not implemented");
     }
     fn unblock_domain(&self, domain: String) -> Result<Empty> {
