@@ -10,6 +10,7 @@ cache:
   - $HOME/.cargo
 env:
   - ELEFREN_FEATURES="--features toml"
+  - ELEFREN_FEATURES="--features json"
   - ELEFREN_FEATURES="--features all"
   - ELEFREN_FEATURES=""
 os:
