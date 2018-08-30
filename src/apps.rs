@@ -15,10 +15,38 @@ pub struct App {
 }
 
 impl App {
+    /// Get an AppBuilder object
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # extern crate elefren;
+    /// use elefren::apps::App;
+    ///
+    /// let mut builder = App::builder();
+    /// ```
     pub fn builder<'a>() -> AppBuilder<'a> {
         AppBuilder::new()
     }
 
+    /// Retrieve the list of scopes that apply to this App
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # extern crate elefren;
+    /// # use elefren::Error;
+    /// use elefren::apps::{App, Scopes};
+    ///
+    /// # fn main() -> Result<(), Error> {
+    /// let mut builder = App::builder();
+    /// builder.client_name("elefren-test");
+    /// let app = builder.build()?;
+    /// let scopes = app.scopes();
+    /// assert_eq!(scopes, Scopes::Read);
+    /// #   Ok(())
+    /// # }
+    /// ```
     pub fn scopes(&self) -> Scopes {
         self.scopes
     }
@@ -45,6 +73,7 @@ pub struct AppBuilder<'a> {
 }
 
 impl<'a> AppBuilder<'a> {
+    /// Creates a new AppBuilder object
     pub fn new() -> Self {
         Default::default()
     }

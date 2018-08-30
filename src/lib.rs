@@ -26,7 +26,7 @@
 //! ```
 
 #![deny(
-    // missing_docs,
+    missing_docs,
     warnings,
     missing_debug_implementations,
     missing_copy_implementations,

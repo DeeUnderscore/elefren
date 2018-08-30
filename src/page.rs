@@ -9,6 +9,7 @@ use url::Url;
 
 use http_send::HttpSend;
 
+/// Represents a single page of API results
 #[derive(Debug, Clone)]
 pub struct Page<'a, T: for<'de> Deserialize<'de>, H: 'a + HttpSend> {
     mastodon: &'a Mastodon<H>,
@@ -22,6 +23,8 @@ macro_rules! pages {
     ($($direction:ident: $fun:ident),*) => {
 
         $(
+            doc_comment!(concat!(
+                    "Method to retrieve the ", stringify!($direction), " page of results"),
             pub fn $fun(&mut self) -> Result<Option<Vec<T>>> {
                 let url = match self.$direction.take() {
                     Some(s) => s,
@@ -37,7 +40,7 @@ macro_rules! pages {
                 self.prev = prev;
 
                 deserialise(response)
-            }
+            });
          )*
     }
 }
@@ -48,7 +51,7 @@ impl<'a, T: for<'de> Deserialize<'de>, H: HttpSend> Page<'a, T, H> {
         prev: prev_page
     }
 
-    pub fn new(mastodon: &'a Mastodon<H>, response: Response) -> Result<Self> {
+    pub(crate) fn new(mastodon: &'a Mastodon<H>, response: Response) -> Result<Self> {
         let (prev, next) = get_links(&response)?;
         Ok(Page {
             initial_items: deserialise(response)?,

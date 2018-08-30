@@ -82,6 +82,7 @@ fn string_or_bool<'de, D: Deserializer<'de>>(val: D) -> ::std::result::Result<bo
     })
 }
 
+/// Data structure used for updating user credentials
 #[derive(Debug)]
 pub struct CredentialsBuilder<'a> {
     display_name: Option<&'a str>,
@@ -91,6 +92,8 @@ pub struct CredentialsBuilder<'a> {
 }
 
 impl<'a> CredentialsBuilder<'a> {
+    /// Turns a `CredentialsForm` into a form suitable for PUTing to the
+    /// endpoint
     pub fn into_form(self) -> Result<Form> {
         let mut form = Form::new();
         macro_rules! add_to_form {

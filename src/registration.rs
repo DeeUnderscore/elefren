@@ -68,21 +68,30 @@ impl<'a, H: HttpSend> Registration<'a, H> {
         }
     }
 
+    /// Sets the name of this app
+    ///
+    /// This is required, and if this isn't set then the AppBuilder::build
+    /// method will fail
     pub fn client_name<I: Into<Cow<'a, str>>>(&mut self, name: I) -> &mut Self {
         self.app_builder.client_name(name.into());
         self
     }
 
+    /// Sets the redirect uris that this app uses
     pub fn redirect_uris<I: Into<Cow<'a, str>>>(&mut self, uris: I) -> &mut Self {
         self.app_builder.redirect_uris(uris);
         self
     }
 
+    /// Sets the scopes that this app requires
+    ///
+    /// The default for an app is Scopes::Read
     pub fn scopes(&mut self, scopes: Scopes) -> &mut Self {
         self.app_builder.scopes(scopes);
         self
     }
 
+    /// Sets the optional "website" to register the app with
     pub fn website<I: Into<Cow<'a, str>>>(&mut self, website: I) -> &mut Self {
         self.app_builder.website(website);
         self
@@ -216,6 +225,8 @@ impl<H: HttpSend> Registered<H> {
     }
 }
 
+/// Represents the state of the auth flow when the app has been registered but
+/// the user is not authenticated
 #[derive(Debug, Clone)]
 pub struct Registered<H: HttpSend> {
     base: String,
