@@ -2,6 +2,7 @@ use std::borrow::Cow;
 
 use reqwest::{Client, RequestBuilder, Response};
 use try_from::TryInto;
+use url::percent_encoding::{utf8_percent_encode, DEFAULT_ENCODE_SET};
 
 use apps::{App, AppBuilder};
 use http_send::{HttpSend, HttpSender};
@@ -190,9 +191,11 @@ impl<H: HttpSend> Registered<H> {
     /// Returns the full url needed for authorisation. This needs to be opened
     /// in a browser.
     pub fn authorize_url(&self) -> Result<String> {
+        let scopes = format!("{}", self.scopes);
+        let scopes: String = utf8_percent_encode(&scopes, DEFAULT_ENCODE_SET).collect();
         let url = format!(
             "{}/oauth/authorize?client_id={}&redirect_uri={}&scope={}&response_type=code",
-            self.base, self.client_id, self.redirect, self.scopes,
+            self.base, self.client_id, self.redirect, scopes,
         );
 
         Ok(url)
