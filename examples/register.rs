@@ -6,6 +6,7 @@ pub use self::elefren::prelude::*;
 
 use std::{error::Error, io};
 
+use self::elefren::helpers::cli;
 #[cfg(feature = "toml")]
 use self::elefren::helpers::toml;
 
@@ -34,12 +35,7 @@ pub fn register() -> Result<Mastodon, Box<Error>> {
         .scopes(Scopes::all())
         .website("https://github.com/pwoolcoc/elefren")
         .build()?;
-    let url = registration.authorize_url()?;
-
-    println!("Click this link to authorize on Mastodon: {}", url);
-    let code = read_line("Paste the returned authorization code: ")?;
-
-    let mastodon = registration.complete(&code)?;
+    let mastodon = cli::authenticate(registration)?;
 
     // Save app data for using on the next run.
     toml::to_file(&*mastodon, "mastodon-data.toml")?;

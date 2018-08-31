@@ -21,3 +21,6 @@ pub mod toml;
 /// features = ["json"]
 /// ```
 pub mod json;
+
+/// Helpers for working with the command line
+pub mod cli;
