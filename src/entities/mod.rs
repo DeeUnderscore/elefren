@@ -33,7 +33,7 @@ pub struct Empty {}
 /// modules:
 pub mod prelude {
     pub use super::{
-        account::{Account, CredentialsBuilder, Source},
+        account::{Account, Source},
         attachment::{Attachment, MediaType},
         card::Card,
         context::Context,

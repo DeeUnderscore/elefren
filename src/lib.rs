@@ -80,7 +80,7 @@ pub use data::Data;
 pub use errors::{ApiError, Error, Result};
 pub use mastodon_client::MastodonClient;
 pub use registration::Registration;
-pub use requests::statuses::StatusesRequest;
+pub use requests::{StatusesRequest, UpdateCredsRequest};
 pub use status_builder::StatusBuilder;
 
 /// Registering your App
@@ -207,7 +207,8 @@ impl<H: HttpSend> MastodonClient<H> for Mastodon<H> {
         (delete) delete_status: "statuses/{}" => Empty,
     }
 
-    fn update_credentials(&self, changes: CredentialsBuilder) -> Result<Account> {
+    fn update_credentials(&self, builder: &mut UpdateCredsRequest) -> Result<Account> {
+        let changes = builder.build()?;
         let url = self.route("/api/v1/accounts/update_credentials");
         let response = self.send(self.client.patch(&url).json(&changes))?;
 

@@ -1,10 +1,9 @@
 //! A module containing everything relating to a account returned from the api.
 
 use chrono::prelude::*;
-use reqwest::multipart::Form;
 use serde::de::{self, Deserialize, Deserializer, Unexpected};
-use std::path::Path;
-use Result;
+use status_builder;
+use std::path::PathBuf;
 
 /// A struct representing an Account.
 #[derive(Debug, Clone, Deserialize)]
@@ -51,7 +50,7 @@ pub struct Account {
 /// An extra object given from `verify_credentials` giving defaults about a user
 #[derive(Debug, Clone, Deserialize)]
 pub struct Source {
-    privacy: ::status_builder::Visibility,
+    privacy: status_builder::Visibility,
     #[serde(deserialize_with = "string_or_bool")]
     sensitive: bool,
     note: String,
@@ -82,130 +81,24 @@ fn string_or_bool<'de, D: Deserializer<'de>>(val: D) -> ::std::result::Result<bo
     })
 }
 
-/// Data structure used for updating user credentials
-#[derive(Debug)]
-pub struct CredentialsBuilder<'a> {
-    display_name: Option<&'a str>,
-    note: Option<&'a str>,
-    avatar: Option<&'a Path>,
-    header: Option<&'a Path>,
+#[derive(Debug, Default, Clone, Copy, Serialize)]
+pub(crate) struct UpdateSource {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub(crate) privacy: Option<status_builder::Visibility>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub(crate) sensitive: Option<bool>,
 }
 
-impl<'a> CredentialsBuilder<'a> {
-    /// Turns a `CredentialsForm` into a form suitable for PUTing to the
-    /// endpoint
-    pub fn into_form(self) -> Result<Form> {
-        let mut form = Form::new();
-        macro_rules! add_to_form {
-            ($key:ident : Text; $($rest:tt)*) => {{
-                if let Some(val) = self.$key {
-                    form = form.text(stringify!($key), val.to_owned());
-                }
-
-                add_to_form!{$($rest)*}
-            }};
-
-            ($key:ident : File; $($rest:tt)*) => {{
-                if let Some(val) = self.$key {
-                    form = form.file(stringify!($key), val)?;
-                }
-
-                add_to_form!{$($rest)*}
-            }};
-
-            () => {}
-        }
-
-        add_to_form! {
-            display_name: Text;
-            note: Text;
-            avatar: File;
-            header: File;
-        }
-
-        Ok(form)
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use tempfile::NamedTempFile;
-
-    #[test]
-    fn test_credentials_builder_to_form() {
-        let avatar = NamedTempFile::new().expect("Couldn't make avatar file");
-        let header = NamedTempFile::new().expect("Couldn't make header file");
-        let tests = [
-            (None, None, None, None),
-            (Some("my-display-name"), None, None, None),
-            (None, Some("my-note"), None, None),
-            (None, None, Some(avatar.path().clone()), None),
-            (None, None, None, Some(header.path().clone())),
-            (Some("my-display-name"), Some("my-note"), None, None),
-            (
-                Some("my-display-name"),
-                None,
-                Some(avatar.path().clone()),
-                None,
-            ),
-            (None, Some("my-note"), Some(avatar.path().clone()), None),
-            (None, Some("my-note"), None, Some(header.path().clone())),
-            (
-                None,
-                None,
-                Some(avatar.path().clone()),
-                Some(header.path().clone()),
-            ),
-            (
-                Some("my-display-name"),
-                None,
-                None,
-                Some(header.path().clone()),
-            ),
-            (
-                Some("my-display-name"),
-                Some("my-note"),
-                Some(avatar.path().clone()),
-                None,
-            ),
-            (
-                Some("my-display-name"),
-                Some("my-note"),
-                None,
-                Some(header.path().clone()),
-            ),
-            (
-                Some("my-display-name"),
-                None,
-                Some(avatar.path().clone()),
-                Some(header.path().clone()),
-            ),
-            (
-                None,
-                Some("my-note"),
-                Some(avatar.path().clone()),
-                Some(header.path().clone()),
-            ),
-            (
-                Some("my-display-name"),
-                Some("my-note"),
-                Some(avatar.path().clone()),
-                Some(header.path().clone()),
-            ),
-        ];
-
-        for test in tests.into_iter() {
-            let (display_name, note, avatar, header) = test;
-            let credentials_builder = CredentialsBuilder {
-                display_name: *display_name,
-                note: *note,
-                avatar: *avatar,
-                header: *header,
-            };
-            let _form = credentials_builder
-                .into_form()
-                .expect("could not create form");
-        }
-    }
+#[derive(Debug, Default, Serialize)]
+pub(crate) struct Credentials {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub(crate) display_name: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub(crate) note: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub(crate) avatar: Option<PathBuf>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub(crate) header: Option<PathBuf>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub(crate) source: Option<UpdateSource>,
 }

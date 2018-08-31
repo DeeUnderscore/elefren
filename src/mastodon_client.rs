@@ -4,7 +4,7 @@ use entities::prelude::*;
 use errors::Result;
 use http_send::{HttpSend, HttpSender};
 use page::Page;
-use requests::statuses::StatusesRequest;
+use requests::{StatusesRequest, UpdateCredsRequest};
 use status_builder::StatusBuilder;
 
 /// Represents the set of methods that a Mastodon Client can do, so that
@@ -172,7 +172,7 @@ pub trait MastodonClient<H: HttpSend = HttpSender> {
         unimplemented!("This method was not implemented");
     }
     /// PATCH /api/v1/accounts/update_credentials
-    fn update_credentials(&self, changes: CredentialsBuilder) -> Result<Account> {
+    fn update_credentials(&self, builder: &mut UpdateCredsRequest) -> Result<Account> {
         unimplemented!("This method was not implemented");
     }
     /// POST /api/v1/statuses
