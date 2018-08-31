@@ -209,7 +209,7 @@ impl<H: HttpSend> MastodonClient<H> for Mastodon<H> {
 
     fn update_credentials(&self, changes: CredentialsBuilder) -> Result<Account> {
         let url = self.route("/api/v1/accounts/update_credentials");
-        let response = self.send(self.client.patch(&url).multipart(changes.into_form()?))?;
+        let response = self.send(self.client.patch(&url).json(&changes))?;
 
         let status = response.status().clone();
 
@@ -381,7 +381,6 @@ impl<H: HttpSend> MastodonBuilder<H> {
         }
     }
 
-    #[allow(dead_code)]
     pub fn client(&mut self, client: Client) -> &mut Self {
         self.client = Some(client);
         self
