@@ -183,6 +183,7 @@ impl UpdateCredsRequest {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use entities::account::{Credentials, UpdateSource};
     use status_builder::Visibility;
 
     #[test]
@@ -269,6 +270,24 @@ mod tests {
             builder,
             UpdateCredsRequest {
                 sensitive: Some(true),
+                ..Default::default()
+            }
+        );
+    }
+
+    #[test]
+    fn test_update_creds_request_build() {
+        let mut builder = UpdateCredsRequest::new();
+        builder.display_name("test").note("a note");
+        let creds = builder.build().expect("Couldn't build Credentials");
+        assert_eq!(
+            creds,
+            Credentials {
+                display_name: Some("test".into()),
+                note: Some("a note".into()),
+                source: Some(UpdateSource {
+                    ..Default::default()
+                }),
                 ..Default::default()
             }
         );
