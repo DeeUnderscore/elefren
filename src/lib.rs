@@ -37,11 +37,13 @@
     unused_import_braces,
     unused_qualifications
 )]
+#![allow(intra_doc_link_resolution_failure)]
 
 #[macro_use]
 extern crate serde_derive;
 #[macro_use]
 extern crate doc_comment;
+extern crate isolang;
 #[macro_use]
 extern crate serde_json;
 extern crate chrono;
@@ -78,6 +80,7 @@ use page::Page;
 
 pub use data::Data;
 pub use errors::{ApiError, Error, Result};
+pub use isolang::Language;
 pub use mastodon_client::MastodonClient;
 pub use registration::Registration;
 pub use requests::{StatusesRequest, UpdateCredsRequest};

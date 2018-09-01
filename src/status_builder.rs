@@ -1,6 +1,22 @@
+use isolang::Language;
 use std::fmt;
 
 /// A builder pattern struct for constructing a status.
+///
+/// # Example
+///
+/// ```
+/// # extern crate elefren;
+/// # use elefren::{Language, StatusBuilder};
+///
+/// let status = StatusBuilder {
+///     status: "a status".to_string(),
+///     sensitive: Some(true),
+///     spoiler_text: Some("a CW".to_string()),
+///     language: Some(Language::Eng),
+///     ..Default::default()
+/// };
+/// ```
 #[derive(Debug, Default, Clone, Serialize, PartialEq)]
 pub struct StatusBuilder {
     /// The text of the status.
@@ -20,6 +36,9 @@ pub struct StatusBuilder {
     /// Visibility of the status, defaults to `Public`.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub visibility: Option<Visibility>,
+    /// Language code of the status
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub language: Option<Language>,
 }
 
 /// The visibility of a status.
@@ -60,6 +79,8 @@ impl Default for Visibility {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use isolang::Language;
+    use serde_json;
 
     #[test]
     fn test_new() {
@@ -71,6 +92,7 @@ mod tests {
             sensitive: None,
             spoiler_text: None,
             visibility: None,
+            language: None,
         };
         assert_eq!(s, expected);
     }
@@ -79,5 +101,44 @@ mod tests {
     fn test_default_visibility() {
         let v: Visibility = Default::default();
         assert_eq!(v, Visibility::Public);
+    }
+
+    #[test]
+    fn test_serialize_visibility() {
+        assert_eq!(
+            serde_json::to_string(&Visibility::Direct).expect("couldn't serialize visibility"),
+            "\"direct\"".to_string()
+        );
+        assert_eq!(
+            serde_json::to_string(&Visibility::Private).expect("couldn't serialize visibility"),
+            "\"private\"".to_string()
+        );
+        assert_eq!(
+            serde_json::to_string(&Visibility::Unlisted).expect("couldn't serialize visibility"),
+            "\"unlisted\"".to_string()
+        );
+        assert_eq!(
+            serde_json::to_string(&Visibility::Public).expect("couldn't serialize visibility"),
+            "\"public\"".to_string()
+        );
+    }
+
+    #[test]
+    fn test_serialize_status() {
+        let status = StatusBuilder::new("a status");
+        assert_eq!(
+            serde_json::to_string(&status).expect("Couldn't serialize status"),
+            "{\"status\":\"a status\"}".to_string()
+        );
+
+        let status = StatusBuilder {
+            status: "a status".into(),
+            language: Some(Language::Eng),
+            ..Default::default()
+        };
+        assert_eq!(
+            serde_json::to_string(&status).expect("Couldn't serialize status"),
+            "{\"status\":\"a status\",\"language\":\"eng\"}"
+        );
     }
 }
