@@ -3,7 +3,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
-use entities::account::{Credentials, UpdateSource};
+use entities::account::{Credentials, MetadataField, UpdateSource};
 use errors::Result;
 use status_builder;
 
@@ -39,6 +39,7 @@ pub struct UpdateCredsRequest {
     note: Option<String>,
     avatar: Option<PathBuf>,
     header: Option<PathBuf>,
+    field_attributes: Vec<MetadataField>,
 
     // UpdateSource fields
     privacy: Option<status_builder::Visibility>,
@@ -166,6 +167,23 @@ impl UpdateCredsRequest {
         self
     }
 
+    /// Add a metadata field
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # extern crate elefren;
+    /// use elefren::UpdateCredsRequest;
+    ///
+    /// let mut builder = UpdateCredsRequest::new();
+    ///
+    /// builder.field_attribute("some key", "some value");
+    /// ```
+    pub fn field_attribute(&mut self, name: &str, value: &str) -> &mut Self {
+        self.field_attributes.push(MetadataField::new(name, value));
+        self
+    }
+
     pub(crate) fn build(&mut self) -> Result<Credentials> {
         Ok(Credentials {
             display_name: self.display_name.clone(),
@@ -176,6 +194,7 @@ impl UpdateCredsRequest {
                 privacy: self.privacy.clone(),
                 sensitive: self.sensitive.clone(),
             }),
+            fields_attributes: self.field_attributes.clone(),
         })
     }
 }
@@ -183,7 +202,7 @@ impl UpdateCredsRequest {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use entities::account::{Credentials, UpdateSource};
+    use entities::account::{Credentials, MetadataField, UpdateSource};
     use status_builder::Visibility;
 
     #[test]
@@ -270,6 +289,19 @@ mod tests {
             builder,
             UpdateCredsRequest {
                 sensitive: Some(true),
+                ..Default::default()
+            }
+        );
+    }
+
+    #[test]
+    fn test_update_creds_request_field_attribute() {
+        let mut builder = UpdateCredsRequest::new();
+        builder.field_attribute("foo", "bar");
+        assert_eq!(
+            builder,
+            UpdateCredsRequest {
+                field_attributes: vec![MetadataField::new("foo", "bar")],
                 ..Default::default()
             }
         );

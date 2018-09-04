@@ -45,6 +45,26 @@ pub struct Account {
     /// If the owner decided to switch accounts, new account is in
     /// this attribute
     pub moved: Option<Box<Account>>,
+    /// List of profile metadata fields
+    pub fields: Option<Vec<MetadataField>>,
+    /// Boolean indicating whether this account is a bot or not
+    pub bot: Option<bool>,
+}
+
+/// A single name: value pair from a user's profile
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
+pub struct MetadataField {
+    name: String,
+    value: String,
+}
+
+impl MetadataField {
+    pub(crate) fn new(name: &str, value: &str) -> MetadataField {
+        MetadataField {
+            name: name.into(),
+            value: value.into(),
+        }
+    }
 }
 
 /// An extra object given from `verify_credentials` giving defaults about a user
@@ -54,6 +74,7 @@ pub struct Source {
     #[serde(deserialize_with = "string_or_bool")]
     sensitive: bool,
     note: String,
+    fields: Vec<MetadataField>,
 }
 
 fn string_or_bool<'de, D: Deserializer<'de>>(val: D) -> ::std::result::Result<bool, D::Error> {
@@ -81,7 +102,7 @@ fn string_or_bool<'de, D: Deserializer<'de>>(val: D) -> ::std::result::Result<bo
     })
 }
 
-#[derive(Debug, Default, Clone, Copy, Serialize, PartialEq)]
+#[derive(Debug, Default, Clone, Serialize, PartialEq)]
 pub(crate) struct UpdateSource {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub(crate) privacy: Option<status_builder::Visibility>,
@@ -101,4 +122,21 @@ pub(crate) struct Credentials {
     pub(crate) header: Option<PathBuf>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub(crate) source: Option<UpdateSource>,
+    #[serde(serialize_with = "fields_attributes_ser::ser")]
+    pub(crate) fields_attributes: Vec<MetadataField>,
+}
+
+mod fields_attributes_ser {
+    use super::*;
+    use serde::ser::{SerializeMap, Serializer};
+    pub(crate) fn ser<S>(attrs: &Vec<MetadataField>, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let mut map = serializer.serialize_map(Some(attrs.len()))?;
+        for (i, field) in attrs.iter().enumerate() {
+            map.serialize_entry(&i, &field)?;
+        }
+        map.end()
+    }
 }
