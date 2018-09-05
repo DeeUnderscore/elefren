@@ -297,7 +297,8 @@ impl<H: HttpSend> MastodonClient<H> for Mastodon<H> {
     /// #   token: "".into(),
     /// # };
     /// let client = Mastodon::from(data);
-    /// let request = StatusesRequest::default().only_media();
+    /// let mut request = StatusesRequest::new();
+    /// request.only_media();
     /// let statuses = client.statuses("user-id", request)?;
     /// # Ok(())
     /// # }
