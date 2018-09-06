@@ -91,8 +91,8 @@ pub trait MastodonClient<H: HttpSend = HttpSender> {
     fn reject_follow_request(&self, id: &str) -> Result<Empty> {
         unimplemented!("This method was not implemented");
     }
-    /// POST /api/v1/search
-    fn search(&self, q: String, resolve: bool) -> Result<SearchResult> {
+    /// GET /api/v1/search
+    fn search<'a>(&self, q: &'a str, resolve: bool) -> Result<SearchResult> {
         unimplemented!("This method was not implemented");
     }
     /// POST /api/v1/follows

@@ -94,6 +94,43 @@ macro_rules! route {
         route!{$($rest)*}
     };
 
+    ((get ($($param:ident: $typ:ty,)*)) $name:ident: $url:expr => $ret:ty, $($rest:tt)*) => {
+        doc_comment! {
+            concat!(
+                "Equivalent to `/api/v1/",
+                $url,
+                "`\n# Errors\nIf `access_token` is not set."
+            ),
+            fn $name<'a>(&self, $($param: $typ,)*) -> Result<$ret> {
+                use serde_urlencoded;
+
+                #[derive(Serialize)]
+                struct Data<'a> {
+                    $(
+                        $param: $typ,
+                    )*
+                    #[serde(skip)]
+                    _marker: ::std::marker::PhantomData<&'a ()>,
+                }
+
+                let qs_data = Data {
+                    $(
+                            $param: $param,
+                    )*
+                    _marker: ::std::marker::PhantomData,
+                };
+
+                let qs = serde_urlencoded::to_string(&qs_data)?;
+
+                let url = format!(concat!("/api/v1/", $url, "?{}"), &qs);
+
+                Ok(self.get(self.route(&url))?)
+            }
+        }
+
+        route!{$($rest)*}
+    };
+
     (($method:ident ($($param:ident: $typ:ty,)*)) $name:ident: $url:expr => $ret:ty, $($rest:tt)*) => {
         doc_comment! {
             concat!(

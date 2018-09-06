@@ -2,6 +2,7 @@ use std::{error, fmt, io::Error as IoError};
 
 use reqwest::{Error as HttpError, StatusCode};
 use serde_json::Error as SerdeError;
+use serde_urlencoded::ser::Error as UrlEncodedError;
 #[cfg(feature = "toml")]
 use tomlcrate::de::Error as TomlDeError;
 #[cfg(feature = "toml")]
@@ -20,6 +21,8 @@ pub enum Error {
     /// Error deserialising to json. Typically represents a breaking change in
     /// the Mastodon API
     Serde(SerdeError),
+    /// Error serializing to url-encoded string
+    UrlEncoded(UrlEncodedError),
     /// Error encountered in the HTTP backend while requesting a route.
     Http(HttpError),
     /// Wrapper around the `std::io::Error` struct.
@@ -64,6 +67,7 @@ impl error::Error for Error {
                 .or(e.error.as_ref().map(|i| &**i))
                 .unwrap_or("Unknown API Error"),
             Error::Serde(ref e) => e.description(),
+            Error::UrlEncoded(ref e) => e.description(),
             Error::Http(ref e) => e.description(),
             Error::Io(ref e) => e.description(),
             Error::Url(ref e) => e.description(),
@@ -110,6 +114,7 @@ from! {
     HttpError, Http,
     IoError, Io,
     SerdeError, Serde,
+    UrlEncodedError, UrlEncoded,
     UrlError, Url,
     ApiError, Api,
     #[cfg(feature = "toml")] TomlSerError, TomlSer,
@@ -121,6 +126,7 @@ mod tests {
     use super::*;
     use reqwest;
     use serde_json;
+    use serde_urlencoded;
     use std::io;
 
     macro_rules! assert_is {
@@ -151,6 +157,13 @@ mod tests {
         let err: SerdeError = serde_json::from_str::<()>("not valid json").unwrap_err();
         let err: Error = Error::from(err);
         assert_is!(err, Error::Serde(..));
+    }
+
+    #[test]
+    fn from_url_encoded_error() {
+        let err: UrlEncodedError = serde_urlencoded::ser::Error::Custom("error".into());
+        let err: Error = Error::from(err);
+        assert_is!(err, Error::UrlEncoded(..));
     }
 
     #[test]

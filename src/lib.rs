@@ -49,6 +49,7 @@ extern crate serde_json;
 extern crate chrono;
 extern crate reqwest;
 extern crate serde;
+extern crate serde_urlencoded;
 extern crate try_from;
 extern crate url;
 
@@ -185,7 +186,7 @@ impl<H: HttpSend> MastodonClient<H> for Mastodon<H> {
         (post (domain: String,)) block_domain: "domain_blocks" => Empty,
         (post (id: &str,)) authorize_follow_request: "accounts/follow_requests/authorize" => Empty,
         (post (id: &str,)) reject_follow_request: "accounts/follow_requests/reject" => Empty,
-        (post (q: String, resolve: bool,)) search: "search" => SearchResult,
+        (get  (q: &'a str, resolve: bool,)) search: "search" => SearchResult,
         (post (uri: Cow<'static, str>,)) follows: "follows" => Account,
         (post multipart (file: Cow<'static, str>,)) media: "media" => Attachment,
         (post) clear_notifications: "notifications/clear" => Empty,
