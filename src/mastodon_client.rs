@@ -116,7 +116,7 @@ pub trait MastodonClient<H: HttpSend = HttpSender> {
         unimplemented!("This method was not implemented");
     }
     /// POST /api/v1/accounts/:id/unfollow
-    fn unfollow(&self, id: u64) -> Result<Account> {
+    fn unfollow(&self, id: u64) -> Result<Relationship> {
         unimplemented!("This method was not implemented");
     }
     /// GET /api/v1/accounts/:id/block

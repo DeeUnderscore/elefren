@@ -20,4 +20,6 @@ pub struct Relationship {
     pub muting_notifications: bool,
     /// Whether the user is currently blocking the accounts's domain
     pub domain_blocking: bool,
+    /// Whether the user's reblogs will show up in the home timeline
+    pub showing_reblogs: bool,
 }

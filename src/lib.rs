@@ -194,7 +194,7 @@ impl<H: HttpSend> MastodonClient<H> for Mastodon<H> {
     route_id! {
         (get) get_account: "accounts/{}" => Account,
         (post) follow: "accounts/{}/follow" => Account,
-        (post) unfollow: "accounts/{}/unfollow" => Account,
+        (post) unfollow: "accounts/{}/unfollow" => Relationship,
         (get) block: "accounts/{}/block" => Account,
         (get) unblock: "accounts/{}/unblock" => Account,
         (get) mute: "accounts/{}/mute" => Account,
