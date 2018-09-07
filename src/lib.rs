@@ -169,6 +169,7 @@ impl<H: HttpSend> MastodonClient<H> for Mastodon<H> {
         (get) mutes: "mutes" => Account,
         (get) notifications: "notifications" => Notification,
         (get) reports: "reports" => Report,
+        (get (q: &'a str, #[serde(skip_serializing_if = "Option::is_none")] limit: Option<u64>, following: bool,)) search_accounts: "accounts/search" => Account,
     }
 
     paged_routes_with_id! {
@@ -335,28 +336,6 @@ impl<H: HttpSend> MastodonClient<H> for Mastodon<H> {
             }
             url.pop();
         }
-
-        let response = self.send(&mut self.client.get(&url))?;
-
-        Page::new(self, response)
-    }
-
-    /// Search for accounts by their name.
-    /// Will lookup an account remotely if the search term is in the
-    /// `username@domain` format and not yet in the database.
-    fn search_accounts(
-        &self,
-        query: &str,
-        limit: Option<u64>,
-        following: bool,
-    ) -> Result<Page<Account, H>> {
-        let url = format!(
-            "{}/api/v1/accounts/search?q={}&limit={}&following={}",
-            self.base,
-            query,
-            limit.unwrap_or(40),
-            following
-        );
 
         let response = self.send(&mut self.client.get(&url))?;
 

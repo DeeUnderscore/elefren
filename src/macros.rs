@@ -54,6 +54,50 @@ macro_rules! paged_routes {
         paged_routes!{$($rest)*}
     };
 
+    ((get ($($(#[$m:meta])* $param:ident: $typ:ty,)*)) $name:ident: $url:expr => $ret:ty, $($rest:tt)*) => {
+        doc_comment! {
+            concat!(
+                "Equivalent to `/api/v1/",
+                $url,
+                "`\n# Errors\nIf `access_token` is not set."
+            ),
+            fn $name<'a>(&self, $($param: $typ,)*) -> Result<Page<$ret, H>> {
+                use serde_urlencoded;
+
+                #[derive(Serialize)]
+                struct Data<'a> {
+                    $(
+                        $(
+                        #[$m]
+                        )*
+                        $param: $typ,
+                    )*
+                    #[serde(skip)]
+                    _marker: ::std::marker::PhantomData<&'a ()>,
+                }
+
+                let qs_data = Data {
+                    $(
+                            $param: $param,
+                    )*
+                    _marker: ::std::marker::PhantomData,
+                };
+
+                let qs = serde_urlencoded::to_string(&qs_data)?;
+
+                let url = format!(concat!("/api/v1/", $url, "?{}"), &qs);
+
+                let response = self.send(
+                        &mut self.client.get(&url)
+                )?;
+
+                Page::new(self, response)
+            }
+        }
+
+        paged_routes!{$($rest)*}
+    };
+
     () => {}
 }
 
