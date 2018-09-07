@@ -193,6 +193,10 @@ impl<H: HttpSend> MastodonClient<H> for Mastodon<H> {
         (post) clear_notifications: "notifications/clear" => Empty,
     }
 
+    route_v2! {
+        (get (q: &'a str, resolve: bool,)) search_v2: "search" => SearchResultV2,
+    }
+
     route_id! {
         (get) get_account: "accounts/{}" => Account,
         (post) follow: "accounts/{}/follow" => Account,

@@ -43,7 +43,7 @@ pub mod prelude {
         notification::Notification,
         relationship::Relationship,
         report::Report,
-        search_result::SearchResult,
+        search_result::{SearchResult, SearchResultV2},
         status::{Application, Emoji, Status},
         Empty,
     };

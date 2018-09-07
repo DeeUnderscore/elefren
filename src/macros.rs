@@ -19,7 +19,7 @@ macro_rules! paged_routes {
     (($method:ident) $name:ident: $url:expr => $ret:ty, $($rest:tt)*) => {
         doc_comment! {
             concat!(
-            "Equivalent to `/api/v1/",
+            "Equivalent to `", stringify!($method), " /api/v1/",
             $url,
             "`\n# Errors\nIf `access_token` is not set.",
             "\n",
@@ -57,7 +57,7 @@ macro_rules! paged_routes {
     ((get ($($(#[$m:meta])* $param:ident: $typ:ty,)*)) $name:ident: $url:expr => $ret:ty, $($rest:tt)*) => {
         doc_comment! {
             concat!(
-                "Equivalent to `/api/v1/",
+                "Equivalent to `get /api/v1/",
                 $url,
                 "`\n# Errors\nIf `access_token` is not set."
             ),
@@ -101,12 +101,53 @@ macro_rules! paged_routes {
     () => {}
 }
 
+macro_rules! route_v2 {
+    ((get ($($param:ident: $typ:ty,)*)) $name:ident: $url:expr => $ret:ty, $($rest:tt)*) => {
+        doc_comment! {
+            concat!(
+                "Equivalent to `get /api/v2/",
+                $url,
+                "`\n# Errors\nIf `access_token` is not set."
+            ),
+            fn $name<'a>(&self, $($param: $typ,)*) -> Result<$ret> {
+                use serde_urlencoded;
+
+                #[derive(Serialize)]
+                struct Data<'a> {
+                    $(
+                        $param: $typ,
+                    )*
+                    #[serde(skip)]
+                    _marker: ::std::marker::PhantomData<&'a ()>,
+                }
+
+                let qs_data = Data {
+                    $(
+                            $param: $param,
+                    )*
+                    _marker: ::std::marker::PhantomData,
+                };
+
+                let qs = serde_urlencoded::to_string(&qs_data)?;
+
+                let url = format!(concat!("/api/v2/", $url, "?{}"), &qs);
+
+                Ok(self.get(self.route(&url))?)
+            }
+        }
+
+        route_v2!{$($rest)*}
+    };
+
+    () => {}
+}
+
 macro_rules! route {
 
     ((post multipart ($($param:ident: $typ:ty,)*)) $name:ident: $url:expr => $ret:ty, $($rest:tt)*) => {
         doc_comment! {
             concat!(
-                "Equivalent to `/api/v1/",
+                "Equivalent to `post /api/v1/",
                 $url,
                 "`\n# Errors\nIf `access_token` is not set."),
             fn $name(&self, $($param: $typ,)*) -> Result<$ret> {
@@ -141,7 +182,7 @@ macro_rules! route {
     ((get ($($param:ident: $typ:ty,)*)) $name:ident: $url:expr => $ret:ty, $($rest:tt)*) => {
         doc_comment! {
             concat!(
-                "Equivalent to `/api/v1/",
+                "Equivalent to `get /api/v1/",
                 $url,
                 "`\n# Errors\nIf `access_token` is not set."
             ),
@@ -178,7 +219,7 @@ macro_rules! route {
     (($method:ident ($($param:ident: $typ:ty,)*)) $name:ident: $url:expr => $ret:ty, $($rest:tt)*) => {
         doc_comment! {
             concat!(
-                "Equivalent to `/api/v1/",
+                "Equivalent to `", stringify!($method), " /api/v1/",
                 $url,
                 "`\n# Errors\nIf `access_token` is not set.",
             ),
@@ -213,7 +254,7 @@ macro_rules! route {
     (($method:ident) $name:ident: $url:expr => $ret:ty, $($rest:tt)*) => {
         doc_comment! {
             concat!(
-                "Equivalent to `/api/v1/",
+                "Equivalent to `", stringify!($method), " /api/v1/",
                 $url,
                 "`\n# Errors\nIf `access_token` is not set.",
                 "\n",
@@ -251,7 +292,7 @@ macro_rules! route_id {
         $(
             doc_comment! {
                 concat!(
-                    "Equivalent to `/api/v1/",
+                    "Equivalent to `", stringify!($method), " /api/v1/",
                     $url,
                     "`\n# Errors\nIf `access_token` is not set.",
                     "\n",
@@ -285,7 +326,7 @@ macro_rules! paged_routes_with_id {
     (($method:ident) $name:ident: $url:expr => $ret:ty, $($rest:tt)*) => {
         doc_comment! {
             concat!(
-                "Equivalent to `/api/v1/",
+                "Equivalent to `", stringify!($method), " /api/v1/",
                 $url,
                 "`\n# Errors\nIf `access_token` is not set.",
                 "\n",
