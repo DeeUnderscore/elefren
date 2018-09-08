@@ -15,6 +15,8 @@ pub mod list;
 pub mod mention;
 /// Data structures for ser/de of notification-related resources
 pub mod notification;
+/// Data structures for ser/de of push-subscription-related resources
+pub mod push;
 /// Data structures for ser/de of relationship-related resources
 pub mod relationship;
 /// Data structures for ser/de of report-related resources
@@ -41,6 +43,7 @@ pub mod prelude {
         list::List,
         mention::Mention,
         notification::Notification,
+        push::Subscription,
         relationship::Relationship,
         report::Report,
         search_result::{SearchResult, SearchResultV2},

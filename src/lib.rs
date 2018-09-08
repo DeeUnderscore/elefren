@@ -9,18 +9,21 @@
 //! #    try().unwrap();
 //! # }
 //! # fn try() -> elefren::Result<()> {
-//! use elefren::prelude::*;
+//! use elefren::{helpers::cli, prelude::*};
 //!
 //! let registration = Registration::new("https://mastodon.social")
 //!     .client_name("elefren_test")
 //!     .build()?;
-//! let url = registration.authorize_url()?;
-//! // Here you now need to open the url in the browser
-//! // And handle a the redirect url coming back with the code.
-//! let code = String::from("RETURNED_FROM_BROWSER");
-//! let mastodon = registration.complete(&code)?;
+//! let mastodon = cli::authenticate(registration)?;
 //!
-//! println!("{:?}", mastodon.get_home_timeline()?.initial_items);
+//! println!(
+//!     "{:?}",
+//!     mastodon
+//!         .get_home_timeline()?
+//!         .items_iter()
+//!         .take(100)
+//!         .collect::<Vec<_>>()
+//! );
 //! # Ok(())
 //! # }
 //! ```
@@ -50,6 +53,7 @@ extern crate chrono;
 extern crate reqwest;
 extern crate serde;
 extern crate serde_urlencoded;
+extern crate tap_reader;
 extern crate try_from;
 extern crate url;
 
@@ -74,6 +78,7 @@ use reqwest::{
     RequestBuilder,
     Response,
 };
+use tap_reader::Tap;
 
 use entities::prelude::*;
 use http_send::{HttpSend, HttpSender};
@@ -84,7 +89,7 @@ pub use errors::{ApiError, Error, Result};
 pub use isolang::Language;
 pub use mastodon_client::MastodonClient;
 pub use registration::Registration;
-pub use requests::{StatusesRequest, UpdateCredsRequest};
+pub use requests::{AddPushRequest, StatusesRequest, UpdateCredsRequest, UpdatePushRequest};
 pub use status_builder::StatusBuilder;
 
 /// Registering your App
@@ -191,6 +196,8 @@ impl<H: HttpSend> MastodonClient<H> for Mastodon<H> {
         (post (uri: Cow<'static, str>,)) follows: "follows" => Account,
         (post multipart (file: Cow<'static, str>,)) media: "media" => Attachment,
         (post) clear_notifications: "notifications/clear" => Empty,
+        (get) get_push_subscription: "push/subscription" => Subscription,
+        (delete) delete_push_subscription: "push/subscription" => Empty,
     }
 
     route_v2! {
@@ -345,6 +352,31 @@ impl<H: HttpSend> MastodonClient<H> for Mastodon<H> {
 
         Page::new(self, response)
     }
+
+    /// Add a push notifications subscription
+    fn add_push_subscription(&self, request: &AddPushRequest) -> Result<Subscription> {
+        let request = request.build()?;
+        let response = self.send(
+            self.client
+                .post(&self.route("/api/v1/push/subscription"))
+                .json(&request),
+        )?;
+
+        deserialise(response)
+    }
+
+    /// Update the `data` portion of the push subscription associated with this
+    /// access token
+    fn update_push_data(&self, request: &UpdatePushRequest) -> Result<Subscription> {
+        let request = request.build();
+        let response = self.send(
+            self.client
+                .put(&self.route("/api/v1/push/subscription"))
+                .json(&request),
+        )?;
+
+        deserialise(response)
+    }
 }
 
 impl<H: HttpSend> ops::Deref for Mastodon<H> {
@@ -401,18 +433,15 @@ impl<H: HttpSend> MastodonBuilder<H> {
 
 // Convert the HTTP response body from JSON. Pass up deserialization errors
 // transparently.
-fn deserialise<T: for<'de> serde::Deserialize<'de>>(mut response: Response) -> Result<T> {
-    use std::io::Read;
+fn deserialise<T: for<'de> serde::Deserialize<'de>>(response: Response) -> Result<T> {
+    let mut reader = Tap::new(response);
 
-    let mut vec = Vec::new();
-    response.read_to_end(&mut vec)?;
-
-    match serde_json::from_slice(&vec) {
+    match serde_json::from_reader(&mut reader) {
         Ok(t) => Ok(t),
         // If deserializing into the desired type fails try again to
         // see if this is an error response.
         Err(e) => {
-            if let Ok(error) = serde_json::from_slice(&vec) {
+            if let Ok(error) = serde_json::from_slice(&reader.bytes) {
                 return Err(Error::Api(error));
             }
             Err(e.into())
