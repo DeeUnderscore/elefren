@@ -30,6 +30,8 @@ pub struct Status {
     pub created_at: DateTime<Utc>,
     /// An array of Emoji
     pub emojis: Vec<Emoji>,
+    /// The numbef or replies to this status.
+    pub replies_count: u64,
     /// The number of reblogs for the status.
     pub reblogs_count: u64,
     /// The number of favourites for the status.
