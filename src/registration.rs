@@ -179,7 +179,7 @@ impl<'a, H: HttpSend> Registration<'a, H> {
 
     fn send_app(&self, app: &App) -> Result<OAuth> {
         let url = format!("{}/api/v1/apps", self.base);
-        Ok(self.send(self.client.post(&url).form(&app))?.json()?)
+        Ok(self.send(self.client.post(&url).json(&app))?.json()?)
     }
 }
 
