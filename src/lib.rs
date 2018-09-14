@@ -206,6 +206,7 @@ impl<H: HttpSend> MastodonClient<H> for Mastodon<H> {
         (get) get_push_subscription: "push/subscription" => Subscription,
         (delete) delete_push_subscription: "push/subscription" => Empty,
         (get) get_filters: "filters" => Vec<Filter>,
+        (get) get_follow_suggestions: "suggestions" => Vec<Account>,
     }
 
     route_v2! {
@@ -231,6 +232,7 @@ impl<H: HttpSend> MastodonClient<H> for Mastodon<H> {
         (delete) delete_status: "statuses/{}" => Empty,
         (get) get_filter: "filters/{}" => Filter,
         (delete) delete_filter: "filters/{}" => Empty,
+        (delete) delete_from_suggestions: "suggestions/{}" => Empty,
     }
 
     fn add_filter(&self, request: &mut AddFilterRequest) -> Result<Filter> {

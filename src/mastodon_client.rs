@@ -253,4 +253,12 @@ pub trait MastodonClient<H: HttpSend = HttpSender> {
     fn delete_filter(&self, id: u64) -> Result<Empty> {
         unimplemented!("This method was not implemented");
     }
+    /// GET /api/v1/suggestions
+    fn get_follow_suggestions(&self) -> Result<Vec<Account>> {
+        unimplemented!("This method was not implemented");
+    }
+    /// DELETE /api/v1/suggestions/:account_id
+    fn delete_from_suggestions(&self, id: u64) -> Result<Empty> {
+        unimplemented!("This method was not implemented");
+    }
 }
