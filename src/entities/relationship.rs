@@ -22,4 +22,10 @@ pub struct Relationship {
     pub domain_blocking: bool,
     /// Whether the user's reblogs will show up in the home timeline
     pub showing_reblogs: bool,
+    /// Whether the user is currently endorsing the account
+    ///
+    /// This field is not techincally nullable with mastodon >= 2.5.0, but
+    /// making it `Option<bool>` here means we shouldn't get deser errors when
+    /// making calls to pleroma or mastodon<2.5.0 instances
+    pub endorsed: bool,
 }

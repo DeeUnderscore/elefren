@@ -261,4 +261,16 @@ pub trait MastodonClient<H: HttpSend = HttpSender> {
     fn delete_from_suggestions(&self, id: u64) -> Result<Empty> {
         unimplemented!("This method was not implemented");
     }
+    /// GET /api/v1/endorsements
+    fn get_endorsements(&self) -> Result<Page<Account, H>> {
+        unimplemented!("This method was not implemented");
+    }
+    /// POST /api/v1/accounts/:id/pin
+    fn endorse_user(&self, id: u64) -> Result<Relationship> {
+        unimplemented!("This method was not implemented");
+    }
+    /// POST /api/v1/accounts/:id/unpin
+    fn unendorse_user(&self, id: u64) -> Result<Relationship> {
+        unimplemented!("This method was not implemented");
+    }
 }

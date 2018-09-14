@@ -181,6 +181,7 @@ impl<H: HttpSend> MastodonClient<H> for Mastodon<H> {
         (get) notifications: "notifications" => Notification,
         (get) reports: "reports" => Report,
         (get (q: &'a str, #[serde(skip_serializing_if = "Option::is_none")] limit: Option<u64>, following: bool,)) search_accounts: "accounts/search" => Account,
+        (get) get_endorsements: "endorsements" => Account,
     }
 
     paged_routes_with_id! {
@@ -233,6 +234,8 @@ impl<H: HttpSend> MastodonClient<H> for Mastodon<H> {
         (get) get_filter: "filters/{}" => Filter,
         (delete) delete_filter: "filters/{}" => Empty,
         (delete) delete_from_suggestions: "suggestions/{}" => Empty,
+        (post) endorse_user: "accounts/{}/pin" => Relationship,
+        (post) unendorse_user: "accounts/{}/unpin" => Relationship,
     }
 
     fn add_filter(&self, request: &mut AddFilterRequest) -> Result<Filter> {
