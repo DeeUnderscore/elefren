@@ -4,7 +4,13 @@ use entities::prelude::*;
 use errors::Result;
 use http_send::{HttpSend, HttpSender};
 use page::Page;
-use requests::{AddPushRequest, StatusesRequest, UpdateCredsRequest, UpdatePushRequest};
+use requests::{
+    AddFilterRequest,
+    AddPushRequest,
+    StatusesRequest,
+    UpdateCredsRequest,
+    UpdatePushRequest,
+};
 use status_builder::StatusBuilder;
 
 /// Represents the set of methods that a Mastodon Client can do, so that
@@ -225,6 +231,26 @@ pub trait MastodonClient<H: HttpSend = HttpSender> {
     }
     /// DELETE /api/v1/push/subscription
     fn delete_push_subscription(&self) -> Result<Empty> {
+        unimplemented!("This method was not implemented");
+    }
+    /// GET /api/v1/filters
+    fn get_filters(&self) -> Result<Vec<Filter>> {
+        unimplemented!("This method was not implemented");
+    }
+    /// POST /api/v1/filters
+    fn add_filter(&self, request: &mut AddFilterRequest) -> Result<Filter> {
+        unimplemented!("This method was not implemented");
+    }
+    /// GET /api/v1/filters/:id
+    fn get_filter(&self, id: u64) -> Result<Filter> {
+        unimplemented!("This method was not implemented");
+    }
+    /// PUT /api/v1/filters/:id
+    fn update_filter(&self, id: u64, request: &mut AddFilterRequest) -> Result<Filter> {
+        unimplemented!("This method was not implemented");
+    }
+    /// DELETE /api/v1/filters/:id
+    fn delete_filter(&self, id: u64) -> Result<Empty> {
         unimplemented!("This method was not implemented");
     }
 }

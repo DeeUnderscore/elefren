@@ -6,6 +6,8 @@ pub mod attachment;
 pub mod card;
 /// Data structures for ser/de of contetx-related resources
 pub mod context;
+/// Data structures for ser/de of filter-related resources
+pub mod filter;
 /// Data structures for ser/de of instance-related resources
 pub mod instance;
 pub(crate) mod itemsiter;
@@ -39,6 +41,7 @@ pub mod prelude {
         attachment::{Attachment, MediaType},
         card::Card,
         context::Context,
+        filter::{Filter, FilterContext},
         instance::*,
         list::List,
         mention::Mention,

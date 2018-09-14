@@ -89,7 +89,13 @@ pub use errors::{ApiError, Error, Result};
 pub use isolang::Language;
 pub use mastodon_client::MastodonClient;
 pub use registration::Registration;
-pub use requests::{AddPushRequest, StatusesRequest, UpdateCredsRequest, UpdatePushRequest};
+pub use requests::{
+    AddFilterRequest,
+    AddPushRequest,
+    StatusesRequest,
+    UpdateCredsRequest,
+    UpdatePushRequest,
+};
 pub use status_builder::StatusBuilder;
 
 /// Registering your App
@@ -193,11 +199,13 @@ impl<H: HttpSend> MastodonClient<H> for Mastodon<H> {
         (post (id: &str,)) authorize_follow_request: "accounts/follow_requests/authorize" => Empty,
         (post (id: &str,)) reject_follow_request: "accounts/follow_requests/reject" => Empty,
         (get  (q: &'a str, resolve: bool,)) search: "search" => SearchResult,
+        (get  (local: bool,)) get_public_timeline: "timelines/public" => Vec<Status>,
         (post (uri: Cow<'static, str>,)) follows: "follows" => Account,
         (post multipart (file: Cow<'static, str>,)) media: "media" => Attachment,
         (post) clear_notifications: "notifications/clear" => Empty,
         (get) get_push_subscription: "push/subscription" => Subscription,
         (delete) delete_push_subscription: "push/subscription" => Empty,
+        (get) get_filters: "filters" => Vec<Filter>,
     }
 
     route_v2! {
@@ -221,6 +229,39 @@ impl<H: HttpSend> MastodonClient<H> for Mastodon<H> {
         (post) favourite: "statuses/{}/favourite" => Status,
         (post) unfavourite: "statuses/{}/unfavourite" => Status,
         (delete) delete_status: "statuses/{}" => Empty,
+        (get) get_filter: "filters/{}" => Filter,
+        (delete) delete_filter: "filters/{}" => Empty,
+    }
+
+    fn add_filter(&self, request: &mut AddFilterRequest) -> Result<Filter> {
+        let url = self.route("/api/v1/filters");
+        let response = self.send(self.client.post(&url).json(&request))?;
+
+        let status = response.status();
+
+        if status.is_client_error() {
+            return Err(Error::Client(status.clone()));
+        } else if status.is_server_error() {
+            return Err(Error::Server(status.clone()));
+        }
+
+        deserialise(response)
+    }
+
+    /// PUT /api/v1/filters/:id
+    fn update_filter(&self, id: u64, request: &mut AddFilterRequest) -> Result<Filter> {
+        let url = self.route(&format!("/api/v1/filters/{}", id));
+        let response = self.send(self.client.put(&url).json(&request))?;
+
+        let status = response.status();
+
+        if status.is_client_error() {
+            return Err(Error::Client(status.clone()));
+        } else if status.is_server_error() {
+            return Err(Error::Server(status.clone()));
+        }
+
+        deserialise(response)
     }
 
     fn update_credentials(&self, builder: &mut UpdateCredsRequest) -> Result<Account> {
@@ -228,12 +269,12 @@ impl<H: HttpSend> MastodonClient<H> for Mastodon<H> {
         let url = self.route("/api/v1/accounts/update_credentials");
         let response = self.send(self.client.patch(&url).json(&changes))?;
 
-        let status = response.status().clone();
+        let status = response.status();
 
         if status.is_client_error() {
-            return Err(Error::Client(status));
+            return Err(Error::Client(status.clone()));
         } else if status.is_server_error() {
-            return Err(Error::Server(status));
+            return Err(Error::Server(status.clone()));
         }
 
         deserialise(response)
@@ -250,26 +291,15 @@ impl<H: HttpSend> MastodonClient<H> for Mastodon<H> {
         deserialise(response)
     }
 
-    /// Get the federated timeline for the instance.
-    fn get_public_timeline(&self, local: bool) -> Result<Vec<Status>> {
-        let mut url = self.route("/api/v1/timelines/public");
-
-        if local {
-            url += "?local=1";
-        }
-
-        self.get(url)
-    }
-
     /// Get timeline filtered by a hashtag(eg. `#coffee`) either locally or
     /// federated.
     fn get_tagged_timeline(&self, hashtag: String, local: bool) -> Result<Vec<Status>> {
-        let mut url = self.route("/api/v1/timelines/tag/");
-        url += &hashtag;
-
-        if local {
-            url += "?local=1";
-        }
+        let base = "/api/v1/timelines/tag/";
+        let url = if local {
+            self.route(&format!("{}{}?local=1", base, hashtag))
+        } else {
+            self.route(&format!("{}{}", base, hashtag))
+        };
 
         self.get(url)
     }
