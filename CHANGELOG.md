@@ -1,3 +1,32 @@
+<a name="v0.15.0"></a>
+## v0.15.0 (2018-09-15)
+
+This release adds support for all new API endpoints introduced in Mastodon 2.4.* and 2.5.0
+
+#### Features
+
+* **scopes:** Implement granular OAuth scopes ([e284894d](e284894d), closes [#44](44))
+* **helpers:** cli::authenticate ([034bd4e6](034bd4e6))
+* **client:** Implement client.update\_credentials ([a57c7e2f](a57c7e2f))
+* **status:** Add language code to status builer ([989d9a59](989d9a59), closes [#55](55))
+* **client:** Implement profile metadata update ([0ad1e374](0ad1e374), closes [#54](54))
+* **search:** Implement `GET /api/v2/search` ([28192e11](28192e11))
+* **client:** Implement push notifciations endpoints ([690b029d](690b029d), closes [#53](53))
+* **client:** Add `replies_count` property to `Status` entities ([7d752a9f](7d752a9f), closes [#73](73))
+* **client:** Implement Keyword filtering API ([7d164cb8](7d164cb8), closes [#71](71))
+* **client:** Implement the Follow Suggestions API ([7de1bdc0](7de1bdc0), closes [#72](72))
+* **client:** Implement the Endorsements API ([1f0ba184](1f0ba184), closes [#74](74))
+
+#### Breaking Changes
+
+* **scopes:** Implement granular OAuth scopes ([e284894d](e284894d)) (closes [#44](44))
+
+#### Bug Fixes
+
+* **client:** change return value of client.unfollow to `Relationship` ([20a9c69a](20a9c69a))
+* **client:** change `POST /search` to `GET /search` ([34e2c008](34e2c008))
+
+
 <a name="v0.14.0"></a>
 ## v0.14.0 (2018-08-29)
 
