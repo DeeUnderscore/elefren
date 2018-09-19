@@ -74,7 +74,7 @@ pub struct Source {
     #[serde(deserialize_with = "string_or_bool")]
     sensitive: bool,
     note: String,
-    fields: Vec<MetadataField>,
+    fields: Option<Vec<MetadataField>>,
 }
 
 fn string_or_bool<'de, D: Deserializer<'de>>(val: D) -> ::std::result::Result<bool, D::Error> {
