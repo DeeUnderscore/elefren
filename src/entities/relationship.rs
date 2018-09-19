@@ -27,5 +27,5 @@ pub struct Relationship {
     /// This field is not techincally nullable with mastodon >= 2.5.0, but
     /// making it `Option<bool>` here means we shouldn't get deser errors when
     /// making calls to pleroma or mastodon<2.5.0 instances
-    pub endorsed: bool,
+    pub endorsed: Option<bool>,
 }
