@@ -33,7 +33,7 @@ script:
     if [[ "$TRAVIS_RUST_VERSION" == "nightly"* ]]; then cargo fmt --all -- --check; fi
   - cargo test $ELEFREN_FEATURES
 after_success: |
-  if [[ "$TRAVIS_RUST_VERSION" == stable ]] 2> /dev/null && [ -z "$ELEFREN_FEATURES" ] 2>/dev/null && [[ "$TRAVIS_OS_NAME" == "linux" ]]; then
+  if [[ "$TRAVIS_RUST_VERSION" == "nightly"* ]] 2> /dev/null && [ -z "$ELEFREN_FEATURES" ] 2>/dev/null && [[ "$TRAVIS_OS_NAME" == "linux" ]]; then
     cargo tarpaulin --ciserver travis-ci --coveralls $TRAVIS_JOB_ID --features toml
   fi
 matrix:
