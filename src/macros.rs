@@ -308,12 +308,12 @@ macro_rules! route_id {
                     "#     token: \"tsaohueaheis\".into(),\n",
                     "# };\n",
                     "let client = Mastodon::from(data);\n",
-                    "client.", stringify!($name), "(42);\n",
+                    "client.", stringify!($name), "(\"42\");\n",
                     "#   Ok(())\n",
                     "# }\n",
                     "```"
                 ),
-                fn $name(&self, id: u64) -> Result<$ret> {
+                fn $name(&self, id: &str) -> Result<$ret> {
                     self.$method(self.route(&format!(concat!("/api/v1/", $url), id)))
                 }
             }

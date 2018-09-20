@@ -118,67 +118,67 @@ pub trait MastodonClient<H: HttpSend = HttpSender> {
         unimplemented!("This method was not implemented");
     }
     /// GET /api/v1/accounts/:id
-    fn get_account(&self, id: u64) -> Result<Account> {
+    fn get_account(&self, id: &str) -> Result<Account> {
         unimplemented!("This method was not implemented");
     }
     /// POST /api/v1/accounts/:id/follow
-    fn follow(&self, id: u64) -> Result<Account> {
+    fn follow(&self, id: &str) -> Result<Account> {
         unimplemented!("This method was not implemented");
     }
     /// POST /api/v1/accounts/:id/unfollow
-    fn unfollow(&self, id: u64) -> Result<Relationship> {
+    fn unfollow(&self, id: &str) -> Result<Relationship> {
         unimplemented!("This method was not implemented");
     }
     /// GET /api/v1/accounts/:id/block
-    fn block(&self, id: u64) -> Result<Account> {
+    fn block(&self, id: &str) -> Result<Account> {
         unimplemented!("This method was not implemented");
     }
     /// GET /api/v1/accounts/:id/unblock
-    fn unblock(&self, id: u64) -> Result<Account> {
+    fn unblock(&self, id: &str) -> Result<Account> {
         unimplemented!("This method was not implemented");
     }
     /// GET /api/v1/accounts/:id/mute
-    fn mute(&self, id: u64) -> Result<Account> {
+    fn mute(&self, id: &str) -> Result<Account> {
         unimplemented!("This method was not implemented");
     }
     /// GET /api/v1/accounts/:id/unmute
-    fn unmute(&self, id: u64) -> Result<Account> {
+    fn unmute(&self, id: &str) -> Result<Account> {
         unimplemented!("This method was not implemented");
     }
     /// GET /api/v1/notifications/:id
-    fn get_notification(&self, id: u64) -> Result<Notification> {
+    fn get_notification(&self, id: &str) -> Result<Notification> {
         unimplemented!("This method was not implemented");
     }
     /// GET /api/v1/statuses/:id
-    fn get_status(&self, id: u64) -> Result<Status> {
+    fn get_status(&self, id: &str) -> Result<Status> {
         unimplemented!("This method was not implemented");
     }
     /// GET /api/v1/statuses/:id/context
-    fn get_context(&self, id: u64) -> Result<Context> {
+    fn get_context(&self, id: &str) -> Result<Context> {
         unimplemented!("This method was not implemented");
     }
     /// GET /api/v1/statuses/:id/card
-    fn get_card(&self, id: u64) -> Result<Card> {
+    fn get_card(&self, id: &str) -> Result<Card> {
         unimplemented!("This method was not implemented");
     }
     /// POST /api/v1/statuses/:id/reblog
-    fn reblog(&self, id: u64) -> Result<Status> {
+    fn reblog(&self, id: &str) -> Result<Status> {
         unimplemented!("This method was not implemented");
     }
     /// POST /api/v1/statuses/:id/unreblog
-    fn unreblog(&self, id: u64) -> Result<Status> {
+    fn unreblog(&self, id: &str) -> Result<Status> {
         unimplemented!("This method was not implemented");
     }
     /// POST /api/v1/statuses/:id/favourite
-    fn favourite(&self, id: u64) -> Result<Status> {
+    fn favourite(&self, id: &str) -> Result<Status> {
         unimplemented!("This method was not implemented");
     }
     /// POST /api/v1/statuses/:id/unfavourite
-    fn unfavourite(&self, id: u64) -> Result<Status> {
+    fn unfavourite(&self, id: &str) -> Result<Status> {
         unimplemented!("This method was not implemented");
     }
     /// DELETE /api/v1/statuses/:id
-    fn delete_status(&self, id: u64) -> Result<Empty> {
+    fn delete_status(&self, id: &str) -> Result<Empty> {
         unimplemented!("This method was not implemented");
     }
     /// PATCH /api/v1/accounts/update_credentials
@@ -242,15 +242,15 @@ pub trait MastodonClient<H: HttpSend = HttpSender> {
         unimplemented!("This method was not implemented");
     }
     /// GET /api/v1/filters/:id
-    fn get_filter(&self, id: u64) -> Result<Filter> {
+    fn get_filter(&self, id: &str) -> Result<Filter> {
         unimplemented!("This method was not implemented");
     }
     /// PUT /api/v1/filters/:id
-    fn update_filter(&self, id: u64, request: &mut AddFilterRequest) -> Result<Filter> {
+    fn update_filter(&self, id: &str, request: &mut AddFilterRequest) -> Result<Filter> {
         unimplemented!("This method was not implemented");
     }
     /// DELETE /api/v1/filters/:id
-    fn delete_filter(&self, id: u64) -> Result<Empty> {
+    fn delete_filter(&self, id: &str) -> Result<Empty> {
         unimplemented!("This method was not implemented");
     }
     /// GET /api/v1/suggestions
@@ -258,7 +258,7 @@ pub trait MastodonClient<H: HttpSend = HttpSender> {
         unimplemented!("This method was not implemented");
     }
     /// DELETE /api/v1/suggestions/:account_id
-    fn delete_from_suggestions(&self, id: u64) -> Result<Empty> {
+    fn delete_from_suggestions(&self, id: &str) -> Result<Empty> {
         unimplemented!("This method was not implemented");
     }
     /// GET /api/v1/endorsements
@@ -266,11 +266,11 @@ pub trait MastodonClient<H: HttpSend = HttpSender> {
         unimplemented!("This method was not implemented");
     }
     /// POST /api/v1/accounts/:id/pin
-    fn endorse_user(&self, id: u64) -> Result<Relationship> {
+    fn endorse_user(&self, id: &str) -> Result<Relationship> {
         unimplemented!("This method was not implemented");
     }
     /// POST /api/v1/accounts/:id/unpin
-    fn unendorse_user(&self, id: u64) -> Result<Relationship> {
+    fn unendorse_user(&self, id: &str) -> Result<Relationship> {
         unimplemented!("This method was not implemented");
     }
 }

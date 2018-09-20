@@ -249,7 +249,7 @@ impl<H: HttpSend> MastodonClient<H> for Mastodon<H> {
     }
 
     /// PUT /api/v1/filters/:id
-    fn update_filter(&self, id: u64, request: &mut AddFilterRequest) -> Result<Filter> {
+    fn update_filter(&self, id: &str, request: &mut AddFilterRequest) -> Result<Filter> {
         let url = self.route(&format!("/api/v1/filters/{}", id));
         let response = self.send(self.client.put(&url).json(&request))?;
 
