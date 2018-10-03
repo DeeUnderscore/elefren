@@ -1,3 +1,19 @@
+<a name="v0.16.0"></a>
+## v0.16.0 (2018-10-03)
+
+This release upgrades reqwest, our http client dependency, from 0.8.8 ->
+0.9.0
+
+<a name="v0.15.2"></a>
+## v0.15.2
+
+This is a bugfix release
+
+<a name="v0.15.1"></a>
+## v0.15.1
+
+This is a bugfix release
+
 <a name="v0.15.0"></a>
 ## v0.15.0 (2018-09-15)
 
