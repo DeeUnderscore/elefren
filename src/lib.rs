@@ -407,6 +407,18 @@ impl<H: HttpSend> MastodonClient<H> for Mastodon<H> {
 
         deserialise(response)
     }
+
+    /// Get all accounts that follow the authenticated user
+    fn follows_me(&self) -> Result<Page<Account, H>> {
+        let me = self.verify_credentials()?;
+        Ok(self.followers(&me.id)?)
+    }
+
+    /// Get all accounts that the authenticated user follows
+    fn followed_by_me(&self) -> Result<Page<Account, H>> {
+        let me = self.verify_credentials()?;
+        Ok(self.following(&me.id)?)
+    }
 }
 
 impl<H: HttpSend> ops::Deref for Mastodon<H> {

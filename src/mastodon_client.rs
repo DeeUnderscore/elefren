@@ -273,4 +273,47 @@ pub trait MastodonClient<H: HttpSend = HttpSender> {
     fn unendorse_user(&self, id: &str) -> Result<Relationship> {
         unimplemented!("This method was not implemented");
     }
+    /// Shortcut for: `let me = client.verify_credentials(); client.followers()`
+    ///
+    /// ```no_run
+    /// # extern crate elefren;
+    /// # use std::error::Error;
+    /// # use elefren::prelude::*;
+    /// # fn main() -> Result<(), Box<Error>> {
+    /// # let data = Data {
+    /// #   base: "".into(),
+    /// #   client_id: "".into(),
+    /// #   client_secret: "".into(),
+    /// #   redirect: "".into(),
+    /// #   token: "".into(),
+    /// # };
+    /// # let client = Mastodon::from(data);
+    /// let follows_me = client.follows_me()?;
+    /// #   Ok(())
+    /// # }
+    fn follows_me(&self) -> Result<Page<Account, H>> {
+        unimplemented!("This method was not implemented");
+    }
+    /// Shortcut for
+    /// `let me = client.verify_credentials(); client.following(&me.id)`
+    ///
+    /// ```no_run
+    /// # extern crate elefren;
+    /// # use std::error::Error;
+    /// # use elefren::prelude::*;
+    /// # fn main() -> Result<(), Box<Error>> {
+    /// # let data = Data {
+    /// #   base: "".into(),
+    /// #   client_id: "".into(),
+    /// #   client_secret: "".into(),
+    /// #   redirect: "".into(),
+    /// #   token: "".into(),
+    /// # };
+    /// # let client = Mastodon::from(data);
+    /// let follows_me = client.followed_by_me()?;
+    /// #   Ok(())
+    /// # }
+    fn followed_by_me(&self) -> Result<Page<Account, H>> {
+        unimplemented!("This method was not implemented");
+    }
 }
