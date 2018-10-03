@@ -1,6 +1,7 @@
 use std::{error, fmt, io::Error as IoError};
 
-use reqwest::{Error as HttpError, StatusCode};
+use hyper_old_types::Error as HeaderParseError;
+use reqwest::{header::ToStrError as HeaderStrError, Error as HttpError, StatusCode};
 use serde_json::Error as SerdeError;
 use serde_urlencoded::ser::Error as UrlEncodedError;
 #[cfg(feature = "toml")]
@@ -49,6 +50,10 @@ pub enum Error {
     #[cfg(feature = "toml")]
     /// Error deserializing from toml
     TomlDe(TomlDeError),
+    /// Error converting an http header to a string
+    HeaderStrError(HeaderStrError),
+    /// Error parsing the http Link header
+    HeaderParseError(HeaderParseError),
 }
 
 impl fmt::Display for Error {
@@ -83,6 +88,8 @@ impl error::Error for Error {
             Error::TomlSer(ref e) => e.description(),
             #[cfg(feature = "toml")]
             Error::TomlDe(ref e) => e.description(),
+            Error::HeaderStrError(ref e) => e.description(),
+            Error::HeaderParseError(ref e) => e.description(),
         }
     }
 }
@@ -119,6 +126,8 @@ from! {
     ApiError, Api,
     #[cfg(feature = "toml")] TomlSerError, TomlSer,
     #[cfg(feature = "toml")] TomlDeError, TomlDe,
+    HeaderStrError, HeaderStrError,
+    HeaderParseError, HeaderParseError,
 }
 
 #[cfg(test)]
