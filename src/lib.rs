@@ -450,7 +450,7 @@ impl<H: HttpSend> MastodonBuilder<H> {
                 data,
             }
         } else {
-            return Err(Error::DataMissing);
+            return Err(Error::MissingField("missing field 'data'"));
         })
     }
 }

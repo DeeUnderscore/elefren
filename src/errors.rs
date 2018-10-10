@@ -40,9 +40,7 @@ pub enum Error {
     Client(StatusCode),
     /// Generic server error.
     Server(StatusCode),
-    /// MastodonBuilder error.
-    DataMissing,
-    /// AppBuilder error
+    /// MastodonBuilder & AppBuilder error
     MissingField(&'static str),
     #[cfg(feature = "toml")]
     /// Error serializing to toml
@@ -54,6 +52,8 @@ pub enum Error {
     HeaderStrError(HeaderStrError),
     /// Error parsing the http Link header
     HeaderParseError(HeaderParseError),
+    /// Other errors
+    Other(String),
 }
 
 impl fmt::Display for Error {
@@ -82,7 +82,6 @@ impl error::Error for Error {
             Error::ClientIdRequired => "ClientIdRequired",
             Error::ClientSecretRequired => "ClientSecretRequired",
             Error::AccessTokenRequired => "AccessTokenRequired",
-            Error::DataMissing => "DataMissing",
             Error::MissingField(_) => "MissingField",
             #[cfg(feature = "toml")]
             Error::TomlSer(ref e) => e.description(),
@@ -90,6 +89,7 @@ impl error::Error for Error {
             Error::TomlDe(ref e) => e.description(),
             Error::HeaderStrError(ref e) => e.description(),
             Error::HeaderParseError(ref e) => e.description(),
+            Error::Other(ref e) => e,
         }
     }
 }
@@ -128,6 +128,17 @@ from! {
     #[cfg(feature = "toml")] TomlDeError, TomlDe,
     HeaderStrError, HeaderStrError,
     HeaderParseError, HeaderParseError,
+    String, Other,
+}
+
+#[macro_export]
+macro_rules! format_err {
+    ( $( $arg:tt )* ) => {
+        {
+            use elefren::Error;
+            Error::Other(format!($($arg)*))
+        }
+    }
 }
 
 #[cfg(test)]
