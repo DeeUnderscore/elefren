@@ -1,14 +1,13 @@
 #![cfg_attr(not(feature = "toml"), allow(dead_code))]
 #![cfg_attr(not(feature = "toml"), allow(unused_imports))]
-extern crate elefren;
 
-pub use self::elefren::prelude::*;
+pub use elefren::prelude::*;
 
 use std::{error::Error, io};
 
-use self::elefren::helpers::cli;
+use elefren::helpers::cli;
 #[cfg(feature = "toml")]
-use self::elefren::helpers::toml;
+use elefren::helpers::toml;
 
 #[allow(dead_code)]
 #[cfg(feature = "toml")]

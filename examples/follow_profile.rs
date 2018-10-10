@@ -1,5 +1,8 @@
 #![cfg_attr(not(feature = "toml"), allow(dead_code))]
 #![cfg_attr(not(feature = "toml"), allow(unused_imports))]
+#[macro_use]
+extern crate pretty_env_logger;
+extern crate elefren;
 mod register;
 
 use register::MastodonClient;
@@ -12,7 +15,6 @@ fn main() -> Result<(), Box<error::Error>> {
     let new_follow = mastodon.follow(input.trim())?;
 
     println!("{:#?}", new_follow);
-
     Ok(())
 }
 
