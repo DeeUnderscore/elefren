@@ -12,6 +12,7 @@ use requests::{
     UpdatePushRequest,
 };
 use status_builder::StatusBuilder;
+use media_builder::MediaBuilder;
 
 /// Represents the set of methods that a Mastodon Client can do, so that
 /// implementations might be swapped out for testing
@@ -316,4 +317,9 @@ pub trait MastodonClient<H: HttpSend = HttpSender> {
     fn followed_by_me(&self) -> Result<Page<Account, H>> {
         unimplemented!("This method was not implemented");
     }
+
+    /// Helper for POST /api/v1/media
+     fn new_media(&self, media: MediaBuilder)-> Result<Attachment> {
+         unimplemented!("This method was not implemented");
+     }
 }

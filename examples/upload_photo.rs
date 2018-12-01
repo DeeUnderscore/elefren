@@ -5,6 +5,7 @@ extern crate pretty_env_logger;
 extern crate elefren;
 mod register;
 
+use elefren::MediaBuilder;
 use register::MastodonClient;
 use std::error;
 
@@ -12,8 +13,16 @@ use std::error;
 fn main() -> Result<(), Box<error::Error>> {
     let mastodon = register::get_mastodon_data()?;
     let input = register::read_line("Enter the path to the photo you'd like to post: ")?;
+    let description = register::read_line("Enter the image description: ")?;
 
-    mastodon.media(input.into())?;
+    let builder = MediaBuilder {
+        description: Some(description),
+        ..MediaBuilder::from_file(input.into())
+    };
+
+    let attachment = mastodon.new_media(builder)?;
+
+    println!("{:#?}", attachment);
 
     Ok(())
 }

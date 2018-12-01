@@ -73,7 +73,7 @@ extern crate indoc;
 
 use std::{borrow::Cow, ops};
 
-use reqwest::{Client, RequestBuilder, Response};
+use reqwest::{multipart, Client, RequestBuilder, Response};
 use tap_reader::Tap;
 
 use entities::prelude::*;
@@ -84,6 +84,7 @@ pub use data::Data;
 pub use errors::{ApiError, Error, Result};
 pub use isolang::Language;
 pub use mastodon_client::MastodonClient;
+pub use media_builder::MediaBuilder;
 pub use registration::Registration;
 pub use requests::{
     AddFilterRequest,
@@ -107,6 +108,8 @@ pub mod helpers;
 /// Contains trait for converting `reqwest::Request`s to `reqwest::Response`s
 pub mod http_send;
 mod mastodon_client;
+/// Constructing a media attachment for upload
+pub mod media_builder;
 /// Handling multiple pages of entities.
 pub mod page;
 /// Registering your app.
@@ -117,6 +120,7 @@ pub mod requests;
 pub mod scopes;
 /// Constructing a status
 pub mod status_builder;
+
 #[macro_use]
 mod macros;
 /// Automatically import the things you need
@@ -418,6 +422,84 @@ impl<H: HttpSend> MastodonClient<H> for Mastodon<H> {
     fn followed_by_me(&self) -> Result<Page<Account, H>> {
         let me = self.verify_credentials()?;
         Ok(self.following(&me.id)?)
+    }
+
+    /// Upload some media to the server for possible attaching to a new status
+    ///
+    /// Upon successful upload of a media attachment, the server will assign it an id. To actually
+    /// use the attachment in a new status, you can use the `media_ids` field of
+    /// [`StatusBuilder`](status_builder/struct.StatusBuilder.html)
+    ///
+    /// There are two ways of providing the data to be attached: by reading a file, or by using a
+    /// reader.
+    ///
+    /// ## Files
+    /// If the `MediaBuilder` was supplied with a file path, the filename and mimetype will be
+    /// automatically populated from that file; their values set in the `MediaBuilder` will be
+    /// ignored. For example:
+    ///
+    /// ```no_run
+    /// let client = Mastodon::from(data);
+    /// let builder = MediaBuilder::from_file("/tmp/my_image.png".into());
+    ///
+    /// let attachment = client.add_media(builder);
+    /// ```
+    ///
+    /// ## Readers
+    /// The `MediaBuilder` can also be supplied with a reader. This is useful for uploading data
+    /// already in memory, for example from a `Vec<u8>` containing some image data. For example:
+    ///
+    /// ```no_run
+    /// use std::io::Cursor;
+    /// let client = Mastodon::from(data);
+    ///
+    /// let mut image_data: Vec<u8> = Vec::new();
+    /// populate_image_data(&mut image_data);
+    ///
+    /// let builder = MediaBuilder::from_reader(Cursor::new(image_data));
+    /// let attachment = client.add_media(builder):
+    ///
+    /// ```
+    ///
+    /// ## Errors
+    /// This function may return an `Error::Http` before sending anything over the network if the
+    /// `MediaBuilder` was supplied with a reader and a `mimetype` string which cannot be pasrsed. 
+    fn new_media(&self, media: MediaBuilder) -> Result<Attachment> {
+        use media_builder::MediaBuilderData;
+
+        let mut form = multipart::Form::new();
+        form = match media.data {
+            MediaBuilderData::Reader(reader) => {
+                let mut part = multipart::Part::reader(reader);
+
+                if let Some(filename) = media.filename {
+                    part = part.file_name(filename);
+                }
+
+                if let Some(mimetype) = media.mimetype {
+                    part = part.mime_str(&mimetype)?;
+                }
+
+                form.part("file", part)
+            }
+            MediaBuilderData::File(file) => form.file("file", file.as_ref())?,
+        };
+
+        if let Some(description) = media.description {
+            form = form.text("description", description);
+        }
+
+        if let Some((x, y)) = media.focus {
+            form = form.text("focus", format!("{},{}", x, y));
+        }
+
+        let response = self.send(
+            self.client
+                .post(&self.route("/api/v1/media"))
+                .multipart(form),
+        )?;
+
+        deserialise(response)
     }
 }
 
