@@ -65,10 +65,7 @@ extern crate toml as tomlcrate;
 extern crate tempfile;
 
 #[cfg(test)]
-#[cfg_attr(
-    all(test, any(feature = "toml", feature = "json")),
-    macro_use
-)]
+#[cfg_attr(all(test, any(feature = "toml", feature = "json")), macro_use)]
 extern crate indoc;
 
 use std::{borrow::Cow, ops};
