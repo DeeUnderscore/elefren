@@ -183,6 +183,53 @@ impl<'a, H: HttpSend> Registration<'a, H> {
     }
 }
 
+impl Registered<HttpSender> {
+    /// Skip having to retrieve the client id and secret from the server by
+    /// creating a `Registered` struct directly
+    ///
+    /// # Example
+    ///
+    /// ```no_run
+    /// # extern crate elefren;
+    /// # fn main() -> elefren::Result<()> {
+    /// use elefren::{prelude::*, registration::Registered};
+    ///
+    /// let registration = Registered::from_parts(
+    ///     "https://example.com",
+    ///     "the-client-id",
+    ///     "the-client-secret",
+    ///     "https://example.com/redirect",
+    ///     Scopes::read_all(),
+    /// );
+    /// let url = registration.authorize_url()?;
+    /// // Here you now need to open the url in the browser
+    /// // And handle a the redirect url coming back with the code.
+    /// let code = String::from("RETURNED_FROM_BROWSER");
+    /// let mastodon = registration.complete(&code)?;
+    ///
+    /// println!("{:?}", mastodon.get_home_timeline()?.initial_items);
+    /// #   Ok(())
+    /// # }
+    /// ```
+    pub fn from_parts(
+        base: &str,
+        client_id: &str,
+        client_secret: &str,
+        redirect: &str,
+        scopes: Scopes,
+    ) -> Registered<HttpSender> {
+        Registered {
+            base: base.to_string(),
+            client: Client::new(),
+            client_id: client_id.to_string(),
+            client_secret: client_secret.to_string(),
+            redirect: redirect.to_string(),
+            scopes,
+            http_sender: HttpSender,
+        }
+    }
+}
+
 impl<H: HttpSend> Registered<H> {
     fn send(&self, req: RequestBuilder) -> Result<Response> {
         Ok(self.http_sender.send(&self.client, req)?)
