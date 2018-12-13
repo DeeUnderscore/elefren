@@ -235,6 +235,38 @@ impl<H: HttpSend> Registered<H> {
         Ok(self.http_sender.send(&self.client, req)?)
     }
 
+    /// Returns the parts of the `Registered` struct that can be used to
+    /// recreate another `Registered` struct
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # extern crate elefren;
+    /// use elefren::{prelude::*, registration::Registered};
+    /// # fn main() -> Result<(), Box<std::error::Error>> {
+    ///
+    /// let registered = Registered::from_parts(
+    ///     "https://example.social",
+    ///     "some-client-id",
+    ///     "some-client-secret",
+    ///     "https://example.social/redirect",
+    ///     Scopes::all(),
+    /// );
+    ///
+    /// let (base, client_id, client_secret, redirect, scopes) = registered.into_parts();
+    /// #   Ok(())
+    /// # }
+    /// ```
+    pub fn into_parts(self) -> (String, String, String, String, Scopes) {
+        (
+            self.base,
+            self.client_id,
+            self.client_secret,
+            self.redirect,
+            self.scopes,
+        )
+    }
+
     /// Returns the full url needed for authorisation. This needs to be opened
     /// in a browser.
     pub fn authorize_url(&self) -> Result<String> {
