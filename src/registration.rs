@@ -282,7 +282,7 @@ impl<H: HttpSend> Registered<H> {
 
     /// Create an access token from the client id, client secret, and code
     /// provided by the authorisation url.
-    pub fn complete(self, code: &str) -> Result<Mastodon<H>> {
+    pub fn complete(&self, code: &str) -> Result<Mastodon<H>> {
         let url = format!(
             "{}/oauth/token?client_id={}&client_secret={}&code={}&grant_type=authorization_code&redirect_uri={}",
             self.base,
@@ -295,15 +295,15 @@ impl<H: HttpSend> Registered<H> {
         let token: AccessToken = self.send(self.client.post(&url))?.json()?;
 
         let data = Data {
-            base: self.base.into(),
-            client_id: self.client_id.into(),
-            client_secret: self.client_secret.into(),
-            redirect: self.redirect.into(),
+            base: self.base.clone().into(),
+            client_id: self.client_id.clone().into(),
+            client_secret: self.client_secret.clone().into(),
+            redirect: self.redirect.clone().into(),
             token: token.access_token.into(),
         };
 
-        let mut builder = MastodonBuilder::new(self.http_sender);
-        builder.client(self.client).data(data);
+        let mut builder = MastodonBuilder::new(self.http_sender.clone());
+        builder.client(self.client.clone()).data(data);
         Ok(builder.build()?)
     }
 }
