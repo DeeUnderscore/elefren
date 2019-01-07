@@ -1,3 +1,18 @@
+<a name="v0.17.0"></a>
+## v0.17.0 (2018-12-12)
+
+#### Bug Fixes
+
+* Fixes `follow` to return a `Relationship` [6f63fef](6f63fef0b2414099c55e36107aab785f689d19b6)
+
+#### Features
+
+* Add `follows_me` and `followed_by_me` shortcut methods [4dd4042](4dd40422b3de11aaadcfc600317c0df3556b38f5)
+
+#### Breaking Changes
+
+* Change `u64` ids to `&str` [9a08058](9a080583f0577d3f77eaf7be55758835c56ea61e)
+
 <a name="v0.16.0"></a>
 ## v0.16.0 (2018-10-03)
 
