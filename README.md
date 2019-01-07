@@ -32,6 +32,13 @@ extern crate elefren;
 
 ## Example
 
+In your `Cargo.toml`, make sure you enable the `toml` feature:
+
+```toml
+[dependencies]
+elefren = { version = "0.18", features = ["toml"] }
+```
+
 ```rust,no_run
 extern crate elefren;
 
