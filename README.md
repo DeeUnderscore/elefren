@@ -66,6 +66,7 @@ fn register() -> Result<Mastodon, Box<Error>> {
 
     Ok(mastodon)
 }
+```
 
 ## Relationship to [Mammut](https://github.com/Aaronepower/mammut)
 
