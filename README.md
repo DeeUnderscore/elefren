@@ -19,7 +19,7 @@ To add `elefren` to your project, add the following to the
 `[dependencies]` section of your `Cargo.toml`
 
 ```toml
-elefren = "0.17"
+elefren = "0.18"
 ```
 
 ## Usage
