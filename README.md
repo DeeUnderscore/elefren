@@ -40,6 +40,7 @@ elefren = { version = "0.18", features = ["toml"] }
 ```
 
 ```rust,no_run
+// src/main.rs
 extern crate elefren;
 
 use std::error::Error;
