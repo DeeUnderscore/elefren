@@ -66,3 +66,35 @@ fn register() -> Result<Mastodon, Box<Error>> {
 
     Ok(mastodon)
 }
+
+## Relationship to [Mammut](https://github.com/Aaronepower/mammut)
+
+This library was forked from Mammut around elefren commit
+6c37ecb1e1ec3aa888711c1fad1a76f3bdf826b3.  I started this fork as a
+place to experiment with some of the changes I wanted to make to Mammut,
+and ended up diverging enough that I didn't really want to spend the time
+trying to get everything merged back.
+
+Some of the major differences between this and mammut are:
+
+* Compatibility with newer mastodon versions. Elefren supports new API
+  calls introduced in Mastodon 2.4 and 2.5, and 2.6 support is being
+  worked on.
+* Compatibility with other implementations of the Mastodon API. One
+  design goal of elefren is to be compatible with as many
+  implementations of the Mastodon API as possible. Currently, this means
+  the GlitchSoc fork of Mastodon, and Pleroma. I do not guarantee that
+  support is 100% there, but if you find any inconsistencies, it is a
+  bug and I hope you can take the time to open an issue here
+* Multiple bug fixes
+
+I have a couple big features on the horizon, the first being a
+comprehensive test suite that I'm currently working on, which should
+help us test for inconsistencies and issues between the different
+versions of the Mastodon API that elefren aims to support. After that, I
+will be trying to get support for the Mastodon Streaming API merged in,
+though that might need to wait until rust's async story is a little more
+stable.
+
+For a complete list of changes, see the
+[Changelog](https://github.com/pwoolcoc/elefren/blob/master/CHANGELOG.md).
