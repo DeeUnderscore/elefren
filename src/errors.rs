@@ -132,6 +132,7 @@ from! {
 }
 
 #[macro_export]
+/// Used to easily create errors from strings
 macro_rules! format_err {
     ( $( $arg:tt )* ) => {
         {
