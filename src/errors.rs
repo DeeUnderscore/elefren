@@ -1,5 +1,7 @@
 use std::{error, fmt, io::Error as IoError};
 
+#[cfg(feature = "env")]
+use envy::Error as EnvyError;
 use hyper_old_types::Error as HeaderParseError;
 use reqwest::{header::ToStrError as HeaderStrError, Error as HttpError, StatusCode};
 use serde_json::Error as SerdeError;
@@ -52,6 +54,9 @@ pub enum Error {
     HeaderStrError(HeaderStrError),
     /// Error parsing the http Link header
     HeaderParseError(HeaderParseError),
+    #[cfg(feature = "env")]
+    /// Error deserializing from the environment
+    Envy(EnvyError),
     /// Other errors
     Other(String),
 }
@@ -89,6 +94,7 @@ impl error::Error for Error {
             Error::TomlDe(ref e) => e.description(),
             Error::HeaderStrError(ref e) => e.description(),
             Error::HeaderParseError(ref e) => e.description(),
+            Error::Envy(ref e) => e.description(),
             Error::Other(ref e) => e,
         }
     }
@@ -128,6 +134,7 @@ from! {
     #[cfg(feature = "toml")] TomlDeError, TomlDe,
     HeaderStrError, HeaderStrError,
     HeaderParseError, HeaderParseError,
+    EnvyError, Envy,
     String, Other,
 }
 

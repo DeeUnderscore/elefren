@@ -58,6 +58,9 @@ extern crate tap_reader;
 extern crate try_from;
 extern crate url;
 
+#[cfg(feature = "env")]
+extern crate envy;
+
 #[cfg(feature = "toml")]
 extern crate toml as tomlcrate;
 
