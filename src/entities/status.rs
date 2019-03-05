@@ -5,7 +5,7 @@ use chrono::prelude::*;
 use status_builder::Visibility;
 
 /// A status from the instance.
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Debug, Clone, Deserialize, PartialEq)]
 pub struct Status {
     /// The ID of the status.
     pub id: String,
@@ -62,7 +62,7 @@ pub struct Status {
 }
 
 /// A mention of another user.
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Debug, Clone, Deserialize, PartialEq)]
 pub struct Mention {
     /// URL of user's profile (can be remote).
     pub url: String,
@@ -75,7 +75,7 @@ pub struct Mention {
 }
 
 /// Struct representing an emoji within text.
-#[derive(Clone, Debug, Deserialize)]
+#[derive(Clone, Debug, Deserialize, PartialEq)]
 pub struct Emoji {
     /// The shortcode of the emoji
     pub shortcode: String,
@@ -86,7 +86,7 @@ pub struct Emoji {
 }
 
 /// Hashtags in the status.
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Debug, Clone, Deserialize, PartialEq)]
 pub struct Tag {
     /// The hashtag, not including the preceding `#`.
     pub name: String,
@@ -95,7 +95,7 @@ pub struct Tag {
 }
 
 /// Application details.
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Debug, Clone, Deserialize, PartialEq)]
 pub struct Application {
     /// Name of the application.
     pub name: String,

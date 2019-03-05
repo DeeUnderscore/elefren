@@ -6,7 +6,7 @@ use status_builder;
 use std::path::PathBuf;
 
 /// A struct representing an Account.
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Debug, Clone, Deserialize, PartialEq)]
 pub struct Account {
     /// Equals `username` for local users, includes `@domain` for remote ones.
     pub acct: String,
@@ -68,7 +68,7 @@ impl MetadataField {
 }
 
 /// An extra object given from `verify_credentials` giving defaults about a user
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Debug, Clone, Deserialize, PartialEq)]
 pub struct Source {
     privacy: status_builder::Visibility,
     #[serde(deserialize_with = "string_or_bool")]
@@ -78,7 +78,7 @@ pub struct Source {
 }
 
 fn string_or_bool<'de, D: Deserializer<'de>>(val: D) -> ::std::result::Result<bool, D::Error> {
-    #[derive(Clone, Debug, Deserialize)]
+    #[derive(Clone, Debug, Deserialize, PartialEq)]
     #[serde(untagged)]
     pub enum BoolOrString {
         Bool(bool),
