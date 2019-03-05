@@ -94,6 +94,7 @@ impl error::Error for Error {
             Error::TomlDe(ref e) => e.description(),
             Error::HeaderStrError(ref e) => e.description(),
             Error::HeaderParseError(ref e) => e.description(),
+            #[cfg(feature = "env")]
             Error::Envy(ref e) => e.description(),
             Error::Other(ref e) => e,
         }
@@ -134,7 +135,7 @@ from! {
     #[cfg(feature = "toml")] TomlDeError, TomlDe,
     HeaderStrError, HeaderStrError,
     HeaderParseError, HeaderParseError,
-    EnvyError, Envy,
+    #[cfg(feature = "env")] EnvyError, Envy,
     String, Other,
 }
 
