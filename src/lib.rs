@@ -500,13 +500,13 @@ impl<R: BufRead> Iterator for EventReader<R> {
         let mut tmp = String::new();
         loop {
             if let Ok(..) = self.0.read_line(&mut tmp) {
-                let line = dbg!(tmp.trim().to_string());
+                let line = tmp.trim().to_string();
                 tmp.clear();
-                if dbg!(line.starts_with(":")) {
+                if line.starts_with(":") {
                     continue;
                 }
-                if dbg!(line.is_empty() && !lines.is_empty()) {
-                    if let Ok(event) = dbg!(self.make_event(&lines)) {
+                if line.is_empty() && !lines.is_empty() {
+                    if let Ok(event) = self.make_event(&lines) {
                         lines.clear();
                         return Some(event);
                     } else {
