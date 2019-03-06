@@ -21,9 +21,9 @@ use std::fmt;
 pub struct StatusBuilder {
     /// The text of the status.
     pub status: String,
-    /// Ids of accounts being replied to.
+    /// Id of status being replied to.
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub in_reply_to_id: Option<u64>,
+    pub in_reply_to_id: Option<String>,
     /// Ids of media attachments being attached to the status.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub media_ids: Option<Vec<String>>,

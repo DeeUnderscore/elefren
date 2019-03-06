@@ -284,12 +284,9 @@ impl<H: HttpSend> Registered<H> {
     /// provided by the authorisation url.
     pub fn complete(&self, code: &str) -> Result<Mastodon<H>> {
         let url = format!(
-            "{}/oauth/token?client_id={}&client_secret={}&code={}&grant_type=authorization_code&redirect_uri={}",
-            self.base,
-            self.client_id,
-            self.client_secret,
-            code,
-            self.redirect
+            "{}/oauth/token?client_id={}&client_secret={}&code={}&grant_type=authorization_code&\
+             redirect_uri={}",
+            self.base, self.client_id, self.client_secret, code, self.redirect
         );
 
         let token: AccessToken = self.send(self.client.post(&url))?.json()?;
