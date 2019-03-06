@@ -53,6 +53,9 @@ impl<'a, T: Clone + for<'de> Deserialize<'de>, H: HttpSend> ItemsIter<'a, T, H> 
             return None;
         };
         if let Some(items) = items {
+            if items.is_empty() {
+                return None;
+            }
             self.buffer = items;
             self.cur_idx = 0;
             Some(())
@@ -67,7 +70,7 @@ impl<'a, T: Clone + for<'de> Deserialize<'de>, H: HttpSend> Iterator for ItemsIt
 
     fn next(&mut self) -> Option<Self::Item> {
         if self.use_initial {
-            if self.page.initial_items.is_empty() {
+            if self.page.initial_items.is_empty() || self.cur_idx == self.page.initial_items.len() {
                 return None;
             }
             let idx = self.cur_idx;
