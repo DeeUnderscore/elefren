@@ -76,6 +76,37 @@ fn register() -> Result<Mastodon, Box<Error>> {
 }
 ```
 
+It also supports the [Streaming API](https://docs.joinmastodon.org/api/streaming):
+
+```no_run
+use elefren::prelude::*;
+use elefren::entities::event::Event;
+
+use std::error::Error;
+
+fn main() -> Result<(), Box<Error>> {
+    let data = Data {
+      base: "".into(),
+      client_id: "".into(),
+      client_secret: "".into(),
+      redirect: "".into(),
+      token: "".into(),
+    };
+
+    let client = Mastodon::from(data);
+
+    for event in client.streaming_user()? {
+        match event {
+            Event::Update(ref status) => { /* .. */ },
+            Event::Notification(ref notification) => { /* .. */ },
+            Event::Delete(ref id) => { /* .. */ },
+            Event::FiltersChanged => { /* .. */ },
+        }
+    }
+    Ok(())
+}
+```
+
 ## Relationship to [Mammut](https://github.com/Aaronepower/mammut)
 
 This library was forked from Mammut around elefren commit

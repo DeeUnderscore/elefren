@@ -27,6 +27,36 @@
 //! # Ok(())
 //! # }
 //! ```
+//!
+//! Elefren also supports Mastodon's Streaming API:
+//!
+//! # Example
+//!
+//! ```no_run
+//! # extern crate elefren;
+//! # use elefren::prelude::*;
+//! # use std::error::Error;
+//! use elefren::entities::event::Event;
+//! # fn main() -> Result<(), Box<Error>> {
+//! # let data = Data {
+//! #   base: "".into(),
+//! #   client_id: "".into(),
+//! #   client_secret: "".into(),
+//! #   redirect: "".into(),
+//! #   token: "".into(),
+//! # };
+//! let client = Mastodon::from(data);
+//! for event in client.streaming_user()? {
+//!     match event {
+//!         Event::Update(ref status) => { /* .. */ },
+//!         Event::Notification(ref notification) => { /* .. */ },
+//!         Event::Delete(ref id) => { /* .. */ },
+//!         Event::FiltersChanged => { /* .. */ },
+//!     }
+//! }
+//! # Ok(())
+//! # }
+//! ```
 
 #![deny(
     missing_docs,
@@ -428,6 +458,34 @@ impl<H: HttpSend> MastodonClient<H> for Mastodon<H> {
 
     /// returns events that are relevant to the authorized user, i.e. home
     /// timeline & notifications
+    ///
+    /// # Example
+    ///
+    /// ```no_run
+    /// # extern crate elefren;
+    /// # use elefren::prelude::*;
+    /// # use std::error::Error;
+    /// use elefren::entities::event::Event;
+    /// # fn main() -> Result<(), Box<Error>> {
+    /// # let data = Data {
+    /// #   base: "".into(),
+    /// #   client_id: "".into(),
+    /// #   client_secret: "".into(),
+    /// #   redirect: "".into(),
+    /// #   token: "".into(),
+    /// # };
+    /// let client = Mastodon::from(data);
+    /// for event in client.streaming_user()? {
+    ///     match event {
+    ///         Event::Update(ref status) => { /* .. */ },
+    ///         Event::Notification(ref notification) => { /* .. */ },
+    ///         Event::Delete(ref id) => { /* .. */ },
+    ///         Event::FiltersChanged => { /* .. */ },
+    ///     }
+    /// }
+    /// # Ok(())
+    /// # }
+    /// ```
     fn streaming_user(&self) -> Result<Self::Stream> {
         let response = self.send(self.client.get(&self.route("/api/v1/streaming/user")))?;
         let reader = BufReader::new(response);
