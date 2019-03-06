@@ -17,6 +17,9 @@ use status_builder::StatusBuilder;
 /// implementations might be swapped out for testing
 #[allow(unused)]
 pub trait MastodonClient<H: HttpSend = HttpSender> {
+    /// Type that wraps streaming API streams
+    type Stream: Iterator<Item = Event>;
+
     /// GET /api/v1/favourites
     fn favourites(&self) -> Result<Page<Status, H>> {
         unimplemented!("This method was not implemented");
@@ -314,6 +317,42 @@ pub trait MastodonClient<H: HttpSend = HttpSender> {
     /// #   Ok(())
     /// # }
     fn followed_by_me(&self) -> Result<Page<Account, H>> {
+        unimplemented!("This method was not implemented");
+    }
+
+    /// Returns events that are relevant to the authorized user, i.e. home
+    /// timeline and notifications
+    fn streaming_user(&self) -> Result<Self::Stream> {
+        unimplemented!("This method was not implemented");
+    }
+
+    /// Returns all public statuses
+    fn streaming_public(&self) -> Result<Self::Stream> {
+        unimplemented!("This method was not implemented");
+    }
+
+    /// Returns all local statuses
+    fn streaming_local(&self) -> Result<Self::Stream> {
+        unimplemented!("This method was not implemented");
+    }
+
+    /// Returns all public statuses for a particular hashtag
+    fn streaming_public_hashtag(&self, hashtag: &str) -> Result<Self::Stream> {
+        unimplemented!("This method was not implemented");
+    }
+
+    /// Returns all local statuses for a particular hashtag
+    fn streaming_local_hashtag(&self, hashtag: &str) -> Result<Self::Stream> {
+        unimplemented!("This method was not implemented");
+    }
+
+    /// Returns statuses for a list
+    fn streaming_list(&self, list_id: &str) -> Result<Self::Stream> {
+        unimplemented!("This method was not implemented");
+    }
+
+    /// Returns all direct messages
+    fn streaming_direct(&self) -> Result<Self::Stream> {
         unimplemented!("This method was not implemented");
     }
 }
