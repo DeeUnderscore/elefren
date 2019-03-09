@@ -2,6 +2,7 @@
 
 use super::prelude::*;
 use chrono::prelude::*;
+use entities::card::Card;
 use status_builder::Visibility;
 
 /// A status from the instance.
@@ -53,6 +54,8 @@ pub struct Status {
     pub mentions: Vec<Mention>,
     /// An array of tags.
     pub tags: Vec<Tag>,
+    /// The associated card
+    pub card: Option<Card>,
     /// Name of application used to post status.
     pub application: Option<Application>,
     /// The detected language for the status, if detected.
