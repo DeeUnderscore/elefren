@@ -22,6 +22,7 @@ pub struct Registration<'a, H: HttpSend = HttpSender> {
     base: String,
     client: Client,
     app_builder: AppBuilder<'a>,
+    force_login: bool,
     http_sender: H,
 }
 
@@ -54,6 +55,7 @@ impl<'a> Registration<'a, HttpSender> {
             base: base.into(),
             client: Client::new(),
             app_builder: AppBuilder::new(),
+            force_login: false,
             http_sender: HttpSender,
         }
     }
@@ -66,6 +68,7 @@ impl<'a, H: HttpSend> Registration<'a, H> {
             base: base.into(),
             client: Client::new(),
             app_builder: AppBuilder::new(),
+            force_login: false,
             http_sender,
         }
     }
@@ -96,6 +99,13 @@ impl<'a, H: HttpSend> Registration<'a, H> {
     /// Sets the optional "website" to register the app with
     pub fn website<I: Into<Cow<'a, str>>>(&mut self, website: I) -> &mut Self {
         self.app_builder.website(website);
+        self
+    }
+
+    /// Forces the user to re-login (useful if you need to re-auth as a
+    /// different user on the same instance
+    pub fn force_login(&mut self, force_login: bool) -> &mut Self {
+        self.force_login = force_login;
         self
     }
 
@@ -138,6 +148,7 @@ impl<'a, H: HttpSend> Registration<'a, H> {
             client_secret: oauth.client_secret,
             redirect: oauth.redirect_uri,
             scopes: app.scopes().clone(),
+            force_login: self.force_login,
             http_sender: self.http_sender.clone(),
         })
     }
@@ -173,6 +184,7 @@ impl<'a, H: HttpSend> Registration<'a, H> {
             client_secret: oauth.client_secret,
             redirect: oauth.redirect_uri,
             scopes: app.scopes().clone(),
+            force_login: self.force_login,
             http_sender: self.http_sender.clone(),
         })
     }
@@ -200,6 +212,7 @@ impl Registered<HttpSender> {
     ///     "the-client-secret",
     ///     "https://example.com/redirect",
     ///     Scopes::read_all(),
+    ///     false,
     /// );
     /// let url = registration.authorize_url()?;
     /// // Here you now need to open the url in the browser
@@ -217,6 +230,7 @@ impl Registered<HttpSender> {
         client_secret: &str,
         redirect: &str,
         scopes: Scopes,
+        force_login: bool,
     ) -> Registered<HttpSender> {
         Registered {
             base: base.to_string(),
@@ -225,6 +239,7 @@ impl Registered<HttpSender> {
             client_secret: client_secret.to_string(),
             redirect: redirect.to_string(),
             scopes,
+            force_login,
             http_sender: HttpSender,
         }
     }
@@ -245,25 +260,41 @@ impl<H: HttpSend> Registered<H> {
     /// use elefren::{prelude::*, registration::Registered};
     /// # fn main() -> Result<(), Box<std::error::Error>> {
     ///
+    /// let origbase = "https://example.social";
+    /// let origclient_id = "some-client_id";
+    /// let origclient_secret = "some-client-secret";
+    /// let origredirect = "https://example.social/redirect";
+    /// let origscopes = Scopes::all();
+    /// let origforce_login = false;
+    ///
     /// let registered = Registered::from_parts(
-    ///     "https://example.social",
-    ///     "some-client-id",
-    ///     "some-client-secret",
-    ///     "https://example.social/redirect",
-    ///     Scopes::all(),
+    ///     origbase,
+    ///     origclient_id,
+    ///     origclient_secret,
+    ///     origredirect,
+    ///     origscopes.clone(),
+    ///     origforce_login,
     /// );
     ///
-    /// let (base, client_id, client_secret, redirect, scopes) = registered.into_parts();
+    /// let (base, client_id, client_secret, redirect, scopes, force_login) = registered.into_parts();
+    ///
+    /// assert_eq!(origbase, &base);
+    /// assert_eq!(origclient_id, &client_id);
+    /// assert_eq!(origclient_secret, &client_secret);
+    /// assert_eq!(origredirect, &redirect);
+    /// assert_eq!(origscopes, scopes);
+    /// assert_eq!(origforce_login, force_login);
     /// #   Ok(())
     /// # }
     /// ```
-    pub fn into_parts(self) -> (String, String, String, String, Scopes) {
+    pub fn into_parts(self) -> (String, String, String, String, Scopes, bool) {
         (
             self.base,
             self.client_id,
             self.client_secret,
             self.redirect,
             self.scopes,
+            self.force_login,
         )
     }
 
@@ -272,10 +303,18 @@ impl<H: HttpSend> Registered<H> {
     pub fn authorize_url(&self) -> Result<String> {
         let scopes = format!("{}", self.scopes);
         let scopes: String = utf8_percent_encode(&scopes, DEFAULT_ENCODE_SET).collect();
-        let url = format!(
-            "{}/oauth/authorize?client_id={}&redirect_uri={}&scope={}&response_type=code",
-            self.base, self.client_id, self.redirect, scopes,
-        );
+        let url = if self.force_login {
+            format!(
+                "{}/oauth/authorize?client_id={}&redirect_uri={}&scope={}&force_login=true&\
+                 response_type=code",
+                self.base, self.client_id, self.redirect, scopes,
+            )
+        } else {
+            format!(
+                "{}/oauth/authorize?client_id={}&redirect_uri={}&scope={}&response_type=code",
+                self.base, self.client_id, self.redirect, scopes,
+            )
+        };
 
         Ok(url)
     }
@@ -315,6 +354,7 @@ pub struct Registered<H: HttpSend> {
     client_secret: String,
     redirect: String,
     scopes: Scopes,
+    force_login: bool,
     http_sender: H,
 }
 
