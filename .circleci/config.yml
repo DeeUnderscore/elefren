@@ -11,10 +11,10 @@ jobs:
                 name: Stable Build
                 command: |
                     cargo --version --verbose
-                    cargo build
+                    cargo build -j 1
             - run:
                 name: Stable Test
-                command: cargo test
+                command: cargo test -j 1
             - save_cache:
                 key: project-cache
                 paths:
