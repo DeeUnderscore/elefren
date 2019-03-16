@@ -356,3 +356,29 @@ pub trait MastodonClient<H: HttpSend = HttpSender> {
         unimplemented!("This method was not implemented");
     }
 }
+
+/// Trait that represents clients that can make unauthenticated calls to a
+/// mastodon instance
+#[allow(unused)]
+pub trait MastodonUnauthenticated<H: HttpSend> {
+    /// GET /api/v1/statuses/:id
+    fn get_status(&self, id: &str) -> Result<Status> {
+        unimplemented!("This method was not implemented");
+    }
+    /// GET /api/v1/statuses/:id/context
+    fn get_context(&self, id: &str) -> Result<Context> {
+        unimplemented!("This method was not implemented");
+    }
+    /// GET /api/v1/statuses/:id/card
+    fn get_card(&self, id: &str) -> Result<Card> {
+        unimplemented!("This method was not implemented");
+    }
+    /// GET /api/v1/statuses/:id/reblogged_by
+    fn reblogged_by(&self, id: &str) -> Result<Page<Account, H>> {
+        unimplemented!("This method was not implemented");
+    }
+    /// GET /api/v1/statuses/:id/favourited_by
+    fn favourited_by(&self, id: &str) -> Result<Page<Account, H>> {
+        unimplemented!("This method was not implemented");
+    }
+}

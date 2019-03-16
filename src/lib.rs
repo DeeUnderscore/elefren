@@ -118,7 +118,7 @@ use page::Page;
 pub use data::Data;
 pub use errors::{ApiError, Error, Result};
 pub use isolang::Language;
-pub use mastodon_client::MastodonClient;
+pub use mastodon_client::{MastodonClient, MastodonUnauthenticated};
 pub use registration::Registration;
 pub use requests::{
     AddFilterRequest,
@@ -657,6 +657,68 @@ impl<H: HttpSend> MastodonBuilder<H> {
         } else {
             return Err(Error::MissingField("missing field 'data'"));
         })
+    }
+}
+
+/// Client that can make unauthenticated calls to a mastodon instance
+#[derive(Clone, Debug)]
+pub struct MastodonUnauth<H: HttpSend = HttpSender> {
+    client: Client,
+    http_sender: H,
+    base: url::Url,
+}
+
+impl MastodonUnauth<HttpSender> {
+    /// Create a new unauthenticated client
+    pub fn new(base: &str) -> Result<MastodonUnauth<HttpSender>> {
+        let base = if base.starts_with("https://") {
+            base.to_string()
+        } else {
+            format!("https://{}", base)
+        };
+        Ok(MastodonUnauth {
+            client: Client::new(),
+            http_sender: HttpSender,
+            base: url::Url::parse(&base)?,
+        })
+    }
+}
+
+impl<H: HttpSend> MastodonUnauth<H> {
+    fn route(&self, url: &str) -> Result<url::Url> {
+        Ok(self.base.join(url)?)
+    }
+
+    fn send(&self, req: RequestBuilder) -> Result<Response> {
+        Ok(self.http_sender.send(&self.client, req)?)
+    }
+}
+
+impl<H: HttpSend> MastodonUnauthenticated<H> for MastodonUnauth<H> {
+    /// GET /api/v1/statuses/:id
+    fn get_status(&self, id: &str) -> Result<Status> {
+        let route = self.route("/api/v1/statuses")?;
+        let route = route.join(id)?;
+        let response = self.send(self.client.get(route))?;
+        deserialise(response)
+    }
+
+    /// GET /api/v1/statuses/:id/context
+    fn get_context(&self, id: &str) -> Result<Context> {
+        let route = self.route("/api/v1/statuses")?;
+        let route = route.join(id)?;
+        let route = route.join("context")?;
+        let response = self.send(self.client.get(route))?;
+        deserialise(response)
+    }
+
+    /// GET /api/v1/statuses/:id/card
+    fn get_card(&self, id: &str) -> Result<Card> {
+        let route = self.route("/api/v1/statuses")?;
+        let route = route.join(id)?;
+        let route = route.join("card")?;
+        let response = self.send(self.client.get(route))?;
+        deserialise(response)
     }
 }
 
