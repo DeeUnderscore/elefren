@@ -19,7 +19,7 @@ To add `elefren` to your project, add the following to the
 `[dependencies]` section of your `Cargo.toml`
 
 ```toml
-elefren = "0.18"
+elefren = "0.19"
 ```
 
 ## Usage
@@ -36,7 +36,7 @@ In your `Cargo.toml`, make sure you enable the `toml` feature:
 
 ```toml
 [dependencies]
-elefren = { version = "0.18", features = ["toml"] }
+elefren = { version = "0.19", features = ["toml"] }
 ```
 
 ```rust,no_run
