@@ -22,7 +22,7 @@ pub struct Card {
     /// OEmbed data
     html: Option<String>,
     /// OEmbed data
-    width: Option<String>,
+    width: Option<u64>,
     /// OEmbed data
-    height: Option<String>,
+    height: Option<u64>,
 }
