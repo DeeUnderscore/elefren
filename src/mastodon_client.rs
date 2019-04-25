@@ -133,19 +133,19 @@ pub trait MastodonClient<H: HttpSend = HttpSender> {
         unimplemented!("This method was not implemented");
     }
     /// GET /api/v1/accounts/:id/block
-    fn block(&self, id: &str) -> Result<Account> {
+    fn block(&self, id: &str) -> Result<Relationship> {
         unimplemented!("This method was not implemented");
     }
     /// GET /api/v1/accounts/:id/unblock
-    fn unblock(&self, id: &str) -> Result<Account> {
+    fn unblock(&self, id: &str) -> Result<Relationship> {
         unimplemented!("This method was not implemented");
     }
     /// GET /api/v1/accounts/:id/mute
-    fn mute(&self, id: &str) -> Result<Account> {
+    fn mute(&self, id: &str) -> Result<Relationship> {
         unimplemented!("This method was not implemented");
     }
     /// GET /api/v1/accounts/:id/unmute
-    fn unmute(&self, id: &str) -> Result<Account> {
+    fn unmute(&self, id: &str) -> Result<Relationship> {
         unimplemented!("This method was not implemented");
     }
     /// GET /api/v1/notifications/:id
