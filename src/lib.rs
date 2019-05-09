@@ -127,7 +127,7 @@ pub use requests::{
     UpdateCredsRequest,
     UpdatePushRequest,
 };
-pub use status_builder::StatusBuilder;
+pub use status_builder::{NewStatus, StatusBuilder};
 
 /// Registering your App
 pub mod apps;
@@ -160,6 +160,7 @@ pub mod prelude {
     pub use Data;
     pub use Mastodon;
     pub use MastodonClient;
+    pub use NewStatus;
     pub use Registration;
     pub use StatusBuilder;
     pub use StatusesRequest;
@@ -318,7 +319,7 @@ impl<H: HttpSend> MastodonClient<H> for Mastodon<H> {
     }
 
     /// Post a new status to the account.
-    fn new_status(&self, status: StatusBuilder) -> Result<Status> {
+    fn new_status(&self, status: NewStatus) -> Result<Status> {
         let response = self.send(
             self.client
                 .post(&self.route("/api/v1/statuses"))

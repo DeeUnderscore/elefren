@@ -11,7 +11,7 @@ use requests::{
     UpdateCredsRequest,
     UpdatePushRequest,
 };
-use status_builder::StatusBuilder;
+use status_builder::NewStatus;
 
 /// Represents the set of methods that a Mastodon Client can do, so that
 /// implementations might be swapped out for testing
@@ -189,7 +189,7 @@ pub trait MastodonClient<H: HttpSend = HttpSender> {
         unimplemented!("This method was not implemented");
     }
     /// POST /api/v1/statuses
-    fn new_status(&self, status: StatusBuilder) -> Result<Status> {
+    fn new_status(&self, status: NewStatus) -> Result<Status> {
         unimplemented!("This method was not implemented");
     }
     /// GET /api/v1/timelines/public
