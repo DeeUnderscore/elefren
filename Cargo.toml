@@ -24,6 +24,7 @@ try_from = "0.3.2"
 toml = { version = "0.5.0", optional = true }
 hyper-old-types = "0.11.0"
 envy = { version = "0.4.0", optional = true }
+log = "0.4.6"
 
 [dependencies.chrono]
 version = "0.4"

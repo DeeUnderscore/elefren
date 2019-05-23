@@ -73,6 +73,8 @@
 #![allow(intra_doc_link_resolution_failure)]
 
 #[macro_use]
+extern crate log;
+#[macro_use]
 extern crate serde_derive;
 #[macro_use]
 extern crate doc_comment;
@@ -729,10 +731,14 @@ fn deserialise<T: for<'de> serde::Deserialize<'de>>(response: Response) -> Resul
     let mut reader = Tap::new(response);
 
     match serde_json::from_reader(&mut reader) {
-        Ok(t) => Ok(t),
+        Ok(t) => {
+            debug!("{}", String::from_utf8_lossy(&reader.bytes));
+            Ok(t)
+        },
         // If deserializing into the desired type fails try again to
         // see if this is an error response.
         Err(e) => {
+            error!("{}", String::from_utf8_lossy(&reader.bytes));
             if let Ok(error) = serde_json::from_slice(&reader.bytes) {
                 return Err(Error::Api(error));
             }
