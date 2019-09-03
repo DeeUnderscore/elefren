@@ -120,6 +120,10 @@ pub trait MastodonClient<H: HttpSend = HttpSender> {
     fn clear_notifications(&self) -> Result<Empty> {
         unimplemented!("This method was not implemented");
     }
+    /// POST /api/v1/notifications/dismiss
+    fn dismiss_notification(&self, id: &str) -> Result<Empty> {
+        unimplemented!("This method was not implemented");
+    }
     /// GET /api/v1/accounts/:id
     fn get_account(&self, id: &str) -> Result<Account> {
         unimplemented!("This method was not implemented");

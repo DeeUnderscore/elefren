@@ -239,6 +239,7 @@ impl<H: HttpSend> MastodonClient<H> for Mastodon<H> {
         (post (uri: Cow<'static, str>,)) follows: "follows" => Account,
         (post multipart (file: Cow<'static, str>,)) media: "media" => Attachment,
         (post) clear_notifications: "notifications/clear" => Empty,
+        (post (id: &str,)) dismiss_notification: "notifications/dismiss" => Empty,
         (get) get_push_subscription: "push/subscription" => Subscription,
         (delete) delete_push_subscription: "push/subscription" => Empty,
         (get) get_filters: "filters" => Vec<Filter>,
