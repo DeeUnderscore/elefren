@@ -2,7 +2,7 @@
 
 ## A Wrapper for the Mastodon API.
 
-[![CircleCI](https://circleci.com/gh/pwoolcoc/elefren.svg?style=svg)](https://circleci.com/gh/pwoolcoc/elefren)
+[![Build Status](https://travis-ci.org/pwoolcoc/elefren.svg?branch=master)](https://travis-ci.org/pwoolcoc/elefren)
 [![Build Status](https://ci.appveyor.com/api/projects/status/qeigk3nmmps52wxv?svg=true)](https://ci.appveyor.com/project/pwoolcoc/elefren)
 [![Coverage Status](https://coveralls.io/repos/github/pwoolcoc/elefren/badge.svg?branch=master&service=github)](https://coveralls.io/github/pwoolcoc/elefren?branch=master)
 [![crates.io](https://img.shields.io/crates/v/elefren.svg)](https://crates.io/crates/elefren)
