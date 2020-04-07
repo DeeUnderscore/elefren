@@ -71,37 +71,33 @@ impl fmt::Display for Error {
 }
 
 impl error::Error for Error {
-    fn description(&self) -> &str {
-        match *self {
-            Error::Api(ref e) => e
-                .error_description
-                .as_ref()
-                .map(|i| &**i)
-                .or(e.error.as_ref().map(|i| &**i))
-                .unwrap_or("Unknown API Error"),
-            Error::Serde(ref e) => e.description(),
-            Error::UrlEncoded(ref e) => e.description(),
-            Error::Http(ref e) => e.description(),
-            Error::Io(ref e) => e.description(),
-            Error::Url(ref e) => e.description(),
-            Error::Client(ref status) | Error::Server(ref status) => {
-                status.canonical_reason().unwrap_or("Unknown Status code")
-            },
-            Error::ClientIdRequired => "ClientIdRequired",
-            Error::ClientSecretRequired => "ClientSecretRequired",
-            Error::AccessTokenRequired => "AccessTokenRequired",
-            Error::MissingField(_) => "MissingField",
+    fn source(&self) -> Option<&(dyn error::Error + 'static)> {
+        Some(match *self {
+            Error::Api(ref e) => e,
+            Error::Serde(ref e) => e,
+            Error::UrlEncoded(ref e) => e,
+            Error::Http(ref e) => e,
+            Error::Io(ref e) => e,
+            Error::Url(ref e) => e,
             #[cfg(feature = "toml")]
-            Error::TomlSer(ref e) => e.description(),
+            Error::TomlSer(ref e) => e,
             #[cfg(feature = "toml")]
-            Error::TomlDe(ref e) => e.description(),
-            Error::HeaderStrError(ref e) => e.description(),
-            Error::HeaderParseError(ref e) => e.description(),
+            Error::TomlDe(ref e) => e,
+            Error::HeaderStrError(ref e) => e,
+            Error::HeaderParseError(ref e) => e,
             #[cfg(feature = "env")]
-            Error::Envy(ref e) => e.description(),
-            Error::SerdeQs(ref e) => e.description(),
-            Error::Other(ref e) => e,
-        }
+            Error::Envy(ref e) => e,
+            Error::SerdeQs(ref e) => e,
+
+            Error::Client(..) | Error::Server(..) => {
+                return None
+            },
+            Error::ClientIdRequired => return None,
+            Error::ClientSecretRequired => return None,
+            Error::AccessTokenRequired => return None,
+            Error::MissingField(_) => return None,
+            Error::Other(..) => return None,
+        })
     }
 }
 
@@ -113,6 +109,14 @@ pub struct ApiError {
     /// The description of the error.
     pub error_description: Option<String>,
 }
+
+impl fmt::Display for ApiError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{:?}", self)
+    }
+}
+
+impl error::Error for ApiError {}
 
 macro_rules! from {
     ($($(#[$met:meta])* $typ:ident, $variant:ident,)*) => {
