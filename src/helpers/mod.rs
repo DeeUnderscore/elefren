@@ -5,7 +5,7 @@
 ///
 /// ```toml,ignore
 /// [dependencies.elefren]
-/// version = "0.18"
+/// version = "0.22"
 /// features = ["toml"]
 /// ```
 pub mod toml;
@@ -17,7 +17,7 @@ pub mod toml;
 ///
 /// ```toml,ignore
 /// [dependencies.elefen]
-/// version = "0.18"
+/// version = "0.22"
 /// features = ["json"]
 /// ```
 pub mod json;
@@ -29,7 +29,7 @@ pub mod json;
 ///
 /// ```toml,ignore
 /// [dependencies.elefren]
-/// version = "0.18"
+/// version = "0.22"
 /// features = ["env"]
 /// ```
 pub mod env;
