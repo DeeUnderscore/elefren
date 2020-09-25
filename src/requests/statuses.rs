@@ -96,6 +96,27 @@ impl<'a> StatusesRequest<'a> {
         self
     }
 
+    /// Set the `?exclude_reblogs=1` flag for the .statuses() request
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # extern crate elefren;
+    /// # use elefren::StatusesRequest;
+    /// let mut request = StatusesRequest::new();
+    /// assert_eq!(
+    ///     &request
+    ///         .exclude_reblogs()
+    ///         .to_querystring()
+    ///         .expect("Couldn't serialize qs"),
+    ///     "?exclude_reblogs=1"
+    /// );
+    /// ```
+    pub fn exclude_reblogs(&mut self) -> &mut Self {
+        self.exclude_reblogs = true;
+        self
+    }
+
     /// Set the `?exclude_replies=1` flag for the .statuses() request
     ///
     /// # Example
