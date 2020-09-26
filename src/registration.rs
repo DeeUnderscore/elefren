@@ -1,9 +1,8 @@
 use std::borrow::Cow;
 
-use reqwest::{Client, RequestBuilder, Response};
+use reqwest::blocking::{Client, RequestBuilder, Response};
 use serde::Deserialize;
 use try_from::TryInto;
-use url::percent_encoding::{utf8_percent_encode, DEFAULT_ENCODE_SET};
 
 use crate::{
     apps::{App, AppBuilder},
@@ -289,22 +288,16 @@ impl Registered {
     /// Returns the full url needed for authorisation. This needs to be opened
     /// in a browser.
     pub fn authorize_url(&self) -> Result<String> {
-        let scopes = format!("{}", self.scopes);
-        let scopes: String = utf8_percent_encode(&scopes, DEFAULT_ENCODE_SET).collect();
-        let url = if self.force_login {
-            format!(
-                "{}/oauth/authorize?client_id={}&redirect_uri={}&scope={}&force_login=true&\
-                 response_type=code",
-                self.base, self.client_id, self.redirect, scopes,
-            )
-        } else {
-            format!(
-                "{}/oauth/authorize?client_id={}&redirect_uri={}&scope={}&response_type=code",
-                self.base, self.client_id, self.redirect, scopes,
-            )
-        };
+        let mut url = url::Url::parse(&self.base)?.join("/oauth/authorize")?;
 
-        Ok(url)
+        url.query_pairs_mut()
+            .append_pair("client_id", &self.client_id)
+            .append_pair("redirect_uri", &self.redirect)
+            .append_pair("scope", &self.scopes.to_string())
+            .append_pair("response_type", "code")
+            .append_pair("force_login", &self.force_login.to_string());
+
+        Ok(url.into_string())
     }
 
     /// Create an access token from the client id, client secret, and code

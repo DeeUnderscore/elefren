@@ -182,7 +182,7 @@ mod tests {
 
     #[test]
     fn from_http_error() {
-        let err: HttpError = reqwest::get("not an actual URL").unwrap_err();
+        let err: HttpError = reqwest::blocking::get("not an actual URL").unwrap_err();
         let err: Error = Error::from(err);
         assert_is!(err, Error::Http(..));
     }
