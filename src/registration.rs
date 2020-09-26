@@ -2,7 +2,7 @@ use std::borrow::Cow;
 
 use reqwest::blocking::{Client, RequestBuilder, Response};
 use serde::Deserialize;
-use try_from::TryInto;
+use std::convert::TryInto;
 
 use crate::{
     apps::{App, AppBuilder},
@@ -125,7 +125,7 @@ impl<'a> Registration<'a> {
     /// ```
     pub fn register<I: TryInto<App>>(&mut self, app: I) -> Result<Registered>
     where
-        Error: From<<I as TryInto<App>>::Err>,
+        Error: From<<I as TryInto<App>>::Error>,
     {
         let app = app.try_into()?;
         let oauth = self.send_app(&app)?;

@@ -1,7 +1,7 @@
 use std::borrow::Cow;
 
 use serde::Serialize;
-use try_from::TryInto;
+use std::convert::TryInto;
 
 use crate::{
     errors::{Error, Result},
@@ -132,16 +132,8 @@ impl<'a> AppBuilder<'a> {
     }
 }
 
-impl TryInto<App> for App {
-    type Err = Error;
-
-    fn try_into(self) -> Result<App> {
-        Ok(self)
-    }
-}
-
 impl<'a> TryInto<App> for AppBuilder<'a> {
-    type Err = Error;
+    type Error = Error;
 
     fn try_into(self) -> Result<App> {
         Ok(self.build()?)
