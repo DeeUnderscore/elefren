@@ -1,28 +1,29 @@
 use std::borrow::Cow;
 
 use reqwest::{Client, RequestBuilder, Response};
-use try_from::TryInto;
-use url::percent_encoding::{utf8_percent_encode, DEFAULT_ENCODE_SET};
+use serde::Deserialize;
+use std::convert::TryInto;
 
-use apps::{App, AppBuilder};
-use http_send::{HttpSend, HttpSender};
-use scopes::Scopes;
-use Data;
-use Error;
-use Mastodon;
-use MastodonBuilder;
-use Result;
+use crate::{
+    apps::{App, AppBuilder},
+    scopes::Scopes,
+    Data,
+    Error,
+    Mastodon,
+    MastodonBuilder,
+    Result,
+};
 
-const DEFAULT_REDIRECT_URI: &'static str = "urn:ietf:wg:oauth:2.0:oob";
+const DEFAULT_REDIRECT_URI: &str = "urn:ietf:wg:oauth:2.0:oob";
 
 /// Handles registering your mastodon app to your instance. It is recommended
 /// you cache your data struct to avoid registering on every run.
 #[derive(Debug, Clone)]
-pub struct Registration<'a, H: HttpSend = HttpSender> {
+pub struct Registration<'a> {
     base: String,
     client: Client,
     app_builder: AppBuilder<'a>,
-    http_sender: H,
+    force_login: bool,
 }
 
 #[derive(Deserialize)]
@@ -42,7 +43,7 @@ struct AccessToken {
     access_token: String,
 }
 
-impl<'a> Registration<'a, HttpSender> {
+impl<'a> Registration<'a> {
     /// Construct a new registration process to the instance of the `base` url.
     /// ```
     /// use elefren::prelude::*;
@@ -54,22 +55,12 @@ impl<'a> Registration<'a, HttpSender> {
             base: base.into(),
             client: Client::new(),
             app_builder: AppBuilder::new(),
-            http_sender: HttpSender,
+            force_login: false,
         }
     }
 }
 
-impl<'a, H: HttpSend> Registration<'a, H> {
-    #[allow(dead_code)]
-    pub(crate) fn with_sender<I: Into<String>>(base: I, http_sender: H) -> Self {
-        Registration {
-            base: base.into(),
-            client: Client::new(),
-            app_builder: AppBuilder::new(),
-            http_sender,
-        }
-    }
-
+impl<'a> Registration<'a> {
     /// Sets the name of this app
     ///
     /// This is required, and if this isn't set then the AppBuilder::build
@@ -99,8 +90,17 @@ impl<'a, H: HttpSend> Registration<'a, H> {
         self
     }
 
+    /// Forces the user to re-login (useful if you need to re-auth as a
+    /// different user on the same instance
+    pub fn force_login(&mut self, force_login: bool) -> &mut Self {
+        self.force_login = force_login;
+        self
+    }
+
     fn send(&self, req: RequestBuilder) -> Result<Response> {
-        Ok(self.http_sender.send(&self.client, req)?)
+        let req = req.build()?;
+        let handle = tokio::runtime::Handle::current();
+        Ok(handle.block_on(self.client.execute(req))?)
     }
 
     /// Register the given application
@@ -124,9 +124,9 @@ impl<'a, H: HttpSend> Registration<'a, H> {
     /// # Ok(())
     /// # }
     /// ```
-    pub fn register<I: TryInto<App>>(&mut self, app: I) -> Result<Registered<H>>
+    pub fn register<I: TryInto<App>>(&mut self, app: I) -> Result<Registered>
     where
-        Error: From<<I as TryInto<App>>::Err>,
+        Error: From<<I as TryInto<App>>::Error>,
     {
         let app = app.try_into()?;
         let oauth = self.send_app(&app)?;
@@ -138,7 +138,7 @@ impl<'a, H: HttpSend> Registration<'a, H> {
             client_secret: oauth.client_secret,
             redirect: oauth.redirect_uri,
             scopes: app.scopes().clone(),
-            http_sender: self.http_sender.clone(),
+            force_login: self.force_login,
         })
     }
 
@@ -162,7 +162,7 @@ impl<'a, H: HttpSend> Registration<'a, H> {
     /// # Ok(())
     /// # }
     /// ```
-    pub fn build(&mut self) -> Result<Registered<H>> {
+    pub fn build(&mut self) -> Result<Registered> {
         let app: App = self.app_builder.clone().build()?;
         let oauth = self.send_app(&app)?;
 
@@ -173,58 +173,158 @@ impl<'a, H: HttpSend> Registration<'a, H> {
             client_secret: oauth.client_secret,
             redirect: oauth.redirect_uri,
             scopes: app.scopes().clone(),
-            http_sender: self.http_sender.clone(),
+            force_login: self.force_login,
         })
     }
 
     fn send_app(&self, app: &App) -> Result<OAuth> {
         let url = format!("{}/api/v1/apps", self.base);
-        Ok(self.send(self.client.post(&url).json(&app))?.json()?)
+        let handle = tokio::runtime::Handle::current();
+        Ok(handle.block_on(self.send(self.client.post(&url).json(&app))?.json())?)
     }
 }
 
-impl<H: HttpSend> Registered<H> {
+impl Registered {
+    /// Skip having to retrieve the client id and secret from the server by
+    /// creating a `Registered` struct directly
+    ///
+    /// # Example
+    ///
+    /// ```no_run
+    /// # extern crate elefren;
+    /// # fn main() -> elefren::Result<()> {
+    /// use elefren::{prelude::*, registration::Registered};
+    ///
+    /// let registration = Registered::from_parts(
+    ///     "https://example.com",
+    ///     "the-client-id",
+    ///     "the-client-secret",
+    ///     "https://example.com/redirect",
+    ///     Scopes::read_all(),
+    ///     false,
+    /// );
+    /// let url = registration.authorize_url()?;
+    /// // Here you now need to open the url in the browser
+    /// // And handle a the redirect url coming back with the code.
+    /// let code = String::from("RETURNED_FROM_BROWSER");
+    /// let mastodon = registration.complete(&code)?;
+    ///
+    /// println!("{:?}", mastodon.get_home_timeline()?.initial_items);
+    /// #   Ok(())
+    /// # }
+    /// ```
+    pub fn from_parts(
+        base: &str,
+        client_id: &str,
+        client_secret: &str,
+        redirect: &str,
+        scopes: Scopes,
+        force_login: bool,
+    ) -> Registered {
+        Registered {
+            base: base.to_string(),
+            client: Client::new(),
+            client_id: client_id.to_string(),
+            client_secret: client_secret.to_string(),
+            redirect: redirect.to_string(),
+            scopes,
+            force_login,
+        }
+    }
+}
+
+impl Registered {
     fn send(&self, req: RequestBuilder) -> Result<Response> {
-        Ok(self.http_sender.send(&self.client, req)?)
+        let req = req.build()?;
+        let handle = tokio::runtime::Handle::current();
+        Ok(handle.block_on(self.client.execute(req))?)
+    }
+
+    /// Returns the parts of the `Registered` struct that can be used to
+    /// recreate another `Registered` struct
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # extern crate elefren;
+    /// use elefren::{prelude::*, registration::Registered};
+    /// # fn main() -> Result<(), Box<std::error::Error>> {
+    ///
+    /// let origbase = "https://example.social";
+    /// let origclient_id = "some-client_id";
+    /// let origclient_secret = "some-client-secret";
+    /// let origredirect = "https://example.social/redirect";
+    /// let origscopes = Scopes::all();
+    /// let origforce_login = false;
+    ///
+    /// let registered = Registered::from_parts(
+    ///     origbase,
+    ///     origclient_id,
+    ///     origclient_secret,
+    ///     origredirect,
+    ///     origscopes.clone(),
+    ///     origforce_login,
+    /// );
+    ///
+    /// let (base, client_id, client_secret, redirect, scopes, force_login) = registered.into_parts();
+    ///
+    /// assert_eq!(origbase, &base);
+    /// assert_eq!(origclient_id, &client_id);
+    /// assert_eq!(origclient_secret, &client_secret);
+    /// assert_eq!(origredirect, &redirect);
+    /// assert_eq!(origscopes, scopes);
+    /// assert_eq!(origforce_login, force_login);
+    /// #   Ok(())
+    /// # }
+    /// ```
+    pub fn into_parts(self) -> (String, String, String, String, Scopes, bool) {
+        (
+            self.base,
+            self.client_id,
+            self.client_secret,
+            self.redirect,
+            self.scopes,
+            self.force_login,
+        )
     }
 
     /// Returns the full url needed for authorisation. This needs to be opened
     /// in a browser.
     pub fn authorize_url(&self) -> Result<String> {
-        let scopes = format!("{}", self.scopes);
-        let scopes: String = utf8_percent_encode(&scopes, DEFAULT_ENCODE_SET).collect();
-        let url = format!(
-            "{}/oauth/authorize?client_id={}&redirect_uri={}&scope={}&response_type=code",
-            self.base, self.client_id, self.redirect, scopes,
-        );
+        let mut url = url::Url::parse(&self.base)?.join("/oauth/authorize")?;
 
-        Ok(url)
+        url.query_pairs_mut()
+            .append_pair("client_id", &self.client_id)
+            .append_pair("redirect_uri", &self.redirect)
+            .append_pair("scope", &self.scopes.to_string())
+            .append_pair("response_type", "code")
+            .append_pair("force_login", &self.force_login.to_string());
+
+        Ok(url.into_string())
     }
 
     /// Create an access token from the client id, client secret, and code
     /// provided by the authorisation url.
-    pub fn complete(self, code: &str) -> Result<Mastodon<H>> {
+    pub fn complete(&self, code: &str) -> Result<Mastodon> {
         let url = format!(
-            "{}/oauth/token?client_id={}&client_secret={}&code={}&grant_type=authorization_code&redirect_uri={}",
-            self.base,
-            self.client_id,
-            self.client_secret,
-            code,
-            self.redirect
+            "{}/oauth/token?client_id={}&client_secret={}&code={}&grant_type=authorization_code&\
+             redirect_uri={}",
+            self.base, self.client_id, self.client_secret, code, self.redirect
         );
 
-        let token: AccessToken = self.send(self.client.post(&url))?.json()?;
+        let handle = tokio::runtime::Handle::current();
+        let token: AccessToken = handle.block_on(self.send(self.client.post(&url))?.json())?;
 
         let data = Data {
-            base: self.base.into(),
-            client_id: self.client_id.into(),
-            client_secret: self.client_secret.into(),
-            redirect: self.redirect.into(),
+            base: self.base.clone().into(),
+            client_id: self.client_id.clone().into(),
+            client_secret: self.client_secret.clone().into(),
+            redirect: self.redirect.clone().into(),
             token: token.access_token.into(),
         };
 
-        let mut builder = MastodonBuilder::new(self.http_sender);
-        builder.client(self.client).data(data);
+        let mut builder = MastodonBuilder::new();
+        builder.client(self.client.clone()).data(data);
         Ok(builder.build()?)
     }
 }
@@ -232,14 +332,14 @@ impl<H: HttpSend> Registered<H> {
 /// Represents the state of the auth flow when the app has been registered but
 /// the user is not authenticated
 #[derive(Debug, Clone)]
-pub struct Registered<H: HttpSend> {
+pub struct Registered {
     base: String,
     client: Client,
     client_id: String,
     client_secret: String,
     redirect: String,
     scopes: Scopes,
-    http_sender: H,
+    force_login: bool,
 }
 
 #[cfg(test)]
@@ -251,15 +351,13 @@ mod tests {
         let r = Registration::new("https://example.com");
         assert_eq!(r.base, "https://example.com".to_string());
         assert_eq!(r.app_builder, AppBuilder::new());
-        assert_eq!(r.http_sender, HttpSender);
     }
 
     #[test]
     fn test_registration_with_sender() {
-        let r = Registration::with_sender("https://example.com", HttpSender);
+        let r = Registration::new("https://example.com");
         assert_eq!(r.base, "https://example.com".to_string());
         assert_eq!(r.app_builder, AppBuilder::new());
-        assert_eq!(r.http_sender, HttpSender);
     }
 
     #[test]

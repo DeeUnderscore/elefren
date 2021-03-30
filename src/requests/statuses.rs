@@ -1,4 +1,22 @@
+use crate::errors::Error;
+use serde::Serialize;
 use std::{borrow::Cow, convert::Into};
+
+mod bool_qs_serialize {
+    use serde::Serializer;
+
+    pub fn is_false(b: &bool) -> bool {
+        !*b
+    }
+
+    pub fn serialize<S: Serializer>(b: &bool, s: S) -> Result<S::Ok, S::Error> {
+        if *b {
+            s.serialize_i64(1)
+        } else {
+            s.serialize_i64(0)
+        }
+    }
+}
 
 /// Builder for making a client.statuses() call
 ///
@@ -7,18 +25,34 @@ use std::{borrow::Cow, convert::Into};
 /// ```
 /// # extern crate elefren;
 /// # use elefren::StatusesRequest;
-/// let mut request = StatusesRequest::new();
-/// request.only_media().pinned().since_id("foo");
-/// # assert_eq!(&request.to_querystring()[..], "?only_media=1&pinned=1&since_id=foo");
+/// let request = StatusesRequest::new()
+///     .only_media()
+///     .pinned()
+///     .since_id("foo");
+/// # assert_eq!(&request.to_querystring().expect("Couldn't serialize qs")[..], "?only_media=1&pinned=1&since_id=foo");
 /// ```
-#[derive(Clone, Debug, Default, PartialEq)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize)]
 pub struct StatusesRequest<'a> {
+    #[serde(skip_serializing_if = "bool_qs_serialize::is_false")]
+    #[serde(serialize_with = "bool_qs_serialize::serialize")]
     only_media: bool,
+    #[serde(skip_serializing_if = "bool_qs_serialize::is_false")]
+    #[serde(serialize_with = "bool_qs_serialize::serialize")]
     exclude_replies: bool,
+    #[serde(skip_serializing_if = "bool_qs_serialize::is_false")]
+    #[serde(serialize_with = "bool_qs_serialize::serialize")]
     pinned: bool,
+    #[serde(skip_serializing_if = "Option::is_none")]
     max_id: Option<Cow<'a, str>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     since_id: Option<Cow<'a, str>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     limit: Option<usize>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    min_id: Option<Cow<'a, str>>,
+    #[serde(skip_serializing_if = "bool_qs_serialize::is_false")]
+    #[serde(serialize_with = "bool_qs_serialize::serialize")]
+    exclude_reblogs: bool,
 }
 
 impl<'a> Into<Option<StatusesRequest<'a>>> for &'a mut StatusesRequest<'a> {
@@ -29,7 +63,9 @@ impl<'a> Into<Option<StatusesRequest<'a>>> for &'a mut StatusesRequest<'a> {
             pinned: self.pinned,
             max_id: self.max_id.clone(),
             since_id: self.since_id.clone(),
-            limit: self.limit.clone(),
+            limit: self.limit,
+            min_id: self.min_id.clone(),
+            exclude_reblogs: self.exclude_reblogs,
         })
     }
 }
@@ -56,9 +92,30 @@ impl<'a> StatusesRequest<'a> {
     /// # extern crate elefren;
     /// # use elefren::StatusesRequest;
     /// let mut request = StatusesRequest::new();
-    /// assert_eq!(&request.only_media().to_querystring(), "?only_media=1");
-    pub fn only_media(&mut self) -> &mut Self {
+    /// assert_eq!(&request.only_media().to_querystring().expect("Couldn't serialize qs"), "?only_media=1");
+    pub fn only_media(mut self) -> Self {
         self.only_media = true;
+        self
+    }
+
+    /// Set the `?exclude_reblogs=1` flag for the .statuses() request
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # extern crate elefren;
+    /// # use elefren::StatusesRequest;
+    /// let mut request = StatusesRequest::new();
+    /// assert_eq!(
+    ///     &request
+    ///         .exclude_reblogs()
+    ///         .to_querystring()
+    ///         .expect("Couldn't serialize qs"),
+    ///     "?exclude_reblogs=1"
+    /// );
+    /// ```
+    pub fn exclude_reblogs(mut self) -> Self {
+        self.exclude_reblogs = true;
         self
     }
 
@@ -71,11 +128,14 @@ impl<'a> StatusesRequest<'a> {
     /// # use elefren::StatusesRequest;
     /// let mut request = StatusesRequest::new();
     /// assert_eq!(
-    ///     &request.exclude_replies().to_querystring(),
+    ///     &request
+    ///         .exclude_replies()
+    ///         .to_querystring()
+    ///         .expect("Couldn't serialize qs"),
     ///     "?exclude_replies=1"
     /// );
     /// ```
-    pub fn exclude_replies(&mut self) -> &mut Self {
+    pub fn exclude_replies(mut self) -> Self {
         self.exclude_replies = true;
         self
     }
@@ -88,9 +148,15 @@ impl<'a> StatusesRequest<'a> {
     /// # extern crate elefren;
     /// # use elefren::StatusesRequest;
     /// let mut request = StatusesRequest::new();
-    /// assert_eq!(&request.pinned().to_querystring(), "?pinned=1");
+    /// assert_eq!(
+    ///     &request
+    ///         .pinned()
+    ///         .to_querystring()
+    ///         .expect("Couldn't serialize qs"),
+    ///     "?pinned=1"
+    /// );
     /// ```
-    pub fn pinned(&mut self) -> &mut Self {
+    pub fn pinned(mut self) -> Self {
         self.pinned = true;
         self
     }
@@ -103,9 +169,15 @@ impl<'a> StatusesRequest<'a> {
     /// # extern crate elefren;
     /// # use elefren::StatusesRequest;
     /// let mut request = StatusesRequest::new();
-    /// assert_eq!(&request.max_id("foo").to_querystring(), "?max_id=foo");
+    /// assert_eq!(
+    ///     &request
+    ///         .max_id("foo")
+    ///         .to_querystring()
+    ///         .expect("Couldn't serialize qs"),
+    ///     "?max_id=foo"
+    /// );
     /// ```
-    pub fn max_id<S: Into<Cow<'a, str>>>(&mut self, max_id: S) -> &mut Self {
+    pub fn max_id<S: Into<Cow<'a, str>>>(mut self, max_id: S) -> Self {
         self.max_id = Some(max_id.into());
         self
     }
@@ -118,9 +190,15 @@ impl<'a> StatusesRequest<'a> {
     /// # extern crate elefren;
     /// # use elefren::StatusesRequest;
     /// let mut request = StatusesRequest::new();
-    /// assert_eq!(&request.since_id("foo").to_querystring(), "?since_id=foo");
+    /// assert_eq!(
+    ///     &request
+    ///         .since_id("foo")
+    ///         .to_querystring()
+    ///         .expect("Couldn't serialize qs"),
+    ///     "?since_id=foo"
+    /// );
     /// ```
-    pub fn since_id<S: Into<Cow<'a, str>>>(&mut self, since_id: S) -> &mut Self {
+    pub fn since_id<S: Into<Cow<'a, str>>>(mut self, since_id: S) -> Self {
         self.since_id = Some(since_id.into());
         self
     }
@@ -133,10 +211,37 @@ impl<'a> StatusesRequest<'a> {
     /// # extern crate elefren;
     /// # use elefren::StatusesRequest;
     /// let mut request = StatusesRequest::new();
-    /// assert_eq!(&request.limit(10).to_querystring(), "?limit=10");
+    /// assert_eq!(
+    ///     &request
+    ///         .limit(10)
+    ///         .to_querystring()
+    ///         .expect("Couldn't serialize qs"),
+    ///     "?limit=10"
+    /// );
     /// ```
-    pub fn limit(&mut self, limit: usize) -> &mut Self {
+    pub fn limit(mut self, limit: usize) -> Self {
         self.limit = Some(limit);
+        self
+    }
+
+    /// Set the `?min_id=:min_id` flag for the .statuses() request
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # extern crate elefren;
+    /// # use elefren::StatusesRequest;
+    /// let mut request = StatusesRequest::new();
+    /// assert_eq!(
+    ///     &request
+    ///         .min_id("foobar")
+    ///         .to_querystring()
+    ///         .expect("Couldn't serialize qs"),
+    ///     "?min_id=foobar"
+    /// );
+    /// ```
+    pub fn min_id<S: Into<Cow<'a, str>>>(mut self, min_id: S) -> Self {
+        self.min_id = Some(min_id.into());
         self
     }
 
@@ -149,42 +254,16 @@ impl<'a> StatusesRequest<'a> {
     /// # use elefren::StatusesRequest;
     /// let mut request = StatusesRequest::new();
     /// assert_eq!(
-    ///     &request.limit(10).pinned().to_querystring(),
+    ///     &request
+    ///         .limit(10)
+    ///         .pinned()
+    ///         .to_querystring()
+    ///         .expect("Couldn't serialize qs"),
     ///     "?pinned=1&limit=10"
     /// );
     /// ```
-    pub fn to_querystring(&self) -> String {
-        let mut opts = vec![];
-
-        if self.only_media {
-            opts.push("only_media=1".into());
-        }
-
-        if self.exclude_replies {
-            opts.push("exclude_replies=1".into());
-        }
-
-        if self.pinned {
-            opts.push("pinned=1".into());
-        }
-
-        if let Some(ref max_id) = self.max_id {
-            opts.push(format!("max_id={}", max_id));
-        }
-
-        if let Some(ref since_id) = self.since_id {
-            opts.push(format!("since_id={}", since_id));
-        }
-
-        if let Some(limit) = self.limit {
-            opts.push(format!("limit={}", limit));
-        }
-
-        if opts.is_empty() {
-            String::new()
-        } else {
-            format!("?{}", opts.join("&"))
-        }
+    pub fn to_querystring(&self) -> Result<String, Error> {
+        Ok(format!("?{}", serde_qs::to_string(&self)?))
     }
 }
 
@@ -204,14 +283,15 @@ mod tests {
                 max_id: None,
                 since_id: None,
                 limit: None,
+                min_id: None,
+                exclude_reblogs: false,
             }
         );
     }
 
     #[test]
     fn test_only_media() {
-        let mut request = StatusesRequest::new();
-        request.only_media();
+        let request = StatusesRequest::new().only_media();
         assert_eq!(
             request,
             StatusesRequest {
@@ -221,14 +301,15 @@ mod tests {
                 max_id: None,
                 since_id: None,
                 limit: None,
+                min_id: None,
+                exclude_reblogs: false,
             }
         );
     }
 
     #[test]
     fn test_exclude_replies() {
-        let mut request = StatusesRequest::new();
-        request.exclude_replies();
+        let request = StatusesRequest::new().exclude_replies();
         assert_eq!(
             request,
             StatusesRequest {
@@ -238,13 +319,14 @@ mod tests {
                 max_id: None,
                 since_id: None,
                 limit: None,
+                min_id: None,
+                exclude_reblogs: false,
             }
         );
     }
     #[test]
     fn test_pinned() {
-        let mut request = StatusesRequest::new();
-        request.pinned();
+        let request = StatusesRequest::new().pinned();
         assert_eq!(
             request,
             StatusesRequest {
@@ -254,13 +336,14 @@ mod tests {
                 max_id: None,
                 since_id: None,
                 limit: None,
+                min_id: None,
+                exclude_reblogs: false,
             }
         );
     }
     #[test]
     fn test_max_id() {
-        let mut request = StatusesRequest::new();
-        request.max_id("foo");
+        let request = StatusesRequest::new().max_id("foo");
         assert_eq!(
             request,
             StatusesRequest {
@@ -270,13 +353,14 @@ mod tests {
                 max_id: Some("foo".into()),
                 since_id: None,
                 limit: None,
+                min_id: None,
+                exclude_reblogs: false,
             }
         );
     }
     #[test]
     fn test_since_id() {
-        let mut request = StatusesRequest::new();
-        request.since_id("foo");
+        let request = StatusesRequest::new().since_id("foo");
         assert_eq!(
             request,
             StatusesRequest {
@@ -286,13 +370,14 @@ mod tests {
                 max_id: None,
                 since_id: Some("foo".into()),
                 limit: None,
+                min_id: None,
+                exclude_reblogs: false,
             }
         );
     }
     #[test]
     fn test_limit() {
-        let mut request = StatusesRequest::new();
-        request.limit(42);
+        let request = StatusesRequest::new().limit(42);
         assert_eq!(
             request,
             StatusesRequest {
@@ -302,236 +387,168 @@ mod tests {
                 max_id: None,
                 since_id: None,
                 limit: Some(42),
+                min_id: None,
+                exclude_reblogs: false,
+            }
+        );
+    }
+    #[test]
+    fn test_min_id() {
+        let request = StatusesRequest::new().min_id("foo");
+        assert_eq!(
+            request,
+            StatusesRequest {
+                only_media: false,
+                exclude_replies: false,
+                pinned: false,
+                max_id: None,
+                since_id: None,
+                limit: None,
+                min_id: Some("foo".into()),
+                exclude_reblogs: false,
             }
         );
     }
     #[test]
     fn test_to_querystring() {
         macro_rules! qs_test {
-            (|$r:ident| $b:block, $expected:expr) => {
-                {
-                    let mut $r = StatusesRequest::new();
-                    $b
-                    let qs = $r.to_querystring();
-                    assert_eq!(&qs, $expected);
-                }
-            }
+            (| $r:ident | $b:block, $expected:expr) => {{
+                let $r = StatusesRequest::new();
+                let $r = $b;
+                let qs = $r
+                    .to_querystring()
+                    .expect("Failed to serialize querystring");
+                assert_eq!(&qs, $expected);
+            }};
         }
 
+        qs_test!(|request| { request.only_media() }, "?only_media=1");
         qs_test!(
-            |request| {
-                request.only_media();
-            },
-            "?only_media=1"
-        );
-        qs_test!(
-            |request| {
-                request.exclude_replies();
-            },
+            |request| { request.exclude_replies() },
             "?exclude_replies=1"
         );
+        qs_test!(|request| { request.pinned() }, "?pinned=1");
+        qs_test!(|request| { request.max_id("foo") }, "?max_id=foo");
+        qs_test!(|request| { request.since_id("foo") }, "?since_id=foo");
+        qs_test!(|request| { request.limit(42) }, "?limit=42");
         qs_test!(
-            |request| {
-                request.pinned();
-            },
-            "?pinned=1"
-        );
-        qs_test!(
-            |request| {
-                request.max_id("foo");
-            },
-            "?max_id=foo"
-        );
-        qs_test!(
-            |request| {
-                request.since_id("foo");
-            },
-            "?since_id=foo"
-        );
-        qs_test!(
-            |request| {
-                request.limit(42);
-            },
-            "?limit=42"
-        );
-        qs_test!(
-            |request| {
-                request.only_media().exclude_replies();
-            },
+            |request| { request.only_media().exclude_replies() },
             "?only_media=1&exclude_replies=1"
         );
         qs_test!(
-            |request| {
-                request.only_media().pinned();
-            },
+            |request| { request.only_media().pinned() },
             "?only_media=1&pinned=1"
         );
         qs_test!(
-            |request| {
-                request.only_media().max_id("foo");
-            },
+            |request| { request.only_media().max_id("foo") },
             "?only_media=1&max_id=foo"
         );
         qs_test!(
-            |request| {
-                request.only_media().since_id("foo");
-            },
+            |request| { request.only_media().since_id("foo") },
             "?only_media=1&since_id=foo"
         );
         qs_test!(
-            |request| {
-                request.only_media().limit(42);
-            },
+            |request| { request.only_media().limit(42) },
             "?only_media=1&limit=42"
         );
         qs_test!(
-            |request| {
-                request.exclude_replies().only_media();
-            },
+            |request| { request.exclude_replies().only_media() },
             "?only_media=1&exclude_replies=1"
         );
         qs_test!(
-            |request| {
-                request.exclude_replies().pinned();
-            },
+            |request| { request.exclude_replies().pinned() },
             "?exclude_replies=1&pinned=1"
         );
         qs_test!(
-            |request| {
-                request.exclude_replies().max_id("foo");
-            },
+            |request| { request.exclude_replies().max_id("foo") },
             "?exclude_replies=1&max_id=foo"
         );
         qs_test!(
-            |request| {
-                request.exclude_replies().since_id("foo");
-            },
+            |request| { request.exclude_replies().since_id("foo") },
             "?exclude_replies=1&since_id=foo"
         );
         qs_test!(
-            |request| {
-                request.exclude_replies().limit(42);
-            },
+            |request| { request.exclude_replies().limit(42) },
             "?exclude_replies=1&limit=42"
         );
         qs_test!(
-            |request| {
-                request.pinned().only_media();
-            },
+            |request| { request.pinned().only_media() },
             "?only_media=1&pinned=1"
         );
         qs_test!(
-            |request| {
-                request.pinned().exclude_replies();
-            },
+            |request| { request.pinned().exclude_replies() },
             "?exclude_replies=1&pinned=1"
         );
         qs_test!(
-            |request| {
-                request.pinned().max_id("foo");
-            },
+            |request| { request.pinned().max_id("foo") },
             "?pinned=1&max_id=foo"
         );
         qs_test!(
-            |request| {
-                request.pinned().since_id("foo");
-            },
+            |request| { request.pinned().since_id("foo") },
             "?pinned=1&since_id=foo"
         );
         qs_test!(
-            |request| {
-                request.pinned().limit(42);
-            },
+            |request| { request.pinned().limit(42) },
             "?pinned=1&limit=42"
         );
         qs_test!(
-            |request| {
-                request.max_id("foo").only_media();
-            },
+            |request| { request.max_id("foo").only_media() },
             "?only_media=1&max_id=foo"
         );
         qs_test!(
-            |request| {
-                request.max_id("foo").exclude_replies();
-            },
+            |request| { request.max_id("foo").exclude_replies() },
             "?exclude_replies=1&max_id=foo"
         );
         qs_test!(
-            |request| {
-                request.max_id("foo").pinned();
-            },
+            |request| { request.max_id("foo").pinned() },
             "?pinned=1&max_id=foo"
         );
         qs_test!(
-            |request| {
-                request.max_id("foo").since_id("foo");
-            },
+            |request| { request.max_id("foo").since_id("foo") },
             "?max_id=foo&since_id=foo"
         );
         qs_test!(
-            |request| {
-                request.max_id("foo").limit(42);
-            },
+            |request| { request.max_id("foo").limit(42) },
             "?max_id=foo&limit=42"
         );
         qs_test!(
-            |request| {
-                request.since_id("foo").only_media();
-            },
+            |request| { request.since_id("foo").only_media() },
             "?only_media=1&since_id=foo"
         );
         qs_test!(
-            |request| {
-                request.since_id("foo").exclude_replies();
-            },
+            |request| { request.since_id("foo").exclude_replies() },
             "?exclude_replies=1&since_id=foo"
         );
         qs_test!(
-            |request| {
-                request.since_id("foo").pinned();
-            },
+            |request| { request.since_id("foo").pinned() },
             "?pinned=1&since_id=foo"
         );
         qs_test!(
-            |request| {
-                request.since_id("foo").max_id("foo");
-            },
+            |request| { request.since_id("foo").max_id("foo") },
             "?max_id=foo&since_id=foo"
         );
         qs_test!(
-            |request| {
-                request.since_id("foo").limit(42);
-            },
+            |request| { request.since_id("foo").limit(42) },
             "?since_id=foo&limit=42"
         );
         qs_test!(
-            |request| {
-                request.limit(42).only_media();
-            },
+            |request| { request.limit(42).only_media() },
             "?only_media=1&limit=42"
         );
         qs_test!(
-            |request| {
-                request.limit(42).exclude_replies();
-            },
+            |request| { request.limit(42).exclude_replies() },
             "?exclude_replies=1&limit=42"
         );
         qs_test!(
-            |request| {
-                request.limit(42).pinned();
-            },
+            |request| { request.limit(42).pinned() },
             "?pinned=1&limit=42"
         );
         qs_test!(
-            |request| {
-                request.limit(42).max_id("foo");
-            },
+            |request| { request.limit(42).max_id("foo") },
             "?max_id=foo&limit=42"
         );
         qs_test!(
-            |request| {
-                request.limit(42).since_id("foo");
-            },
+            |request| { request.limit(42).since_id("foo") },
             "?since_id=foo&limit=42"
         );
     }

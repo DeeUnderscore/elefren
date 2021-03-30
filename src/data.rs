@@ -1,3 +1,4 @@
+use serde::{Deserialize, Serialize};
 use std::borrow::Cow;
 
 /// Raw data about mastodon app. Save `Data` using `serde` to prevent needing

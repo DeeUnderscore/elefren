@@ -4,11 +4,11 @@ macro_rules! methods {
             fn $method<T: for<'de> serde::Deserialize<'de>>(&self, url: String)
             -> Result<T>
             {
-                let response = self.send(
+                let response = self.send_blocking(
                         self.client.$method(&url)
                 )?;
 
-                deserialise(response)
+                deserialise_blocking(response)
             }
          )+
     };
@@ -17,7 +17,7 @@ macro_rules! methods {
 macro_rules! paged_routes {
 
     (($method:ident) $name:ident: $url:expr => $ret:ty, $($rest:tt)*) => {
-        doc_comment! {
+        doc_comment::doc_comment! {
             concat!(
             "Equivalent to `", stringify!($method), " /api/v1/",
             $url,
@@ -40,9 +40,9 @@ macro_rules! paged_routes {
             "# }\n",
             "```"
             ),
-            fn $name(&self) -> Result<Page<$ret, H>> {
+            fn $name(&self) -> Result<Page<$ret>> {
                 let url = self.route(concat!("/api/v1/", $url));
-                let response = self.send(
+                let response = self.send_blocking(
                         self.client.$method(&url)
                 )?;
 
@@ -55,14 +55,15 @@ macro_rules! paged_routes {
     };
 
     ((get ($($(#[$m:meta])* $param:ident: $typ:ty,)*)) $name:ident: $url:expr => $ret:ty, $($rest:tt)*) => {
-        doc_comment! {
+        doc_comment::doc_comment! {
             concat!(
                 "Equivalent to `get /api/v1/",
                 $url,
                 "`\n# Errors\nIf `access_token` is not set."
             ),
-            fn $name<'a>(&self, $($param: $typ,)*) -> Result<Page<$ret, H>> {
+            fn $name<'a>(&self, $($param: $typ,)*) -> Result<Page<$ret>> {
                 use serde_urlencoded;
+                use serde::Serialize;
 
                 #[derive(Serialize)]
                 struct Data<'a> {
@@ -78,7 +79,7 @@ macro_rules! paged_routes {
 
                 let qs_data = Data {
                     $(
-                            $param: $param,
+                            $param,
                     )*
                     _marker: ::std::marker::PhantomData,
                 };
@@ -87,7 +88,7 @@ macro_rules! paged_routes {
 
                 let url = format!(concat!("/api/v1/", $url, "?{}"), &qs);
 
-                let response = self.send(
+                let response = self.send_blocking(
                         self.client.get(&url)
                 )?;
 
@@ -103,7 +104,7 @@ macro_rules! paged_routes {
 
 macro_rules! route_v2 {
     ((get ($($param:ident: $typ:ty,)*)) $name:ident: $url:expr => $ret:ty, $($rest:tt)*) => {
-        doc_comment! {
+        doc_comment::doc_comment! {
             concat!(
                 "Equivalent to `get /api/v2/",
                 $url,
@@ -111,6 +112,7 @@ macro_rules! route_v2 {
             ),
             fn $name<'a>(&self, $($param: $typ,)*) -> Result<$ret> {
                 use serde_urlencoded;
+                use serde::Serialize;
 
                 #[derive(Serialize)]
                 struct Data<'a> {
@@ -123,7 +125,7 @@ macro_rules! route_v2 {
 
                 let qs_data = Data {
                     $(
-                            $param: $param,
+                            $param,
                     )*
                     _marker: ::std::marker::PhantomData,
                 };
@@ -144,43 +146,8 @@ macro_rules! route_v2 {
 
 macro_rules! route {
 
-    ((post multipart ($($param:ident: $typ:ty,)*)) $name:ident: $url:expr => $ret:ty, $($rest:tt)*) => {
-        doc_comment! {
-            concat!(
-                "Equivalent to `post /api/v1/",
-                $url,
-                "`\n# Errors\nIf `access_token` is not set."),
-            fn $name(&self, $($param: $typ,)*) -> Result<$ret> {
-                use reqwest::multipart::Form;
-
-                let form_data = Form::new()
-                    $(
-                        .file(stringify!($param), $param.as_ref())?
-                     )*;
-
-                let response = self.send(
-                        self.client
-                            .post(&self.route(concat!("/api/v1/", $url)))
-                            .multipart(form_data)
-                )?;
-
-                let status = response.status().clone();
-
-                if status.is_client_error() {
-                    return Err(Error::Client(status));
-                } else if status.is_server_error() {
-                    return Err(Error::Server(status));
-                }
-
-                deserialise(response)
-            }
-        }
-
-        route!{$($rest)*}
-    };
-
     ((get ($($param:ident: $typ:ty,)*)) $name:ident: $url:expr => $ret:ty, $($rest:tt)*) => {
-        doc_comment! {
+        doc_comment::doc_comment! {
             concat!(
                 "Equivalent to `get /api/v1/",
                 $url,
@@ -188,6 +155,7 @@ macro_rules! route {
             ),
             fn $name<'a>(&self, $($param: $typ,)*) -> Result<$ret> {
                 use serde_urlencoded;
+                use serde::Serialize;
 
                 #[derive(Serialize)]
                 struct Data<'a> {
@@ -200,7 +168,7 @@ macro_rules! route {
 
                 let qs_data = Data {
                     $(
-                            $param: $param,
+                            $param,
                     )*
                     _marker: ::std::marker::PhantomData,
                 };
@@ -217,7 +185,7 @@ macro_rules! route {
     };
 
     (($method:ident ($($param:ident: $typ:ty,)*)) $name:ident: $url:expr => $ret:ty, $($rest:tt)*) => {
-        doc_comment! {
+        doc_comment::doc_comment! {
             concat!(
                 "Equivalent to `", stringify!($method), " /api/v1/",
                 $url,
@@ -225,13 +193,13 @@ macro_rules! route {
             ),
             fn $name(&self, $($param: $typ,)*) -> Result<$ret> {
 
-                let form_data = json!({
+                let form_data = serde_json::json!({
                     $(
                         stringify!($param): $param,
                     )*
                 });
 
-                let response = self.send(
+                let response = self.send_blocking(
                         self.client.$method(&self.route(concat!("/api/v1/", $url)))
                             .json(&form_data)
                 )?;
@@ -244,7 +212,7 @@ macro_rules! route {
                     return Err(Error::Server(status));
                 }
 
-                deserialise(response)
+                deserialise_blocking(response)
             }
         }
 
@@ -252,7 +220,7 @@ macro_rules! route {
     };
 
     (($method:ident) $name:ident: $url:expr => $ret:ty, $($rest:tt)*) => {
-        doc_comment! {
+        doc_comment::doc_comment! {
             concat!(
                 "Equivalent to `", stringify!($method), " /api/v1/",
                 $url,
@@ -290,7 +258,7 @@ macro_rules! route_id {
 
     ($(($method:ident) $name:ident: $url:expr => $ret:ty,)*) => {
         $(
-            doc_comment! {
+            doc_comment::doc_comment! {
                 concat!(
                     "Equivalent to `", stringify!($method), " /api/v1/",
                     $url,
@@ -324,7 +292,7 @@ macro_rules! route_id {
 macro_rules! paged_routes_with_id {
 
     (($method:ident) $name:ident: $url:expr => $ret:ty, $($rest:tt)*) => {
-        doc_comment! {
+        doc_comment::doc_comment! {
             concat!(
                 "Equivalent to `", stringify!($method), " /api/v1/",
                 $url,
@@ -347,9 +315,9 @@ macro_rules! paged_routes_with_id {
                 "# }\n",
                 "```"
             ),
-            fn $name(&self, id: &str) -> Result<Page<$ret, H>> {
+            fn $name(&self, id: &str) -> Result<Page<$ret>> {
                 let url = self.route(&format!(concat!("/api/v1/", $url), id));
-                let response = self.send(
+                let response = self.send_blocking(
                         self.client.$method(&url)
                 )?;
 

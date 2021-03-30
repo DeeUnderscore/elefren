@@ -1,11 +1,17 @@
+use serde::Deserialize;
+
 /// Data structures for ser/de of account-related resources
 pub mod account;
+/// Data structures for ser/de of activity-related resources
+pub mod activity;
 /// Data structures for ser/de of attachment-related resources
 pub mod attachment;
 /// Data structures for ser/de of card-related resources
 pub mod card;
 /// Data structures for ser/de of contetx-related resources
 pub mod context;
+/// Data structures for ser/de of streaming events
+pub mod event;
 /// Data structures for ser/de of filter-related resources
 pub mod filter;
 /// Data structures for ser/de of instance-related resources
@@ -17,6 +23,8 @@ pub mod list;
 pub mod mention;
 /// Data structures for ser/de of notification-related resources
 pub mod notification;
+/// Data structures for ser/de of poll resources
+pub mod poll;
 /// Data structures for ser/de of push-subscription-related resources
 pub mod push;
 /// Data structures for ser/de of relationship-related resources
@@ -41,6 +49,7 @@ pub mod prelude {
         attachment::{Attachment, MediaType},
         card::Card,
         context::Context,
+        event::Event,
         filter::{Filter, FilterContext},
         instance::*,
         list::List,

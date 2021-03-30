@@ -1,12 +1,16 @@
 //! A module containing everything relating to a account returned from the api.
 
+use crate::status_builder;
 use chrono::prelude::*;
-use serde::de::{self, Deserialize, Deserializer, Unexpected};
-use status_builder;
+use serde::{
+    de::{self, Unexpected},
+    Deserialize,
+    Serialize,
+};
 use std::path::PathBuf;
 
 /// A struct representing an Account.
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Debug, Clone, Deserialize, PartialEq)]
 pub struct Account {
     /// Equals `username` for local users, includes `@domain` for remote ones.
     pub acct: String,
@@ -54,8 +58,10 @@ pub struct Account {
 /// A single name: value pair from a user's profile
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
 pub struct MetadataField {
-    name: String,
-    value: String,
+    /// name part of metadata
+    pub name: String,
+    /// value part of metadata
+    pub value: String,
 }
 
 impl MetadataField {
@@ -68,17 +74,17 @@ impl MetadataField {
 }
 
 /// An extra object given from `verify_credentials` giving defaults about a user
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Debug, Clone, Deserialize, PartialEq)]
 pub struct Source {
-    privacy: status_builder::Visibility,
+    privacy: Option<status_builder::Visibility>,
     #[serde(deserialize_with = "string_or_bool")]
     sensitive: bool,
-    note: String,
+    note: Option<String>,
     fields: Option<Vec<MetadataField>>,
 }
 
-fn string_or_bool<'de, D: Deserializer<'de>>(val: D) -> ::std::result::Result<bool, D::Error> {
-    #[derive(Clone, Debug, Deserialize)]
+fn string_or_bool<'de, D: de::Deserializer<'de>>(val: D) -> ::std::result::Result<bool, D::Error> {
+    #[derive(Clone, Debug, Deserialize, PartialEq)]
     #[serde(untagged)]
     pub enum BoolOrString {
         Bool(bool),
@@ -129,7 +135,7 @@ pub(crate) struct Credentials {
 mod fields_attributes_ser {
     use super::*;
     use serde::ser::{SerializeMap, Serializer};
-    pub(crate) fn ser<S>(attrs: &Vec<MetadataField>, serializer: S) -> Result<S::Ok, S::Error>
+    pub(crate) fn ser<S>(attrs: &[MetadataField], serializer: S) -> Result<S::Ok, S::Error>
     where
         S: Serializer,
     {

@@ -1,7 +1,8 @@
 //! Module representing cards of statuses.
+use serde::Deserialize;
 
 /// A card of a status.
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Debug, Clone, Deserialize, PartialEq)]
 pub struct Card {
     /// The url associated with the card.
     pub url: String,
@@ -22,7 +23,7 @@ pub struct Card {
     /// OEmbed data
     html: Option<String>,
     /// OEmbed data
-    width: Option<String>,
+    width: Option<u64>,
     /// OEmbed data
-    height: Option<String>,
+    height: Option<u64>,
 }

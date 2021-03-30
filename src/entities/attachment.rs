@@ -1,7 +1,8 @@
 //! Module containing everything related to media attachements.
+use serde::Deserialize;
 
 /// A struct representing a media attachment.
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Debug, Clone, Deserialize, PartialEq)]
 pub struct Attachment {
     /// ID of the attachment.
     pub id: String,
@@ -24,7 +25,7 @@ pub struct Attachment {
 }
 
 /// Information about the attachment itself.
-#[derive(Debug, Deserialize, Clone)]
+#[derive(Debug, Deserialize, Clone, PartialEq)]
 pub struct Meta {
     /// Original version.
     pub original: Option<ImageDetails>,
@@ -33,7 +34,7 @@ pub struct Meta {
 }
 
 /// Dimensions of an attachement.
-#[derive(Debug, Deserialize, Clone)]
+#[derive(Debug, Deserialize, Clone, PartialEq)]
 pub struct ImageDetails {
     /// width of attachment.
     width: u64,
@@ -46,7 +47,7 @@ pub struct ImageDetails {
 }
 
 /// The type of media attachment.
-#[derive(Debug, Deserialize, Clone, Copy)]
+#[derive(Debug, Deserialize, Clone, Copy, PartialEq)]
 pub enum MediaType {
     /// An image.
     #[serde(rename = "image")]

@@ -1,9 +1,12 @@
 use std::borrow::Cow;
 
-use try_from::TryInto;
+use serde::Serialize;
+use std::convert::TryInto;
 
-use errors::{Error, Result};
-use scopes::Scopes;
+use crate::{
+    errors::{Error, Result},
+    scopes::Scopes,
+};
 
 /// Represents an application that can be registered with a mastodon instance
 #[derive(Clone, Debug, Default, Serialize, PartialEq)]
@@ -58,7 +61,7 @@ impl App {
 /// use elefren::apps::App;
 /// use std::error::Error;
 ///
-/// # fn main() -> Result<(), Box<Error>> {
+/// # fn main() -> Result<(), Box<dyn Error>> {
 /// let mut builder = App::builder();
 /// builder.client_name("elefren_test");
 /// let app = builder.build()?;
@@ -117,28 +120,20 @@ impl<'a> AppBuilder<'a> {
         Ok(App {
             client_name: self
                 .client_name
-                .ok_or_else(|| Error::MissingField("client_name"))?
+                .ok_or(Error::MissingField("client_name"))?
                 .into(),
             redirect_uris: self
                 .redirect_uris
                 .unwrap_or_else(|| "urn:ietf:wg:oauth:2.0:oob".into())
                 .into(),
-            scopes: self.scopes.unwrap_or_else(|| Scopes::read_all()),
+            scopes: self.scopes.unwrap_or_else(Scopes::read_all),
             website: self.website.map(|s| s.into()),
         })
     }
 }
 
-impl TryInto<App> for App {
-    type Err = Error;
-
-    fn try_into(self) -> Result<App> {
-        Ok(self)
-    }
-}
-
 impl<'a> TryInto<App> for AppBuilder<'a> {
-    type Err = Error;
+    type Error = Error;
 
     fn try_into(self) -> Result<App> {
         Ok(self.build()?)
@@ -230,5 +225,4 @@ mod tests {
             .expect("Couldn't make AppBuilder into App");
         assert_eq!(expected, result);
     }
-
 }

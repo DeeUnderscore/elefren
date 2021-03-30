@@ -1,8 +1,9 @@
 //! Module containing everything related to an instance.
 use super::account::Account;
+use serde::Deserialize;
 
 /// A struct containing info of an instance.
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Debug, Clone, Deserialize, PartialEq)]
 pub struct Instance {
     /// URI of the current instance
     pub uri: String,
@@ -30,14 +31,14 @@ pub struct Instance {
 }
 
 /// Object containing url for streaming api.
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Debug, Clone, Deserialize, PartialEq)]
 pub struct StreamingApi {
     /// Url for streaming API, typically a `wss://` url.
     pub streaming_api: String,
 }
 
 /// Statistics about the Mastodon instance.
-#[derive(Debug, Clone, Copy, Deserialize)]
+#[derive(Debug, Clone, Copy, Deserialize, PartialEq)]
 pub struct Stats {
     user_count: u64,
     status_count: u64,

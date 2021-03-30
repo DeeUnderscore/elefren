@@ -4,19 +4,16 @@ use std::{
     path::Path,
 };
 
-use tomlcrate;
-
-use data::Data;
-use Result;
+use crate::{data::Data, Result};
 
 /// Attempts to deserialize a Data struct from a string
 pub fn from_str(s: &str) -> Result<Data> {
-    Ok(tomlcrate::from_str(s)?)
+    Ok(toml::from_str(s)?)
 }
 
 /// Attempts to deserialize a Data struct from a slice of bytes
 pub fn from_slice(s: &[u8]) -> Result<Data> {
-    Ok(tomlcrate::from_slice(s)?)
+    Ok(toml::from_slice(s)?)
 }
 
 /// Attempts to deserialize a Data struct from something that implements
@@ -36,12 +33,12 @@ pub fn from_file<P: AsRef<Path>>(path: P) -> Result<Data> {
 
 /// Attempts to serialize a Data struct to a String
 pub fn to_string(data: &Data) -> Result<String> {
-    Ok(tomlcrate::to_string_pretty(data)?)
+    Ok(toml::to_string_pretty(data)?)
 }
 
 /// Attempts to serialize a Data struct to a Vec of bytes
 pub fn to_vec(data: &Data) -> Result<Vec<u8>> {
-    Ok(tomlcrate::to_vec(data)?)
+    Ok(toml::to_vec(data)?)
 }
 
 /// Attempts to serialize a Data struct to something that implements the
@@ -49,7 +46,7 @@ pub fn to_vec(data: &Data) -> Result<Vec<u8>> {
 pub fn to_writer<W: Write>(data: &Data, writer: W) -> Result<()> {
     let mut buf_writer = BufWriter::new(writer);
     let vec = to_vec(data)?;
-    buf_writer.write(&vec)?;
+    buf_writer.write_all(&vec)?;
     Ok(())
 }
 
@@ -83,7 +80,7 @@ mod tests {
     use std::{fs::OpenOptions, io::Cursor};
     use tempfile::{tempdir, NamedTempFile};
 
-    const DOC: &'static str = indoc!(
+    const DOC: &'static str = indoc::indoc!(
         r#"
             base = "https://example.com"
             client_id = "adbc01234"

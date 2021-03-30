@@ -1,10 +1,11 @@
 //! A module about contexts of statuses.
+use serde::Deserialize;
 
 use super::status::Status;
 
 /// A context of a status returning a list of statuses it replied to and
 /// statuses replied to it.
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Debug, Clone, Deserialize, PartialEq)]
 pub struct Context {
     /// Statuses that were replied to.
     pub ancestors: Vec<Status>,

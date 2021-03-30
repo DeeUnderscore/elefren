@@ -4,10 +4,7 @@ use std::{
     path::Path,
 };
 
-use serde_json;
-
-use data::Data;
-use Result;
+use crate::{data::Data, Result};
 
 /// Attempts to deserialize a Data struct from a string
 pub fn from_str(s: &str) -> Result<Data> {
@@ -49,7 +46,7 @@ pub fn to_vec(data: &Data) -> Result<Vec<u8>> {
 pub fn to_writer<W: Write>(data: &Data, writer: W) -> Result<()> {
     let mut buf_writer = BufWriter::new(writer);
     let vec = to_vec(data)?;
-    buf_writer.write(&vec)?;
+    buf_writer.write_all(&vec)?;
     Ok(())
 }
 
@@ -83,7 +80,7 @@ mod tests {
     use std::{fs::OpenOptions, io::Cursor};
     use tempfile::{tempdir, NamedTempFile};
 
-    const DOC: &'static str = indoc!(
+    const DOC: &'static str = indoc::indoc!(
         r#"
             {
                 "base": "https://example.com",
