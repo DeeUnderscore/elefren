@@ -28,7 +28,7 @@ pub struct MediaBuilder {
 /// Enum representing possible sources of attachments to upload
 pub enum MediaBuilderData {
     /// An arbitrary reader. It is useful for reading from media already in memory.
-    Reader(Box<Read + Send>),
+    Reader(Box<dyn Read + Send>),
 
     /// Variant represening a file path of the file to attach.
     File(Cow<'static, str>),

@@ -7,16 +7,6 @@ use url::Url;
 
 use http_send::HttpSend;
 
-/// Represents a single page of API results
-#[derive(Debug, Clone)]
-pub struct Page<'a, T: for<'de> Deserialize<'de>, H: 'a + HttpSend> {
-    mastodon: &'a Mastodon<H>,
-    next: Option<Url>,
-    prev: Option<Url>,
-    /// Initial set of items
-    pub initial_items: Vec<T>,
-}
-
 macro_rules! pages {
     ($($direction:ident: $fun:ident),*) => {
 
@@ -43,6 +33,77 @@ macro_rules! pages {
     }
 }
 
+/// Owned version of the `Page` struct in this module. Allows this to be more
+/// easily stored for later use
+///
+/// # Example
+///
+/// ```no_run
+/// # extern crate elefren;
+/// # use elefren::Mastodon;
+/// # use elefren::page::OwnedPage;
+/// # use elefren::http_send::HttpSender;
+/// # use elefren::entities::status::Status;
+/// # use std::cell::RefCell;
+/// # use elefren::prelude::*;
+/// # fn main() -> Result<(), elefren::Error> {
+/// # let data = Data {
+/// #   base: "".into(),
+/// #   client_id: "".into(),
+/// #   client_secret: "".into(),
+/// #   redirect: "".into(),
+/// #   token: "".into(),
+/// # };
+/// struct HomeTimeline {
+///     client: Mastodon,
+///     page: RefCell<Option<OwnedPage<Status, HttpSender>>>,
+/// }
+/// let client = Mastodon::from(data);
+/// let home = client.get_home_timeline()?.to_owned();
+/// let tl = HomeTimeline {
+///     client,
+///     page: RefCell::new(Some(home)),
+/// };
+/// # Ok(())
+/// # }
+/// ```
+#[derive(Debug, Clone)]
+pub struct OwnedPage<T: for<'de> Deserialize<'de>, H: HttpSend> {
+    mastodon: Mastodon<H>,
+    next: Option<Url>,
+    prev: Option<Url>,
+    /// Initial set of items
+    pub initial_items: Vec<T>,
+}
+
+impl<T: for<'de> Deserialize<'de>, H: HttpSend> OwnedPage<T, H> {
+    pages! {
+        next: next_page,
+        prev: prev_page
+    }
+}
+
+impl<'a, T: for<'de> Deserialize<'de>, H: HttpSend> From<Page<'a, T, H>> for OwnedPage<T, H> {
+    fn from(page: Page<'a, T, H>) -> OwnedPage<T, H> {
+        OwnedPage {
+            mastodon: page.mastodon.clone(),
+            next: page.next,
+            prev: page.prev,
+            initial_items: page.initial_items,
+        }
+    }
+}
+
+/// Represents a single page of API results
+#[derive(Debug, Clone)]
+pub struct Page<'a, T: for<'de> Deserialize<'de>, H: 'a + HttpSend> {
+    mastodon: &'a Mastodon<H>,
+    next: Option<Url>,
+    prev: Option<Url>,
+    /// Initial set of items
+    pub initial_items: Vec<T>,
+}
+
 impl<'a, T: for<'de> Deserialize<'de>, H: HttpSend> Page<'a, T, H> {
     pages! {
         next: next_page,
@@ -61,6 +122,44 @@ impl<'a, T: for<'de> Deserialize<'de>, H: HttpSend> Page<'a, T, H> {
 }
 
 impl<'a, T: Clone + for<'de> Deserialize<'de>, H: HttpSend> Page<'a, T, H> {
+    /// Returns an owned version of this struct that doesn't borrow the client
+    /// that created it
+    ///
+    /// # Example
+    ///
+    /// ```no_run
+    /// # extern crate elefren;
+    /// # use elefren::Mastodon;
+    /// # use elefren::page::OwnedPage;
+    /// # use elefren::http_send::HttpSender;
+    /// # use elefren::entities::status::Status;
+    /// # use std::cell::RefCell;
+    /// # use elefren::prelude::*;
+    /// # fn main() -> Result<(), elefren::Error> {
+    /// # let data = Data {
+    /// #   base: "".into(),
+    /// #   client_id: "".into(),
+    /// #   client_secret: "".into(),
+    /// #   redirect: "".into(),
+    /// #   token: "".into(),
+    /// # };
+    /// struct HomeTimeline {
+    ///     client: Mastodon,
+    ///     page: RefCell<Option<OwnedPage<Status, HttpSender>>>,
+    /// }
+    /// let client = Mastodon::from(data);
+    /// let home = client.get_home_timeline()?.to_owned();
+    /// let tl = HomeTimeline {
+    ///     client,
+    ///     page: RefCell::new(Some(home)),
+    /// };
+    /// # Ok(())
+    /// # }
+    /// ```
+    pub fn to_owned(self) -> OwnedPage<T, H> {
+        OwnedPage::from(self)
+    }
+
     /// Returns an iterator that provides a stream of `T`s
     ///
     /// This abstracts away the process of iterating over each item in a page,

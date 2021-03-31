@@ -6,6 +6,8 @@ pub mod attachment;
 pub mod card;
 /// Data structures for ser/de of contetx-related resources
 pub mod context;
+/// Data structures for ser/de of streaming events
+pub mod event;
 /// Data structures for ser/de of filter-related resources
 pub mod filter;
 /// Data structures for ser/de of instance-related resources
@@ -41,6 +43,7 @@ pub mod prelude {
         attachment::{Attachment, MediaType},
         card::Card,
         context::Context,
+        event::Event,
         filter::{Filter, FilterContext},
         instance::*,
         list::List,

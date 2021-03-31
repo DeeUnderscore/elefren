@@ -11,13 +11,16 @@ use requests::{
     UpdateCredsRequest,
     UpdatePushRequest,
 };
-use status_builder::StatusBuilder;
+use status_builder::NewStatus;
 use media_builder::MediaBuilder;
 
 /// Represents the set of methods that a Mastodon Client can do, so that
 /// implementations might be swapped out for testing
 #[allow(unused)]
 pub trait MastodonClient<H: HttpSend = HttpSender> {
+    /// Type that wraps streaming API streams
+    type Stream: Iterator<Item = Event>;
+
     /// GET /api/v1/favourites
     fn favourites(&self) -> Result<Page<Status, H>> {
         unimplemented!("This method was not implemented");
@@ -111,11 +114,15 @@ pub trait MastodonClient<H: HttpSend = HttpSender> {
         unimplemented!("This method was not implemented");
     }
     /// POST /api/v1/media
-    fn media(&self, file: Cow<'static, str>) -> Result<Attachment> {
+    fn media(&self, file: MediaBuilder) -> Result<Attachment> {
         unimplemented!("This method was not implemented");
     }
     /// POST /api/v1/notifications/clear
     fn clear_notifications(&self) -> Result<Empty> {
+        unimplemented!("This method was not implemented");
+    }
+    /// POST /api/v1/notifications/dismiss
+    fn dismiss_notification(&self, id: &str) -> Result<Empty> {
         unimplemented!("This method was not implemented");
     }
     /// GET /api/v1/accounts/:id
@@ -123,7 +130,7 @@ pub trait MastodonClient<H: HttpSend = HttpSender> {
         unimplemented!("This method was not implemented");
     }
     /// POST /api/v1/accounts/:id/follow
-    fn follow(&self, id: &str) -> Result<Account> {
+    fn follow(&self, id: &str) -> Result<Relationship> {
         unimplemented!("This method was not implemented");
     }
     /// POST /api/v1/accounts/:id/unfollow
@@ -131,19 +138,19 @@ pub trait MastodonClient<H: HttpSend = HttpSender> {
         unimplemented!("This method was not implemented");
     }
     /// GET /api/v1/accounts/:id/block
-    fn block(&self, id: &str) -> Result<Account> {
+    fn block(&self, id: &str) -> Result<Relationship> {
         unimplemented!("This method was not implemented");
     }
     /// GET /api/v1/accounts/:id/unblock
-    fn unblock(&self, id: &str) -> Result<Account> {
+    fn unblock(&self, id: &str) -> Result<Relationship> {
         unimplemented!("This method was not implemented");
     }
     /// GET /api/v1/accounts/:id/mute
-    fn mute(&self, id: &str) -> Result<Account> {
+    fn mute(&self, id: &str) -> Result<Relationship> {
         unimplemented!("This method was not implemented");
     }
     /// GET /api/v1/accounts/:id/unmute
-    fn unmute(&self, id: &str) -> Result<Account> {
+    fn unmute(&self, id: &str) -> Result<Relationship> {
         unimplemented!("This method was not implemented");
     }
     /// GET /api/v1/notifications/:id
@@ -187,7 +194,7 @@ pub trait MastodonClient<H: HttpSend = HttpSender> {
         unimplemented!("This method was not implemented");
     }
     /// POST /api/v1/statuses
-    fn new_status(&self, status: StatusBuilder) -> Result<Status> {
+    fn new_status(&self, status: NewStatus) -> Result<Status> {
         unimplemented!("This method was not implemented");
     }
     /// GET /api/v1/timelines/public
@@ -318,8 +325,65 @@ pub trait MastodonClient<H: HttpSend = HttpSender> {
         unimplemented!("This method was not implemented");
     }
 
-    /// Helper for POST /api/v1/media
-     fn new_media(&self, media: MediaBuilder)-> Result<Attachment> {
-         unimplemented!("This method was not implemented");
-     }
+    /// Returns events that are relevant to the authorized user, i.e. home
+    /// timeline and notifications
+    fn streaming_user(&self) -> Result<Self::Stream> {
+        unimplemented!("This method was not implemented");
+    }
+
+    /// Returns all public statuses
+    fn streaming_public(&self) -> Result<Self::Stream> {
+        unimplemented!("This method was not implemented");
+    }
+
+    /// Returns all local statuses
+    fn streaming_local(&self) -> Result<Self::Stream> {
+        unimplemented!("This method was not implemented");
+    }
+
+    /// Returns all public statuses for a particular hashtag
+    fn streaming_public_hashtag(&self, hashtag: &str) -> Result<Self::Stream> {
+        unimplemented!("This method was not implemented");
+    }
+
+    /// Returns all local statuses for a particular hashtag
+    fn streaming_local_hashtag(&self, hashtag: &str) -> Result<Self::Stream> {
+        unimplemented!("This method was not implemented");
+    }
+
+    /// Returns statuses for a list
+    fn streaming_list(&self, list_id: &str) -> Result<Self::Stream> {
+        unimplemented!("This method was not implemented");
+    }
+
+    /// Returns all direct messages
+    fn streaming_direct(&self) -> Result<Self::Stream> {
+        unimplemented!("This method was not implemented");
+    }
+}
+
+/// Trait that represents clients that can make unauthenticated calls to a
+/// mastodon instance
+#[allow(unused)]
+pub trait MastodonUnauthenticated<H: HttpSend> {
+    /// GET /api/v1/statuses/:id
+    fn get_status(&self, id: &str) -> Result<Status> {
+        unimplemented!("This method was not implemented");
+    }
+    /// GET /api/v1/statuses/:id/context
+    fn get_context(&self, id: &str) -> Result<Context> {
+        unimplemented!("This method was not implemented");
+    }
+    /// GET /api/v1/statuses/:id/card
+    fn get_card(&self, id: &str) -> Result<Card> {
+        unimplemented!("This method was not implemented");
+    }
+    /// GET /api/v1/statuses/:id/reblogged_by
+    fn reblogged_by(&self, id: &str) -> Result<Page<Account, H>> {
+        unimplemented!("This method was not implemented");
+    }
+    /// GET /api/v1/statuses/:id/favourited_by
+    fn favourited_by(&self, id: &str) -> Result<Page<Account, H>> {
+        unimplemented!("This method was not implemented");
+    }
 }

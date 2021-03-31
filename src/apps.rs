@@ -230,5 +230,4 @@ mod tests {
             .expect("Couldn't make AppBuilder into App");
         assert_eq!(expected, result);
     }
-
 }

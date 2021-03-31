@@ -20,7 +20,7 @@ fn main() -> Result<(), Box<error::Error>> {
         ..MediaBuilder::from_file(input.into())
     };
 
-    let attachment = mastodon.new_media(builder)?;
+    let attachment = mastodon.media(builder)?;
 
     println!("{:#?}", attachment);
 

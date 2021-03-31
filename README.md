@@ -19,20 +19,20 @@ To add `elefren` to your project, add the following to the
 `[dependencies]` section of your `Cargo.toml`
 
 ```toml
-elefren = "0.16"
-```
-
-## Usage
-
-To use this crate in your project, add this to your crate root (lib.rs, main.rs, etc):
-
-```rust,ignore
-extern crate elefren;
+elefren = "0.22"
 ```
 
 ## Example
 
+In your `Cargo.toml`, make sure you enable the `toml` feature:
+
+```toml
+[dependencies]
+elefren = { version = "0.22", features = ["toml"] }
+```
+
 ```rust,no_run
+// src/main.rs
 extern crate elefren;
 
 use std::error::Error;
@@ -41,7 +41,7 @@ use elefren::prelude::*;
 use elefren::helpers::toml; // requires `features = ["toml"]`
 use elefren::helpers::cli;
 
-fn main() -> Result<(), Box<Error>> {
+fn main() -> Result<(), Box<dyn Error>> {
     let mastodon = if let Ok(data) = toml::from_file("mastodon-data.toml") {
         Mastodon::from(data)
     } else {
@@ -55,7 +55,7 @@ fn main() -> Result<(), Box<Error>> {
     Ok(())
 }
 
-fn register() -> Result<Mastodon, Box<Error>> {
+fn register() -> Result<Mastodon, Box<dyn Error>> {
     let registration = Registration::new("https://mastodon.social")
                                     .client_name("elefren-examples")
                                     .build()?;
@@ -66,3 +66,35 @@ fn register() -> Result<Mastodon, Box<Error>> {
 
     Ok(mastodon)
 }
+```
+
+It also supports the [Streaming API](https://docs.joinmastodon.org/api/streaming):
+
+```no_run
+use elefren::prelude::*;
+use elefren::entities::event::Event;
+
+use std::error::Error;
+
+fn main() -> Result<(), Box<Error>> {
+    let data = Data {
+      base: "".into(),
+      client_id: "".into(),
+      client_secret: "".into(),
+      redirect: "".into(),
+      token: "".into(),
+    };
+
+    let client = Mastodon::from(data);
+
+    for event in client.streaming_user()? {
+        match event {
+            Event::Update(ref status) => { /* .. */ },
+            Event::Notification(ref notification) => { /* .. */ },
+            Event::Delete(ref id) => { /* .. */ },
+            Event::FiltersChanged => { /* .. */ },
+        }
+    }
+    Ok(())
+}
+```

@@ -1,7 +1,6 @@
 //! # Elefren: API Wrapper around the Mastodon API.
 //!
-//! Most of the api is documented on [Mastodon's
-//! github](https://github.com/tootsuite/mastodon/blob/master/docs/Using-the-API/API.md#tag)
+//! Most of the api is documented on [Mastodon's website](https://docs.joinmastodon.org/client/intro/)
 //!
 //! ```no_run
 //! # extern crate elefren;
@@ -27,6 +26,36 @@
 //! # Ok(())
 //! # }
 //! ```
+//!
+//! Elefren also supports Mastodon's Streaming API:
+//!
+//! # Example
+//!
+//! ```no_run
+//! # extern crate elefren;
+//! # use elefren::prelude::*;
+//! # use std::error::Error;
+//! use elefren::entities::event::Event;
+//! # fn main() -> Result<(), Box<Error>> {
+//! # let data = Data {
+//! #   base: "".into(),
+//! #   client_id: "".into(),
+//! #   client_secret: "".into(),
+//! #   redirect: "".into(),
+//! #   token: "".into(),
+//! # };
+//! let client = Mastodon::from(data);
+//! for event in client.streaming_user()? {
+//!     match event {
+//!         Event::Update(ref status) => { /* .. */ },
+//!         Event::Notification(ref notification) => { /* .. */ },
+//!         Event::Delete(ref id) => { /* .. */ },
+//!         Event::FiltersChanged => { /* .. */ },
+//!     }
+//! }
+//! # Ok(())
+//! # }
+//! ```
 
 #![deny(
     missing_docs,
@@ -40,8 +69,10 @@
     unused_import_braces,
     unused_qualifications
 )]
-#![allow(intra_doc_link_resolution_failure)]
+#![allow(broken_intra_doc_links)]
 
+#[macro_use]
+extern crate log;
 #[macro_use]
 extern crate serde_derive;
 #[macro_use]
@@ -53,10 +84,15 @@ extern crate serde_json;
 extern crate chrono;
 extern crate reqwest;
 extern crate serde;
+extern crate serde_qs;
 extern crate serde_urlencoded;
 extern crate tap_reader;
 extern crate try_from;
 extern crate url;
+extern crate tungstenite;
+
+#[cfg(feature = "env")]
+extern crate envy;
 
 #[cfg(feature = "toml")]
 extern crate toml as tomlcrate;
@@ -65,16 +101,18 @@ extern crate toml as tomlcrate;
 extern crate tempfile;
 
 #[cfg(test)]
-#[cfg_attr(
-    all(test, any(feature = "toml", feature = "json")),
-    macro_use
-)]
+#[cfg_attr(all(test, any(feature = "toml", feature = "json")), macro_use)]
 extern crate indoc;
 
-use std::{borrow::Cow, ops};
+use std::{
+    borrow::Cow,
+    io::BufRead,
+    ops,
+};
 
 use reqwest::{multipart, Client, RequestBuilder, Response};
 use tap_reader::Tap;
+use tungstenite::client::AutoStream;
 
 use entities::prelude::*;
 use http_send::{HttpSend, HttpSender};
@@ -83,7 +121,7 @@ use page::Page;
 pub use data::Data;
 pub use errors::{ApiError, Error, Result};
 pub use isolang::Language;
-pub use mastodon_client::MastodonClient;
+pub use mastodon_client::{MastodonClient, MastodonUnauthenticated};
 pub use media_builder::MediaBuilder;
 pub use registration::Registration;
 pub use requests::{
@@ -93,7 +131,7 @@ pub use requests::{
     UpdateCredsRequest,
     UpdatePushRequest,
 };
-pub use status_builder::StatusBuilder;
+pub use status_builder::{NewStatus, StatusBuilder};
 
 /// Registering your App
 pub mod apps;
@@ -120,7 +158,6 @@ pub mod requests;
 pub mod scopes;
 /// Constructing a status
 pub mod status_builder;
-
 #[macro_use]
 mod macros;
 /// Automatically import the things you need
@@ -129,9 +166,11 @@ pub mod prelude {
     pub use Data;
     pub use Mastodon;
     pub use MastodonClient;
+    pub use NewStatus;
     pub use Registration;
     pub use StatusBuilder;
     pub use StatusesRequest;
+    pub use MediaBuilder;
 }
 
 /// Your mastodon application client, handles all requests to and from Mastodon.
@@ -169,6 +208,8 @@ impl From<Data> for Mastodon<HttpSender> {
 }
 
 impl<H: HttpSend> MastodonClient<H> for Mastodon<H> {
+    type Stream = EventReader<WebSocket>;
+
     paged_routes! {
         (get) favourites: "favourites" => Status,
         (get) blocks: "blocks" => Account,
@@ -201,8 +242,8 @@ impl<H: HttpSend> MastodonClient<H> for Mastodon<H> {
         (get  (q: &'a str, resolve: bool,)) search: "search" => SearchResult,
         (get  (local: bool,)) get_public_timeline: "timelines/public" => Vec<Status>,
         (post (uri: Cow<'static, str>,)) follows: "follows" => Account,
-        (post multipart (file: Cow<'static, str>,)) media: "media" => Attachment,
         (post) clear_notifications: "notifications/clear" => Empty,
+        (post (id: &str,)) dismiss_notification: "notifications/dismiss" => Empty,
         (get) get_push_subscription: "push/subscription" => Subscription,
         (delete) delete_push_subscription: "push/subscription" => Empty,
         (get) get_filters: "filters" => Vec<Filter>,
@@ -215,12 +256,12 @@ impl<H: HttpSend> MastodonClient<H> for Mastodon<H> {
 
     route_id! {
         (get) get_account: "accounts/{}" => Account,
-        (post) follow: "accounts/{}/follow" => Account,
+        (post) follow: "accounts/{}/follow" => Relationship,
         (post) unfollow: "accounts/{}/unfollow" => Relationship,
-        (get) block: "accounts/{}/block" => Account,
-        (get) unblock: "accounts/{}/unblock" => Account,
-        (get) mute: "accounts/{}/mute" => Account,
-        (get) unmute: "accounts/{}/unmute" => Account,
+        (post) block: "accounts/{}/block" => Relationship,
+        (post) unblock: "accounts/{}/unblock" => Relationship,
+        (get) mute: "accounts/{}/mute" => Relationship,
+        (get) unmute: "accounts/{}/unmute" => Relationship,
         (get) get_notification: "notifications/{}" => Notification,
         (get) get_status: "statuses/{}" => Status,
         (get) get_context: "statuses/{}/context" => Context,
@@ -285,7 +326,7 @@ impl<H: HttpSend> MastodonClient<H> for Mastodon<H> {
     }
 
     /// Post a new status to the account.
-    fn new_status(&self, status: StatusBuilder) -> Result<Status> {
+    fn new_status(&self, status: NewStatus) -> Result<Status> {
         let response = self.send(
             self.client
                 .post(&self.route("/api/v1/statuses"))
@@ -357,7 +398,7 @@ impl<H: HttpSend> MastodonClient<H> for Mastodon<H> {
         let mut url = format!("{}/api/v1/accounts/{}/statuses", self.base, id);
 
         if let Some(request) = request.into() {
-            url = format!("{}{}", url, request.to_querystring());
+            url = format!("{}{}", url, request.to_querystring()?);
         }
 
         let response = self.send(self.client.get(&url))?;
@@ -428,7 +469,7 @@ impl<H: HttpSend> MastodonClient<H> for Mastodon<H> {
     ///
     /// Upon successful upload of a media attachment, the server will assign it an id. To actually
     /// use the attachment in a new status, you can use the `media_ids` field of
-    /// [`StatusBuilder`](status_builder/struct.StatusBuilder.html)
+    /// [`StatusBuilder`]
     ///
     /// There are two ways of providing the data to be attached: by reading a file, or by using a
     /// reader.
@@ -442,7 +483,7 @@ impl<H: HttpSend> MastodonClient<H> for Mastodon<H> {
     /// let client = Mastodon::from(data);
     /// let builder = MediaBuilder::from_file("/tmp/my_image.png".into());
     ///
-    /// let attachment = client.add_media(builder);
+    /// let attachment = client.media(builder);
     /// ```
     ///
     /// ## Readers
@@ -457,14 +498,14 @@ impl<H: HttpSend> MastodonClient<H> for Mastodon<H> {
     /// populate_image_data(&mut image_data);
     ///
     /// let builder = MediaBuilder::from_reader(Cursor::new(image_data));
-    /// let attachment = client.add_media(builder):
+    /// let attachment = client.media(builder):
     ///
     /// ```
     ///
     /// ## Errors
     /// This function may return an `Error::Http` before sending anything over the network if the
     /// `MediaBuilder` was supplied with a reader and a `mimetype` string which cannot be pasrsed. 
-    fn new_media(&self, media: MediaBuilder) -> Result<Attachment> {
+    fn media(&self, media: MediaBuilder) -> Result<Attachment> {
         use media_builder::MediaBuilderData;
 
         let mut form = multipart::Form::new();
@@ -500,6 +541,267 @@ impl<H: HttpSend> MastodonClient<H> for Mastodon<H> {
         )?;
 
         deserialise(response)
+    }
+
+    /// returns events that are relevant to the authorized user, i.e. home
+    /// timeline & notifications
+    ///
+    /// # Example
+    ///
+    /// ```no_run
+    /// # extern crate elefren;
+    /// # use elefren::prelude::*;
+    /// # use std::error::Error;
+    /// use elefren::entities::event::Event;
+    /// # fn main() -> Result<(), Box<Error>> {
+    /// # let data = Data {
+    /// #   base: "".into(),
+    /// #   client_id: "".into(),
+    /// #   client_secret: "".into(),
+    /// #   redirect: "".into(),
+    /// #   token: "".into(),
+    /// # };
+    /// let client = Mastodon::from(data);
+    /// for event in client.streaming_user()? {
+    ///     match event {
+    ///         Event::Update(ref status) => { /* .. */ },
+    ///         Event::Notification(ref notification) => { /* .. */ },
+    ///         Event::Delete(ref id) => { /* .. */ },
+    ///         Event::FiltersChanged => { /* .. */ },
+    ///     }
+    /// }
+    /// # Ok(())
+    /// # }
+    /// ```
+    fn streaming_user(&self) -> Result<Self::Stream> {
+        let mut url: url::Url = self.route("/api/v1/streaming").parse()?;
+        url.query_pairs_mut()
+            .append_pair("access_token", &self.token)
+            .append_pair("stream", "user");
+        let mut url: url::Url = reqwest::get(url.as_str())?.url().as_str().parse()?;
+        let new_scheme = match url.scheme() {
+            "http" => "ws",
+            "https" => "wss",
+            x => return Err(Error::Other(format!("Bad URL scheme: {}", x))),
+        };
+        url.set_scheme(new_scheme).map_err(|_| Error::Other("Bad URL scheme!".to_string()))?;
+
+        let client = tungstenite::connect(url.as_str())?.0;
+
+        Ok(EventReader(WebSocket(client)))
+    }
+
+    /// returns all public statuses
+    fn streaming_public(&self) -> Result<Self::Stream> {
+        let mut url: url::Url = self.route("/api/v1/streaming").parse()?;
+        url.query_pairs_mut()
+            .append_pair("access_token", &self.token)
+            .append_pair("stream", "public");
+        let mut url: url::Url = reqwest::get(url.as_str())?.url().as_str().parse()?;
+        let new_scheme = match url.scheme() {
+            "http" => "ws",
+            "https" => "wss",
+            x => return Err(Error::Other(format!("Bad URL scheme: {}", x))),
+        };
+        url.set_scheme(new_scheme).map_err(|_| Error::Other("Bad URL scheme!".to_string()))?;
+
+        let client = tungstenite::connect(url.as_str())?.0;
+
+        Ok(EventReader(WebSocket(client)))
+    }
+
+    /// Returns all local statuses
+    fn streaming_local(&self) -> Result<Self::Stream> {
+        let mut url: url::Url = self.route("/api/v1/streaming").parse()?;
+        url.query_pairs_mut()
+            .append_pair("access_token", &self.token)
+            .append_pair("stream", "public:local");
+        let mut url: url::Url = reqwest::get(url.as_str())?.url().as_str().parse()?;
+        let new_scheme = match url.scheme() {
+            "http" => "ws",
+            "https" => "wss",
+            x => return Err(Error::Other(format!("Bad URL scheme: {}", x))),
+        };
+        url.set_scheme(new_scheme).map_err(|_| Error::Other("Bad URL scheme!".to_string()))?;
+
+        let client = tungstenite::connect(url.as_str())?.0;
+
+        Ok(EventReader(WebSocket(client)))
+    }
+
+    /// Returns all public statuses for a particular hashtag
+    fn streaming_public_hashtag(&self, hashtag: &str) -> Result<Self::Stream> {
+        let mut url: url::Url = self.route("/api/v1/streaming").parse()?;
+        url.query_pairs_mut()
+            .append_pair("access_token", &self.token)
+            .append_pair("stream", "hashtag")
+            .append_pair("tag", hashtag);
+        let mut url: url::Url = reqwest::get(url.as_str())?.url().as_str().parse()?;
+        let new_scheme = match url.scheme() {
+            "http" => "ws",
+            "https" => "wss",
+            x => return Err(Error::Other(format!("Bad URL scheme: {}", x))),
+        };
+        url.set_scheme(new_scheme).map_err(|_| Error::Other("Bad URL scheme!".to_string()))?;
+
+        let client = tungstenite::connect(url.as_str())?.0;
+
+        Ok(EventReader(WebSocket(client)))
+    }
+
+    /// Returns all local statuses for a particular hashtag
+    fn streaming_local_hashtag(&self, hashtag: &str) -> Result<Self::Stream> {
+        let mut url: url::Url = self.route("/api/v1/streaming").parse()?;
+        url.query_pairs_mut()
+            .append_pair("access_token", &self.token)
+            .append_pair("stream", "hashtag:local")
+            .append_pair("tag", hashtag);
+        let mut url: url::Url = reqwest::get(url.as_str())?.url().as_str().parse()?;
+        let new_scheme = match url.scheme() {
+            "http" => "ws",
+            "https" => "wss",
+            x => return Err(Error::Other(format!("Bad URL scheme: {}", x))),
+        };
+        url.set_scheme(new_scheme).map_err(|_| Error::Other("Bad URL scheme!".to_string()))?;
+
+        let client = tungstenite::connect(url.as_str())?.0;
+
+        Ok(EventReader(WebSocket(client)))
+    }
+
+    /// Returns statuses for a list
+    fn streaming_list(&self, list_id: &str) -> Result<Self::Stream> {
+        let mut url: url::Url = self.route("/api/v1/streaming").parse()?;
+        url.query_pairs_mut()
+            .append_pair("access_token", &self.token)
+            .append_pair("stream", "list")
+            .append_pair("list", list_id);
+        let mut url: url::Url = reqwest::get(url.as_str())?.url().as_str().parse()?;
+        let new_scheme = match url.scheme() {
+            "http" => "ws",
+            "https" => "wss",
+            x => return Err(Error::Other(format!("Bad URL scheme: {}", x))),
+        };
+        url.set_scheme(new_scheme).map_err(|_| Error::Other("Bad URL scheme!".to_string()))?;
+
+        let client = tungstenite::connect(url.as_str())?.0;
+
+        Ok(EventReader(WebSocket(client)))
+    }
+
+    /// Returns all direct messages
+    fn streaming_direct(&self) -> Result<Self::Stream> {
+        let mut url: url::Url = self.route("/api/v1/streaming").parse()?;
+        url.query_pairs_mut()
+            .append_pair("access_token", &self.token)
+            .append_pair("stream", "direct");
+        let mut url: url::Url = reqwest::get(url.as_str())?.url().as_str().parse()?;
+        let new_scheme = match url.scheme() {
+            "http" => "ws",
+            "https" => "wss",
+            x => return Err(Error::Other(format!("Bad URL scheme: {}", x))),
+        };
+        url.set_scheme(new_scheme).map_err(|_| Error::Other("Bad URL scheme!".to_string()))?;
+
+        let client = tungstenite::connect(url.as_str())?.0;
+
+        Ok(EventReader(WebSocket(client)))
+    }
+}
+
+#[derive(Debug)]
+/// WebSocket newtype so that EventStream can be implemented without coherency issues
+pub struct WebSocket(tungstenite::protocol::WebSocket<AutoStream>);
+
+/// A type that streaming events can be read from
+pub trait EventStream {
+    /// Read a message from this stream
+    fn read_message(&mut self) -> Result<String>;
+}
+
+impl<R: BufRead> EventStream for R {
+    fn read_message(&mut self) -> Result<String> {
+        let mut buf = String::new();
+        self.read_line(&mut buf)?;
+        Ok(buf)
+    }
+}
+
+impl EventStream for WebSocket {
+    fn read_message(&mut self) -> Result<String> {
+        Ok(self.0.read_message()?.into_text()?)
+    }
+}
+
+#[derive(Debug)]
+/// Iterator that produces events from a mastodon streaming API event stream
+pub struct EventReader<R: EventStream>(R);
+impl<R: EventStream> Iterator for EventReader<R> {
+    type Item = Event;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        let mut lines = Vec::new();
+        loop {
+            if let Ok(line) = self.0.read_message() {
+                let line = line.trim().to_string();
+                if line.starts_with(":") || line.is_empty() {
+                    continue;
+                }
+                lines.push(line);
+                if let Ok(event) = self.make_event(&lines) {
+                    lines.clear();
+                    return Some(event);
+                } else {
+                    continue;
+                }
+            }
+        }
+    }
+}
+
+impl<R: EventStream> EventReader<R> {
+    fn make_event(&self, lines: &[String]) -> Result<Event> {
+        let event;
+        let data;
+        if let Some(event_line) = lines
+            .iter()
+            .find(|line| line.starts_with("event:"))
+        {
+            event = event_line[6..].trim().to_string();
+            data = lines.iter().find(|line| line.starts_with("data:")).map(|x| x[5..].trim().to_string());
+        } else {
+            #[derive(Deserialize)]
+            struct Message {
+                pub event: String,
+                pub payload: Option<String>,
+            }
+            let message = serde_json::from_str::<Message>(&lines[0])?;
+            event = message.event;
+            data = message.payload;
+        }
+        let event: &str = &event;
+        Ok(match event {
+            "notification" => {
+                let data = data.ok_or_else(|| {
+                    Error::Other("Missing `data` line for notification".to_string())
+                })?;
+                let notification = serde_json::from_str::<Notification>(&data)?;
+                Event::Notification(notification)
+            },
+            "update" => {
+                let data =
+                    data.ok_or_else(|| Error::Other("Missing `data` line for update".to_string()))?;
+                let status = serde_json::from_str::<Status>(&data)?;
+                Event::Update(status)
+            },
+            "delete" => {
+                let data =
+                    data.ok_or_else(|| Error::Other("Missing `data` line for delete".to_string()))?;
+                Event::Delete(data)
+            },
+            "filters_changed" => Event::FiltersChanged,
+            _ => return Err(Error::Other(format!("Unknown event `{}`", event))),
+        })
     }
 }
 
@@ -549,16 +851,82 @@ impl<H: HttpSend> MastodonBuilder<H> {
     }
 }
 
+/// Client that can make unauthenticated calls to a mastodon instance
+#[derive(Clone, Debug)]
+pub struct MastodonUnauth<H: HttpSend = HttpSender> {
+    client: Client,
+    http_sender: H,
+    base: url::Url,
+}
+
+impl MastodonUnauth<HttpSender> {
+    /// Create a new unauthenticated client
+    pub fn new(base: &str) -> Result<MastodonUnauth<HttpSender>> {
+        let base = if base.starts_with("https://") {
+            base.to_string()
+        } else {
+            format!("https://{}", base)
+        };
+        Ok(MastodonUnauth {
+            client: Client::new(),
+            http_sender: HttpSender,
+            base: url::Url::parse(&base)?,
+        })
+    }
+}
+
+impl<H: HttpSend> MastodonUnauth<H> {
+    fn route(&self, url: &str) -> Result<url::Url> {
+        Ok(self.base.join(url)?)
+    }
+
+    fn send(&self, req: RequestBuilder) -> Result<Response> {
+        Ok(self.http_sender.send(&self.client, req)?)
+    }
+}
+
+impl<H: HttpSend> MastodonUnauthenticated<H> for MastodonUnauth<H> {
+    /// GET /api/v1/statuses/:id
+    fn get_status(&self, id: &str) -> Result<Status> {
+        let route = self.route("/api/v1/statuses")?;
+        let route = route.join(id)?;
+        let response = self.send(self.client.get(route))?;
+        deserialise(response)
+    }
+
+    /// GET /api/v1/statuses/:id/context
+    fn get_context(&self, id: &str) -> Result<Context> {
+        let route = self.route("/api/v1/statuses")?;
+        let route = route.join(id)?;
+        let route = route.join("context")?;
+        let response = self.send(self.client.get(route))?;
+        deserialise(response)
+    }
+
+    /// GET /api/v1/statuses/:id/card
+    fn get_card(&self, id: &str) -> Result<Card> {
+        let route = self.route("/api/v1/statuses")?;
+        let route = route.join(id)?;
+        let route = route.join("card")?;
+        let response = self.send(self.client.get(route))?;
+        deserialise(response)
+    }
+}
+
 // Convert the HTTP response body from JSON. Pass up deserialization errors
 // transparently.
 fn deserialise<T: for<'de> serde::Deserialize<'de>>(response: Response) -> Result<T> {
     let mut reader = Tap::new(response);
 
     match serde_json::from_reader(&mut reader) {
-        Ok(t) => Ok(t),
+        Ok(t) => {
+            debug!("{}", String::from_utf8_lossy(&reader.bytes));
+            Ok(t)
+        },
         // If deserializing into the desired type fails try again to
         // see if this is an error response.
         Err(e) => {
+            error!("{}", String::from_utf8_lossy(&reader.bytes));
             if let Ok(error) = serde_json::from_slice(&reader.bytes) {
                 return Err(Error::Api(error));
             }
