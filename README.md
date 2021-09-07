@@ -1,3 +1,13 @@
+# NOTICE
+
+This repository (<https://github.com/DeeUnderscore/elefren>) was originally a Github fork of <https://github.com/pwoolcoc/elefren>. The upstream repository was deleted at some point prior to August 2021. I, the owner of this repository, do not know why the upstream was deleted; I am not in contact with the (former) maintainer of the upstream repository.
+
+This repository is not intended as a continuation of the project, and contains the upstream history up to a certain point incidentally. The links below still work, as of September 2021, and as such it should be possible to use Elefren via Cargo.
+
+Original README follows.
+
+---- 
+
 # Elefren
 
 ## A Wrapper for the Mastodon API.
