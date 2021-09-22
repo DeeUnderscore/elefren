@@ -300,7 +300,8 @@ impl Registered {
             .append_pair("response_type", "code")
             .append_pair("force_login", &self.force_login.to_string());
 
-        Ok(url.into_string())
+        // Ok(url.into_string())
+        Ok(url.to_string())
     }
 
     /// Create an access token from the client id, client secret, and code
@@ -325,7 +326,7 @@ impl Registered {
 
         let mut builder = MastodonBuilder::new();
         builder.client(self.client.clone()).data(data);
-        Ok(builder.build()?)
+        builder.build()
     }
 }
 
