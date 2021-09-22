@@ -1,6 +1,6 @@
 [package]
 name = "elefren"
-version = "0.22.0"
+version = "0.22.1"
 description = "A wrapper around the Mastodon API."
 authors = [
     "Aaron Power <theaaronepower@gmail.com>",
@@ -9,7 +9,7 @@ authors = [
 ]
 license = "MIT/Apache-2.0"
 readme = "README.md"
-repository = "https://github.com/pwoolcoc/elefren.git"
+repository = "https://github.com/AndreVuillemot160/elefren.git"
 keywords = ["api", "web", "social", "mastodon", "wrapper"]
 categories = ["web-programming", "web-programming::http-client", "api-bindings"]
 edition = "2018"
