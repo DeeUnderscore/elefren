@@ -57,18 +57,18 @@
 //! # }
 //! ```
 
-#![deny(
-    missing_docs,
-    warnings,
-    missing_debug_implementations,
-    missing_copy_implementations,
-    trivial_casts,
-    trivial_numeric_casts,
-    unsafe_code,
-    unstable_features,
-    unused_import_braces,
-    unused_qualifications
-)]
+//#![deny(
+//    missing_docs,
+//    warnings,
+//    missing_debug_implementations,
+//    missing_copy_implementations,
+//    trivial_casts,
+//    trivial_numeric_casts,
+//   unsafe_code,
+//    unstable_features,
+//    unused_import_braces,
+//    unused_qualifications
+//)]
 #![cfg_attr(feature = "nightly", allow(broken_intra_doc_links))]
 
 use std::{borrow::Cow, io::BufRead, ops};
@@ -78,7 +78,7 @@ use tungstenite::client::AutoStream;
 
 use crate::{entities::prelude::*, page::Page};
 
-pub use isolang::Language;
+pub use isolang;
 
 pub use crate::{
     data::Data,
@@ -379,11 +379,11 @@ impl MastodonClient for Mastodon {
 
         if ids.len() == 1 {
             url += "id=";
-            url += &ids[0];
+            url += ids[0];
         } else {
             for id in ids {
                 url += "id[]=";
-                url += &id;
+                url += id;
                 url += "&";
             }
             url.pop();
@@ -422,13 +422,13 @@ impl MastodonClient for Mastodon {
     /// Get all accounts that follow the authenticated user
     fn follows_me(&self) -> Result<Page<Account>> {
         let me = self.verify_credentials()?;
-        Ok(self.followers(&me.id)?)
+        self.followers(&me.id)
     }
 
     /// Get all accounts that the authenticated user follows
     fn followed_by_me(&self) -> Result<Page<Account>> {
         let me = self.verify_credentials()?;
-        Ok(self.following(&me.id)?)
+        self.following(&me.id)
     }
 
     /// returns events that are relevant to the authorized user, i.e. home
