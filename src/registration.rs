@@ -248,7 +248,7 @@ impl Registered {
     /// ```
     /// # extern crate elefren;
     /// use elefren::{prelude::*, registration::Registered};
-    /// # fn main() -> Result<(), Box<std::error::Error>> {
+    /// # fn main() -> Result<(), Box<dyn std::error::Error>> {
     ///
     /// let origbase = "https://example.social";
     /// let origclient_id = "some-client_id";
