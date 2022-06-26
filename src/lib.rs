@@ -888,18 +888,18 @@ fn deserialise_blocking<T: for<'de> serde::Deserialize<'de>>(response: Response)
         .enable_all()
         .build()?;
 
-    let bytes = rt.block_on(response.bytes())?;
+    let body = rt.block_on(response.text())?;
 
-    match serde_json::from_slice(&bytes) {
+    match serde_json::from_str(&body) {
         Ok(t) => {
-            log::debug!("{}", String::from_utf8_lossy(&bytes));
+            log::debug!("{}", &body);
             Ok(t)
         },
         // If deserializing into the desired type fails try again to
         // see if this is an error response.
         Err(e) => {
-            log::error!("{}", String::from_utf8_lossy(&bytes));
-            if let Ok(error) = serde_json::from_slice(&bytes) {
+            log::error!("{}", &body);
+            if let Ok(error) = serde_json::from_str(&body) {
                 return Err(Error::Api(error));
             }
             Err(e.into())
