@@ -75,6 +75,7 @@ use std::{borrow::Cow, io::BufRead, ops};
 
 use reqwest::{Client, RequestBuilder, Response};
 use tungstenite::client::AutoStream;
+use tokio::runtime;
 
 use crate::{entities::prelude::*, page::Page};
 
@@ -155,8 +156,8 @@ impl Mastodon {
 
     pub(crate) fn send_blocking(&self, req: RequestBuilder) -> Result<Response> {
         let request = req.bearer_auth(&self.token).build()?;
-        let handle = tokio::runtime::Handle::current();
-        Ok(handle.block_on(self.client.execute(request))?)
+        let rt = runtime::Builder::new_current_thread().build()?;
+        Ok(rt.block_on(self.client.execute(request))?)
     }
 }
 
@@ -832,8 +833,8 @@ impl MastodonUnauth {
 
     fn send_blocking(&self, req: RequestBuilder) -> Result<Response> {
         let req = req.build()?;
-        let handle = tokio::runtime::Handle::current();
-        Ok(handle.block_on(self.client.execute(req))?)
+        let rt = runtime::Builder::new_current_thread().build()?;
+        Ok(rt.block_on(self.client.execute(req))?)
     }
 
     /// Get a stream of the public timeline
@@ -889,9 +890,9 @@ impl MastodonUnauthenticated for MastodonUnauth {
 // Convert the HTTP response body from JSON. Pass up deserialization errors
 // transparently.
 fn deserialise_blocking<T: for<'de> serde::Deserialize<'de>>(response: Response) -> Result<T> {
-    let handle = tokio::runtime::Handle::current();
+    let rt = runtime::Builder::new_current_thread().build()?;
 
-    let bytes = handle.block_on(response.bytes())?;
+    let bytes = rt.block_on(response.bytes())?;
 
     match serde_json::from_slice(&bytes) {
         Ok(t) => {
