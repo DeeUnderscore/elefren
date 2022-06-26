@@ -146,7 +146,9 @@ impl Mastodon {
 
     pub(crate) fn send_blocking(&self, req: RequestBuilder) -> Result<Response> {
         let request = req.bearer_auth(&self.token).build()?;
-        let rt = runtime::Builder::new_current_thread().build()?;
+        let rt = runtime::Builder::new_current_thread()
+            .enable_all()
+            .build()?;
         Ok(rt.block_on(self.client.execute(request))?)
     }
 }
@@ -823,7 +825,9 @@ impl MastodonUnauth {
 
     fn send_blocking(&self, req: RequestBuilder) -> Result<Response> {
         let req = req.build()?;
-        let rt = runtime::Builder::new_current_thread().build()?;
+        let rt = runtime::Builder::new_current_thread()
+            .enable_all()
+            .build()?;
         Ok(rt.block_on(self.client.execute(req))?)
     }
 
@@ -880,7 +884,9 @@ impl MastodonUnauthenticated for MastodonUnauth {
 // Convert the HTTP response body from JSON. Pass up deserialization errors
 // transparently.
 fn deserialise_blocking<T: for<'de> serde::Deserialize<'de>>(response: Response) -> Result<T> {
-    let rt = runtime::Builder::new_current_thread().build()?;
+    let rt = runtime::Builder::new_current_thread()
+        .enable_all()
+        .build()?;
 
     let bytes = rt.block_on(response.bytes())?;
 
