@@ -73,8 +73,7 @@
 
 use std::{borrow::Cow, io::BufRead, ops};
 
-use reqwest::{Client, RequestBuilder, Response};
-use tokio::runtime;
+use reqwest::blocking::{Client, RequestBuilder, Response};
 use tungstenite::client::AutoStream;
 
 use crate::{entities::prelude::*, page::Page};
@@ -146,10 +145,7 @@ impl Mastodon {
 
     pub(crate) fn send_blocking(&self, req: RequestBuilder) -> Result<Response> {
         let request = req.bearer_auth(&self.token).build()?;
-        let rt = runtime::Builder::new_current_thread()
-            .enable_all()
-            .build()?;
-        Ok(rt.block_on(self.client.execute(request))?)
+        Ok(self.client.execute(request)?)
     }
 }
 
@@ -619,14 +615,9 @@ impl MastodonClient for Mastodon {
 
     /// Equivalent to /api/v1/media
     fn media(&self, media_builder: MediaBuilder) -> Result<Attachment> {
-        use reqwest::multipart::{Form, Part};
-        use std::{fs::File, io::Read};
+        use reqwest::blocking::multipart::Form;
 
-        let mut f = File::open(media_builder.file.as_ref())?;
-        let mut bytes = Vec::new();
-        f.read_to_end(&mut bytes)?;
-        let part = Part::stream(bytes);
-        let mut form_data = Form::new().part("file", part);
+        let mut form_data = Form::new().file("file", media_builder.file.as_ref())?;
 
         if let Some(description) = media_builder.description {
             form_data = form_data.text("description", description);
@@ -825,10 +816,7 @@ impl MastodonUnauth {
 
     fn send_blocking(&self, req: RequestBuilder) -> Result<Response> {
         let req = req.build()?;
-        let rt = runtime::Builder::new_current_thread()
-            .enable_all()
-            .build()?;
-        Ok(rt.block_on(self.client.execute(req))?)
+        Ok(self.client.execute(req)?)
     }
 
     /// Get a stream of the public timeline
@@ -884,11 +872,7 @@ impl MastodonUnauthenticated for MastodonUnauth {
 // Convert the HTTP response body from JSON. Pass up deserialization errors
 // transparently.
 fn deserialise_blocking<T: for<'de> serde::Deserialize<'de>>(response: Response) -> Result<T> {
-    let rt = runtime::Builder::new_current_thread()
-        .enable_all()
-        .build()?;
-
-    let body = rt.block_on(response.text())?;
+    let body = response.text()?;
 
     match serde_json::from_str(&body) {
         Ok(t) => {

@@ -1,9 +1,8 @@
 use std::borrow::Cow;
 
-use reqwest::{Client, RequestBuilder, Response};
+use reqwest::blocking::{Client, RequestBuilder, Response};
 use serde::Deserialize;
 use std::convert::TryInto;
-use tokio::runtime;
 
 use crate::{
     apps::{App, AppBuilder},
@@ -96,10 +95,7 @@ impl<'a> Registration<'a> {
 
     fn send(&self, req: RequestBuilder) -> Result<Response> {
         let req = req.build()?;
-        let rt = runtime::Builder::new_current_thread()
-            .enable_all()
-            .build()?;
-        Ok(rt.block_on(self.client.execute(req))?)
+        Ok(self.client.execute(req)?)
     }
 
     /// Register the given application
@@ -178,10 +174,7 @@ impl<'a> Registration<'a> {
 
     fn send_app(&self, app: &App) -> Result<OAuth> {
         let url = format!("{}/api/v1/apps", self.base);
-        let rt = runtime::Builder::new_current_thread()
-            .enable_all()
-            .build()?;
-        Ok(rt.block_on(self.send(self.client.post(&url).json(&app))?.json())?)
+        Ok(self.send(self.client.post(&url).json(&app))?.json()?)
     }
 }
 
@@ -237,10 +230,7 @@ impl Registered {
 impl Registered {
     fn send(&self, req: RequestBuilder) -> Result<Response> {
         let req = req.build()?;
-        let rt = runtime::Builder::new_current_thread()
-            .enable_all()
-            .build()?;
-        Ok(rt.block_on(self.client.execute(req))?)
+        Ok(self.client.execute(req)?)
     }
 
     /// Returns the parts of the `Registered` struct that can be used to
@@ -315,10 +305,7 @@ impl Registered {
             self.base, self.client_id, self.client_secret, code, self.redirect
         );
 
-        let rt = runtime::Builder::new_current_thread()
-            .enable_all()
-            .build()?;
-        let token: AccessToken = rt.block_on(self.send(self.client.post(&url))?.json())?;
+        let token: AccessToken = self.send(self.client.post(&url))?.json()?;
 
         let data = Data {
             base: self.base.clone().into(),
