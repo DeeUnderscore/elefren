@@ -8,11 +8,7 @@ use tokio::runtime;
 use crate::{
     apps::{App, AppBuilder},
     scopes::Scopes,
-    Data,
-    Error,
-    Mastodon,
-    MastodonBuilder,
-    Result,
+    Data, Error, Mastodon, MastodonBuilder, Result,
 };
 
 const DEFAULT_REDIRECT_URI: &str = "urn:ietf:wg:oauth:2.0:oob";

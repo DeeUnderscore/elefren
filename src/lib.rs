@@ -74,8 +74,8 @@
 use std::{borrow::Cow, io::BufRead, ops};
 
 use reqwest::{Client, RequestBuilder, Response};
-use tungstenite::client::AutoStream;
 use tokio::runtime;
+use tungstenite::client::AutoStream;
 
 use crate::{entities::prelude::*, page::Page};
 
@@ -88,11 +88,7 @@ pub use crate::{
     media_builder::MediaBuilder,
     registration::Registration,
     requests::{
-        AddFilterRequest,
-        AddPushRequest,
-        StatusesRequest,
-        UpdateCredsRequest,
-        UpdatePushRequest,
+        AddFilterRequest, AddPushRequest, StatusesRequest, UpdateCredsRequest, UpdatePushRequest,
     },
     status_builder::{NewStatus, StatusBuilder},
 };
@@ -128,13 +124,7 @@ mod macros;
 /// Automatically import the things you need
 pub mod prelude {
     pub use crate::{
-        scopes::Scopes,
-        Data,
-        Mastodon,
-        MastodonClient,
-        NewStatus,
-        Registration,
-        StatusBuilder,
+        scopes::Scopes, Data, Mastodon, MastodonClient, NewStatus, Registration, StatusBuilder,
         StatusesRequest,
     };
 }
