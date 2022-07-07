@@ -73,7 +73,7 @@
 
 use std::{borrow::Cow, io::BufRead, ops};
 
-use reqwest::{Client, RequestBuilder, Response};
+use reqwest::blocking::{Client, RequestBuilder, Response};
 use tungstenite::client::AutoStream;
 
 use crate::{entities::prelude::*, page::Page};
@@ -87,11 +87,7 @@ pub use crate::{
     media_builder::MediaBuilder,
     registration::Registration,
     requests::{
-        AddFilterRequest,
-        AddPushRequest,
-        StatusesRequest,
-        UpdateCredsRequest,
-        UpdatePushRequest,
+        AddFilterRequest, AddPushRequest, StatusesRequest, UpdateCredsRequest, UpdatePushRequest,
     },
     status_builder::{NewStatus, StatusBuilder},
 };
@@ -127,13 +123,7 @@ mod macros;
 /// Automatically import the things you need
 pub mod prelude {
     pub use crate::{
-        scopes::Scopes,
-        Data,
-        Mastodon,
-        MastodonClient,
-        NewStatus,
-        Registration,
-        StatusBuilder,
+        scopes::Scopes, Data, Mastodon, MastodonClient, NewStatus, Registration, StatusBuilder,
         StatusesRequest,
     };
 }
@@ -155,8 +145,7 @@ impl Mastodon {
 
     pub(crate) fn send_blocking(&self, req: RequestBuilder) -> Result<Response> {
         let request = req.bearer_auth(&self.token).build()?;
-        let handle = tokio::runtime::Handle::current();
-        Ok(handle.block_on(self.client.execute(request))?)
+        Ok(self.client.execute(request)?)
     }
 }
 
@@ -626,14 +615,9 @@ impl MastodonClient for Mastodon {
 
     /// Equivalent to /api/v1/media
     fn media(&self, media_builder: MediaBuilder) -> Result<Attachment> {
-        use reqwest::multipart::{Form, Part};
-        use std::{fs::File, io::Read};
+        use reqwest::blocking::multipart::Form;
 
-        let mut f = File::open(media_builder.file.as_ref())?;
-        let mut bytes = Vec::new();
-        f.read_to_end(&mut bytes)?;
-        let part = Part::stream(bytes);
-        let mut form_data = Form::new().part("file", part);
+        let mut form_data = Form::new().file("file", media_builder.file.as_ref())?;
 
         if let Some(description) = media_builder.description {
             form_data = form_data.text("description", description);
@@ -832,8 +816,7 @@ impl MastodonUnauth {
 
     fn send_blocking(&self, req: RequestBuilder) -> Result<Response> {
         let req = req.build()?;
-        let handle = tokio::runtime::Handle::current();
-        Ok(handle.block_on(self.client.execute(req))?)
+        Ok(self.client.execute(req)?)
     }
 
     /// Get a stream of the public timeline
@@ -889,20 +872,18 @@ impl MastodonUnauthenticated for MastodonUnauth {
 // Convert the HTTP response body from JSON. Pass up deserialization errors
 // transparently.
 fn deserialise_blocking<T: for<'de> serde::Deserialize<'de>>(response: Response) -> Result<T> {
-    let handle = tokio::runtime::Handle::current();
+    let body = response.text()?;
 
-    let bytes = handle.block_on(response.bytes())?;
-
-    match serde_json::from_slice(&bytes) {
+    match serde_json::from_str(&body) {
         Ok(t) => {
-            log::debug!("{}", String::from_utf8_lossy(&bytes));
+            log::debug!("{}", &body);
             Ok(t)
         },
         // If deserializing into the desired type fails try again to
         // see if this is an error response.
         Err(e) => {
-            log::error!("{}", String::from_utf8_lossy(&bytes));
-            if let Ok(error) = serde_json::from_slice(&bytes) {
+            log::error!("{}", &body);
+            if let Ok(error) = serde_json::from_str(&body) {
                 return Err(Error::Api(error));
             }
             Err(e.into())

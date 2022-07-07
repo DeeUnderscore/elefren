@@ -1,17 +1,13 @@
 use std::borrow::Cow;
 
-use reqwest::{Client, RequestBuilder, Response};
+use reqwest::blocking::{Client, RequestBuilder, Response};
 use serde::Deserialize;
 use std::convert::TryInto;
 
 use crate::{
     apps::{App, AppBuilder},
     scopes::Scopes,
-    Data,
-    Error,
-    Mastodon,
-    MastodonBuilder,
-    Result,
+    Data, Error, Mastodon, MastodonBuilder, Result,
 };
 
 const DEFAULT_REDIRECT_URI: &str = "urn:ietf:wg:oauth:2.0:oob";
@@ -99,8 +95,7 @@ impl<'a> Registration<'a> {
 
     fn send(&self, req: RequestBuilder) -> Result<Response> {
         let req = req.build()?;
-        let handle = tokio::runtime::Handle::current();
-        Ok(handle.block_on(self.client.execute(req))?)
+        Ok(self.client.execute(req)?)
     }
 
     /// Register the given application
@@ -179,8 +174,7 @@ impl<'a> Registration<'a> {
 
     fn send_app(&self, app: &App) -> Result<OAuth> {
         let url = format!("{}/api/v1/apps", self.base);
-        let handle = tokio::runtime::Handle::current();
-        Ok(handle.block_on(self.send(self.client.post(&url).json(&app))?.json())?)
+        Ok(self.send(self.client.post(&url).json(&app))?.json()?)
     }
 }
 
@@ -236,8 +230,7 @@ impl Registered {
 impl Registered {
     fn send(&self, req: RequestBuilder) -> Result<Response> {
         let req = req.build()?;
-        let handle = tokio::runtime::Handle::current();
-        Ok(handle.block_on(self.client.execute(req))?)
+        Ok(self.client.execute(req)?)
     }
 
     /// Returns the parts of the `Registered` struct that can be used to
@@ -248,7 +241,7 @@ impl Registered {
     /// ```
     /// # extern crate elefren;
     /// use elefren::{prelude::*, registration::Registered};
-    /// # fn main() -> Result<(), Box<std::error::Error>> {
+    /// # fn main() -> Result<(), Box<dyn std::error::Error>> {
     ///
     /// let origbase = "https://example.social";
     /// let origclient_id = "some-client_id";
@@ -300,7 +293,7 @@ impl Registered {
             .append_pair("response_type", "code")
             .append_pair("force_login", &self.force_login.to_string());
 
-        Ok(url.into_string())
+        Ok(url.into())
     }
 
     /// Create an access token from the client id, client secret, and code
@@ -312,8 +305,7 @@ impl Registered {
             self.base, self.client_id, self.client_secret, code, self.redirect
         );
 
-        let handle = tokio::runtime::Handle::current();
-        let token: AccessToken = handle.block_on(self.send(self.client.post(&url))?.json())?;
+        let token: AccessToken = self.send(self.client.post(&url))?.json()?;
 
         let data = Data {
             base: self.base.clone().into(),
