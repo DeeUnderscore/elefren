@@ -13,8 +13,8 @@ pub struct Attachment {
     pub url: String,
     /// For remote images, the remote URL of the original image.
     pub remote_url: Option<String>,
-    /// URL of the preview image.
-    pub preview_url: String,
+    /// URL of the preview image, can be null for audio files.
+    pub preview_url: Option<String>,
     /// Shorter URL for the image, for insertion into text
     /// (only present on local images)
     pub text_url: Option<String>,
@@ -36,14 +36,16 @@ pub struct Meta {
 /// Dimensions of an attachement.
 #[derive(Debug, Deserialize, Clone, PartialEq)]
 pub struct ImageDetails {
-    /// width of attachment.
-    width: u64,
-    /// height of attachment.
-    height: u64,
+    /// width of attachment, can be null for audio files.
+    width: Option<u64>,
+    /// height of attachment, can be null for audio files.
+    height: Option<u64>,
     /// A string of `widthxheight`.
     size: Option<String>,
     /// The aspect ratio of the attachment.
     aspect: Option<f64>,
+    /// Duration if this is a video/audio file in seconds.
+    duration: Option<f64>,
 }
 
 /// The type of media attachment.
@@ -58,6 +60,9 @@ pub enum MediaType {
     /// A gifv format file.
     #[serde(rename = "gifv")]
     Gifv,
+    /// A audio file.
+    #[serde(rename = "audio")]
+    Audio,
     /// Unknown format.
     #[serde(rename = "unknown")]
     Unknown,
