@@ -235,7 +235,7 @@ impl MastodonClient for Mastodon {
 
     fn add_filter(&self, request: &mut AddFilterRequest) -> Result<Filter> {
         let url = self.route("/api/v1/filters");
-        let response = self.send_blocking(self.client.post(&url).json(&request))?;
+        let response = self.send_blocking(self.client.post(url).json(&request))?;
 
         let status = response.status();
 
@@ -251,7 +251,7 @@ impl MastodonClient for Mastodon {
     /// PUT /api/v1/filters/:id
     fn update_filter(&self, id: &str, request: &mut AddFilterRequest) -> Result<Filter> {
         let url = self.route(&format!("/api/v1/filters/{}", id));
-        let response = self.send_blocking(self.client.put(&url).json(&request))?;
+        let response = self.send_blocking(self.client.put(url).json(&request))?;
 
         let status = response.status();
 
@@ -267,7 +267,7 @@ impl MastodonClient for Mastodon {
     fn update_credentials(&self, builder: UpdateCredsRequest) -> Result<Account> {
         let changes = builder.build()?;
         let url = self.route("/api/v1/accounts/update_credentials");
-        let response = self.send_blocking(self.client.patch(&url).json(&changes))?;
+        let response = self.send_blocking(self.client.patch(url).json(&changes))?;
 
         let status = response.status();
 
@@ -284,7 +284,7 @@ impl MastodonClient for Mastodon {
     fn new_status(&self, status: NewStatus) -> Result<Status> {
         let response = self.send_blocking(
             self.client
-                .post(&self.route("/api/v1/statuses"))
+                .post(self.route("/api/v1/statuses"))
                 .json(&status),
         )?;
 
@@ -301,7 +301,7 @@ impl MastodonClient for Mastodon {
             self.route(&format!("{}{}", base, hashtag))
         };
 
-        Page::new(self, self.send_blocking(self.client.get(&url))?)
+        Page::new(self, self.send_blocking(self.client.get(url))?)
     }
 
     /// Get statuses of a single account by id. Optionally only with pictures
@@ -356,7 +356,7 @@ impl MastodonClient for Mastodon {
             url = format!("{}{}", url, request.to_querystring()?);
         }
 
-        let response = self.send_blocking(self.client.get(&url))?;
+        let response = self.send_blocking(self.client.get(url))?;
 
         Page::new(self, response)
     }
@@ -378,7 +378,7 @@ impl MastodonClient for Mastodon {
             url.pop();
         }
 
-        let response = self.send_blocking(self.client.get(&url))?;
+        let response = self.send_blocking(self.client.get(url))?;
 
         Page::new(self, response)
     }
@@ -388,7 +388,7 @@ impl MastodonClient for Mastodon {
         let request = request.build()?;
         let response = self.send_blocking(
             self.client
-                .post(&self.route("/api/v1/push/subscription"))
+                .post(self.route("/api/v1/push/subscription"))
                 .json(&request),
         )?;
 
@@ -401,7 +401,7 @@ impl MastodonClient for Mastodon {
         let request = request.build();
         let response = self.send_blocking(
             self.client
-                .put(&self.route("/api/v1/push/subscription"))
+                .put(self.route("/api/v1/push/subscription"))
                 .json(&request),
         )?;
 
@@ -630,7 +630,7 @@ impl MastodonClient for Mastodon {
 
         let response = self.send_blocking(
             self.client
-                .post(&self.route("/api/v1/media"))
+                .post(self.route("/api/v1/media"))
                 .multipart(form_data),
         )?;
 

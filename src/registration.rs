@@ -305,7 +305,7 @@ impl Registered {
             self.base, self.client_id, self.client_secret, code, self.redirect
         );
 
-        let token: AccessToken = self.send(self.client.post(&url))?.json()?;
+        let token: AccessToken = self.send(self.client.post(url))?.json()?;
 
         let data = Data {
             base: self.base.clone().into(),
