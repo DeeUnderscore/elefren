@@ -28,7 +28,7 @@ serde_qs = "0.9.2"
 url = "2.1.1"
 tap-reader = "1"
 toml = { version = "0.5.0", optional = true }
-tungstenite = "0.11.0"
+tungstenite = "0.17"
 async-trait = "0.1.40"
 async-h1 = { version = "2.1.2", optional = true }
 async-native-tls = { version = "0.3.3", optional = true }
@@ -45,7 +45,7 @@ default = ["reqwest/default-tls"]
 json = []
 env = ["envy"]
 all = ["toml", "json", "env", "async"]
-rustls-tls = ["reqwest/rustls-tls"]
+rustls-tls = ["reqwest/rustls-tls", "tungstenite/rustls-tls-webpki-roots"]
 nightly = []
 async = ["async-h1", "async-native-tls", "smol", "http-types", "async-mutex"]
 
