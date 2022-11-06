@@ -3,7 +3,7 @@ name = "elefren"
 version = "0.23.0"
 description = "A wrapper around the Mastodon API."
 authors = [
-  "Klaus Purer <klaus.purer@protonamil.ch>",
+  "Klaus Purer <klaus.purer@protonmail.ch>",
   "Aaron Power <theaaronepower@gmail.com>",
   "Paul Woolcock <paul@woolcock.us>",
 ]
