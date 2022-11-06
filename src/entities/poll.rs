@@ -2,7 +2,7 @@ use crate::entities::status::Emoji;
 use serde::{Deserialize, Serialize};
 
 /// Represents a poll attached to a status.
-#[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize, Serialize)]
 pub struct Poll {
     /// The ID of the poll in the database.
     pub id: String,
@@ -28,7 +28,7 @@ pub struct Poll {
 }
 
 /// Possible answers for the poll.
-#[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize, Serialize)]
 pub struct PollOption {
     /// The text value of the poll option.
     pub title: String,

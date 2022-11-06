@@ -55,7 +55,7 @@ pub struct Account {
 }
 
 /// A single name: value pair from a user's profile
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Default)]
 pub struct MetadataField {
     /// name part of metadata
     pub name: String,
@@ -73,7 +73,7 @@ impl MetadataField {
 }
 
 /// An extra object given from `verify_credentials` giving defaults about a user
-#[derive(Debug, Clone, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Deserialize, PartialEq, Eq)]
 pub struct Source {
     privacy: Option<status_builder::Visibility>,
     #[serde(deserialize_with = "string_or_bool")]
@@ -83,7 +83,7 @@ pub struct Source {
 }
 
 fn string_or_bool<'de, D: de::Deserializer<'de>>(val: D) -> ::std::result::Result<bool, D::Error> {
-    #[derive(Clone, Debug, Deserialize, PartialEq)]
+    #[derive(Clone, Debug, Deserialize, PartialEq, Eq)]
     #[serde(untagged)]
     pub enum BoolOrString {
         Bool(bool),
@@ -103,7 +103,7 @@ fn string_or_bool<'de, D: de::Deserializer<'de>>(val: D) -> ::std::result::Resul
                     &"true or false",
                 ));
             }
-        },
+        }
     })
 }
 

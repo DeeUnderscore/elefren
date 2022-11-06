@@ -174,7 +174,7 @@ impl<'a> Registration<'a> {
 
     fn send_app(&self, app: &App) -> Result<OAuth> {
         let url = format!("{}/api/v1/apps", self.base);
-        Ok(self.send(self.client.post(&url).json(&app))?.json()?)
+        Ok(self.send(self.client.post(url).json(&app))?.json()?)
     }
 }
 
@@ -305,7 +305,7 @@ impl Registered {
             self.base, self.client_id, self.client_secret, code, self.redirect
         );
 
-        let token: AccessToken = self.send(self.client.post(&url))?.json()?;
+        let token: AccessToken = self.send(self.client.post(url))?.json()?;
 
         let data = Data {
             base: self.base.clone().into(),
@@ -317,7 +317,7 @@ impl Registered {
 
         let mut builder = MastodonBuilder::new();
         builder.client(self.client.clone()).data(data);
-        Ok(builder.build()?)
+        builder.build()
     }
 }
 

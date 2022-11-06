@@ -79,7 +79,7 @@ pub struct Status {
 }
 
 /// A mention of another user.
-#[derive(Debug, Clone, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Deserialize, PartialEq, Eq)]
 pub struct Mention {
     /// URL of user's profile (can be remote).
     pub url: String,
@@ -92,7 +92,7 @@ pub struct Mention {
 }
 
 /// Struct representing an emoji within text.
-#[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
 pub struct Emoji {
     /// The shortcode of the emoji
     pub shortcode: String,
@@ -103,7 +103,7 @@ pub struct Emoji {
 }
 
 /// Hashtags in the status.
-#[derive(Debug, Clone, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Deserialize, PartialEq, Eq)]
 pub struct Tag {
     /// The hashtag, not including the preceding `#`.
     pub name: String,
@@ -114,7 +114,7 @@ pub struct Tag {
 }
 
 /// Represents daily usage history of a hashtag.
-#[derive(Debug, Clone, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Deserialize, PartialEq, Eq)]
 pub struct History {
     /// UNIX timestamp on midnight of the given day.
     day: String,
@@ -125,7 +125,7 @@ pub struct History {
 }
 
 /// Application details.
-#[derive(Debug, Clone, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Deserialize, PartialEq, Eq)]
 pub struct Application {
     /// Name of the application.
     pub name: String,

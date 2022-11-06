@@ -35,7 +35,7 @@ impl FromStr for Scopes {
     fn from_str(s: &str) -> Result<Scopes, Self::Err> {
         let mut set = HashSet::new();
         for scope in s.split_whitespace() {
-            let scope = Scope::from_str(&scope)?;
+            let scope = Scope::from_str(scope)?;
             set.insert(scope);
         }
         Ok(Scopes { scopes: set })
@@ -313,11 +313,11 @@ impl FromStr for Scope {
             read if read.starts_with("read:") => {
                 let r: Read = Read::from_str(&read[5..])?;
                 Scope::Read(Some(r))
-            },
+            }
             write if write.starts_with("write:") => {
                 let w: Write = Write::from_str(&write[6..])?;
                 Scope::Write(Some(w))
-            },
+            }
             _ => return Err(Error::Other("Unknown scope".to_string())),
         })
     }
@@ -801,7 +801,8 @@ mod tests {
             ("push", Scope::Push),
         ];
         for (source, expected) in &tests {
-            let result = Scope::from_str(source).expect(&format!("Couldn't parse '{}'", &source));
+            let result =
+                Scope::from_str(source).unwrap_or_else(|_| panic!("Couldn't parse '{}'", &source));
             assert_eq!(result, *expected);
         }
     }

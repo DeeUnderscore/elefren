@@ -19,7 +19,7 @@ mod bool_qs_serialize {
 }
 
 /// Represents the options for the directory request
-#[derive(Debug, Clone, Default, PartialEq, Serialize)]
+#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize)]
 pub struct DirectoryRequest<'a> {
     offset: Option<usize>,
     limit: Option<usize>,

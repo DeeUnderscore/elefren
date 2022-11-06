@@ -34,7 +34,7 @@ use crate::{
 /// #   Ok(())
 /// # }
 /// ```
-#[derive(Debug, Default, Clone, PartialEq)]
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub struct UpdateCredsRequest {
     display_name: Option<String>,
     note: Option<String>,

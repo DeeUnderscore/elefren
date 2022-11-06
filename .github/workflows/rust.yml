@@ -41,7 +41,8 @@ jobs:
           command: test
           args: --features all --verbose
       - uses: actions-rs/cargo@v1
-        if: ${{ matrix.rust == 'nightly' && matrix.os == 'ubuntu-latest' }}
+        # Use stable Rust for formatting code as that is what contributors use.
+        if: ${{ matrix.rust == 'stable' && matrix.os == 'ubuntu-latest' }}
         with:
           command: fmt
           args: --verbose --all -- --check

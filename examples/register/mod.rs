@@ -37,7 +37,7 @@ pub fn register() -> Result<Mastodon, Box<dyn Error>> {
     let mastodon = cli::authenticate(registration)?;
 
     // Save app data for using on the next run.
-    toml::to_file(&*mastodon, "mastodon-data.toml")?;
+    toml::to_file(&mastodon, "mastodon-data.toml")?;
 
     Ok(mastodon)
 }

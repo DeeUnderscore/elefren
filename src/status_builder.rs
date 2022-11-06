@@ -19,7 +19,7 @@ use serde::{Deserialize, Serialize};
 /// # Ok(())
 /// # }
 /// ```
-#[derive(Debug, Default, Clone, PartialEq)]
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub struct StatusBuilder {
     status: Option<String>,
     in_reply_to_id: Option<String>,
@@ -252,7 +252,7 @@ impl StatusBuilder {
 }
 
 /// Represents a post that can be sent to the POST /api/v1/status endpoint
-#[derive(Debug, Default, Clone, Serialize, PartialEq)]
+#[derive(Debug, Default, Clone, Serialize, PartialEq, Eq)]
 pub struct NewStatus {
     #[serde(skip_serializing_if = "Option::is_none")]
     status: Option<String>,
@@ -273,7 +273,7 @@ pub struct NewStatus {
 }
 
 /// The visibility of a status.
-#[derive(Clone, Copy, Debug, Deserialize, Serialize, PartialEq)]
+#[derive(Clone, Copy, Debug, Deserialize, Serialize, PartialEq, Eq)]
 #[serde(rename_all = "lowercase")]
 pub enum Visibility {
     /// A Direct message to a user

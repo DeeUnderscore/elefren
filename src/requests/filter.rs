@@ -15,7 +15,7 @@ use std::time::Duration;
 /// #   Ok(())
 /// # }
 /// ```
-#[derive(Debug, Clone, PartialEq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 pub struct AddFilterRequest {
     phrase: String,
     context: FilterContext,

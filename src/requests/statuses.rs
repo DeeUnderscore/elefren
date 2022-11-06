@@ -31,7 +31,7 @@ mod bool_qs_serialize {
 ///     .since_id("foo");
 /// # assert_eq!(&request.to_querystring().expect("Couldn't serialize qs")[..], "?only_media=1&pinned=1&since_id=foo");
 /// ```
-#[derive(Clone, Debug, Default, PartialEq, Serialize)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Eq)]
 pub struct StatusesRequest<'a> {
     #[serde(skip_serializing_if = "bool_qs_serialize::is_false")]
     #[serde(serialize_with = "bool_qs_serialize::serialize")]
@@ -55,17 +55,17 @@ pub struct StatusesRequest<'a> {
     exclude_reblogs: bool,
 }
 
-impl<'a> Into<Option<StatusesRequest<'a>>> for &'a mut StatusesRequest<'a> {
-    fn into(self) -> Option<StatusesRequest<'a>> {
+impl<'a> From<&'a mut StatusesRequest<'a>> for Option<StatusesRequest<'a>> {
+    fn from(s: &'a mut StatusesRequest<'a>) -> Option<StatusesRequest<'a>> {
         Some(StatusesRequest {
-            only_media: self.only_media,
-            exclude_replies: self.exclude_replies,
-            pinned: self.pinned,
-            max_id: self.max_id.clone(),
-            since_id: self.since_id.clone(),
-            limit: self.limit,
-            min_id: self.min_id.clone(),
-            exclude_reblogs: self.exclude_reblogs,
+            only_media: s.only_media,
+            exclude_replies: s.exclude_replies,
+            pinned: s.pinned,
+            max_id: s.max_id.clone(),
+            since_id: s.since_id.clone(),
+            limit: s.limit,
+            min_id: s.min_id.clone(),
+            exclude_reblogs: s.exclude_reblogs,
         })
     }
 }

@@ -235,7 +235,7 @@ impl MastodonClient for Mastodon {
 
     fn add_filter(&self, request: &mut AddFilterRequest) -> Result<Filter> {
         let url = self.route("/api/v1/filters");
-        let response = self.send_blocking(self.client.post(&url).json(&request))?;
+        let response = self.send_blocking(self.client.post(url).json(&request))?;
 
         let status = response.status();
 
@@ -251,7 +251,7 @@ impl MastodonClient for Mastodon {
     /// PUT /api/v1/filters/:id
     fn update_filter(&self, id: &str, request: &mut AddFilterRequest) -> Result<Filter> {
         let url = self.route(&format!("/api/v1/filters/{}", id));
-        let response = self.send_blocking(self.client.put(&url).json(&request))?;
+        let response = self.send_blocking(self.client.put(url).json(&request))?;
 
         let status = response.status();
 
@@ -267,7 +267,7 @@ impl MastodonClient for Mastodon {
     fn update_credentials(&self, builder: UpdateCredsRequest) -> Result<Account> {
         let changes = builder.build()?;
         let url = self.route("/api/v1/accounts/update_credentials");
-        let response = self.send_blocking(self.client.patch(&url).json(&changes))?;
+        let response = self.send_blocking(self.client.patch(url).json(&changes))?;
 
         let status = response.status();
 
@@ -284,7 +284,7 @@ impl MastodonClient for Mastodon {
     fn new_status(&self, status: NewStatus) -> Result<Status> {
         let response = self.send_blocking(
             self.client
-                .post(&self.route("/api/v1/statuses"))
+                .post(self.route("/api/v1/statuses"))
                 .json(&status),
         )?;
 
@@ -301,7 +301,7 @@ impl MastodonClient for Mastodon {
             self.route(&format!("{}{}", base, hashtag))
         };
 
-        Page::new(self, self.send_blocking(self.client.get(&url))?)
+        Page::new(self, self.send_blocking(self.client.get(url))?)
     }
 
     /// Get statuses of a single account by id. Optionally only with pictures
@@ -356,7 +356,7 @@ impl MastodonClient for Mastodon {
             url = format!("{}{}", url, request.to_querystring()?);
         }
 
-        let response = self.send_blocking(self.client.get(&url))?;
+        let response = self.send_blocking(self.client.get(url))?;
 
         Page::new(self, response)
     }
@@ -368,17 +368,17 @@ impl MastodonClient for Mastodon {
 
         if ids.len() == 1 {
             url += "id=";
-            url += &ids[0];
+            url += ids[0];
         } else {
             for id in ids {
                 url += "id[]=";
-                url += &id;
+                url += id;
                 url += "&";
             }
             url.pop();
         }
 
-        let response = self.send_blocking(self.client.get(&url))?;
+        let response = self.send_blocking(self.client.get(url))?;
 
         Page::new(self, response)
     }
@@ -388,7 +388,7 @@ impl MastodonClient for Mastodon {
         let request = request.build()?;
         let response = self.send_blocking(
             self.client
-                .post(&self.route("/api/v1/push/subscription"))
+                .post(self.route("/api/v1/push/subscription"))
                 .json(&request),
         )?;
 
@@ -401,7 +401,7 @@ impl MastodonClient for Mastodon {
         let request = request.build();
         let response = self.send_blocking(
             self.client
-                .put(&self.route("/api/v1/push/subscription"))
+                .put(self.route("/api/v1/push/subscription"))
                 .json(&request),
         )?;
 
@@ -411,13 +411,13 @@ impl MastodonClient for Mastodon {
     /// Get all accounts that follow the authenticated user
     fn follows_me(&self) -> Result<Page<Account>> {
         let me = self.verify_credentials()?;
-        Ok(self.followers(&me.id)?)
+        self.followers(&me.id)
     }
 
     /// Get all accounts that the authenticated user follows
     fn followed_by_me(&self) -> Result<Page<Account>> {
         let me = self.verify_credentials()?;
-        Ok(self.following(&me.id)?)
+        self.following(&me.id)
     }
 
     /// returns events that are relevant to the authorized user, i.e. home
@@ -630,7 +630,7 @@ impl MastodonClient for Mastodon {
 
         let response = self.send_blocking(
             self.client
-                .post(&self.route("/api/v1/media"))
+                .post(self.route("/api/v1/media"))
                 .multipart(form_data),
         )?;
 
@@ -726,18 +726,18 @@ impl<R: EventStream> EventReader<R> {
                 })?;
                 let notification = serde_json::from_str::<Notification>(&data)?;
                 Event::Notification(notification)
-            },
+            }
             "update" => {
                 let data =
                     data.ok_or_else(|| Error::Other("Missing `data` line for update".to_string()))?;
                 let status = serde_json::from_str::<Status>(&data)?;
                 Event::Update(status)
-            },
+            }
             "delete" => {
                 let data =
                     data.ok_or_else(|| Error::Other("Missing `data` line for delete".to_string()))?;
                 Event::Delete(data)
-            },
+            }
             "filters_changed" => Event::FiltersChanged,
             _ => return Err(Error::Other(format!("Unknown event `{}`", event))),
         })
@@ -878,7 +878,7 @@ fn deserialise_blocking<T: for<'de> serde::Deserialize<'de>>(response: Response)
         Ok(t) => {
             log::debug!("{}", &body);
             Ok(t)
-        },
+        }
         // If deserializing into the desired type fails try again to
         // see if this is an error response.
         Err(e) => {
@@ -887,6 +887,6 @@ fn deserialise_blocking<T: for<'de> serde::Deserialize<'de>>(response: Response)
                 return Err(Error::Api(error));
             }
             Err(e.into())
-        },
+        }
     }
 }

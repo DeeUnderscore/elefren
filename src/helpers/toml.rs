@@ -28,7 +28,7 @@ pub fn from_reader<R: Read>(mut r: R) -> Result<Data> {
 pub fn from_file<P: AsRef<Path>>(path: P) -> Result<Data> {
     let path = path.as_ref();
     let file = File::open(path)?;
-    Ok(from_reader(file)?)
+    from_reader(file)
 }
 
 /// Attempts to serialize a Data struct to a String
@@ -80,7 +80,7 @@ mod tests {
     use std::{fs::OpenOptions, io::Cursor};
     use tempfile::{tempdir, NamedTempFile};
 
-    const DOC: &'static str = indoc::indoc!(
+    const DOC: &str = indoc::indoc!(
         r#"
             base = "https://example.com"
             client_id = "adbc01234"
@@ -107,7 +107,7 @@ mod tests {
     #[test]
     fn test_from_slice() {
         let doc = DOC.as_bytes();
-        let desered = from_slice(&doc).expect("Couldn't deserialize Data");
+        let desered = from_slice(doc).expect("Couldn't deserialize Data");
         assert_eq!(
             desered,
             Data {
