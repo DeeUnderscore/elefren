@@ -4,7 +4,8 @@ use crate::status_builder;
 use chrono::prelude::*;
 use serde::{
     de::{self, Unexpected},
-    Deserialize, Serialize,
+    Deserialize,
+    Serialize,
 };
 use std::path::PathBuf;
 

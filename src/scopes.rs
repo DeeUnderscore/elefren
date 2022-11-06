@@ -9,7 +9,9 @@ use std::{
 use crate::errors::Error;
 use serde::{
     de::{self, Visitor},
-    Deserialize, Deserializer, Serialize,
+    Deserialize,
+    Deserializer,
+    Serialize,
 };
 
 /// Represents a set of OAuth scopes
@@ -38,7 +40,9 @@ impl FromStr for Scopes {
             let scope = Scope::from_str(scope)?;
             set.insert(scope);
         }
-        Ok(Scopes { scopes: set })
+        Ok(Scopes {
+            scopes: set,
+        })
     }
 }
 
@@ -211,7 +215,9 @@ impl Scopes {
     /// ```
     pub fn and(self, other: Scopes) -> Scopes {
         let newset: HashSet<_> = self.scopes.union(&other.scopes).copied().collect();
-        Scopes { scopes: newset }
+        Scopes {
+            scopes: newset,
+        }
     }
 
     fn _write(subscope: Option<Write>) -> Scopes {
@@ -225,7 +231,9 @@ impl Scopes {
     fn new(scope: Scope) -> Scopes {
         let mut set = HashSet::new();
         set.insert(scope);
-        Scopes { scopes: set }
+        Scopes {
+            scopes: set,
+        }
     }
 }
 
@@ -801,7 +809,8 @@ mod tests {
             ("push", Scope::Push),
         ];
         for (source, expected) in &tests {
-            let result = Scope::from_str(source).unwrap_or_else(|_| panic!("Couldn't parse '{}'", &source));
+            let result =
+                Scope::from_str(source).unwrap_or_else(|_| panic!("Couldn't parse '{}'", &source));
             assert_eq!(result, *expected);
         }
     }

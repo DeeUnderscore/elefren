@@ -1,7 +1,7 @@
 format_strings = true
 format_macro_matchers = true
+imports_granularity = "Crate"
 imports_layout = "HorizontalVertical"
-merge_imports = true
 match_block_trailing_comma = true
 merge_derives = true
 newline_style = "Unix"

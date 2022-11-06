@@ -87,7 +87,11 @@ pub use crate::{
     media_builder::MediaBuilder,
     registration::Registration,
     requests::{
-        AddFilterRequest, AddPushRequest, StatusesRequest, UpdateCredsRequest, UpdatePushRequest,
+        AddFilterRequest,
+        AddPushRequest,
+        StatusesRequest,
+        UpdateCredsRequest,
+        UpdatePushRequest,
     },
     status_builder::{NewStatus, StatusBuilder},
 };
@@ -123,7 +127,13 @@ mod macros;
 /// Automatically import the things you need
 pub mod prelude {
     pub use crate::{
-        scopes::Scopes, Data, Mastodon, MastodonClient, NewStatus, Registration, StatusBuilder,
+        scopes::Scopes,
+        Data,
+        Mastodon,
+        MastodonClient,
+        NewStatus,
+        Registration,
+        StatusBuilder,
         StatusesRequest,
     };
 }
