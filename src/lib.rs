@@ -74,7 +74,8 @@
 use std::{borrow::Cow, io::BufRead, ops};
 
 use reqwest::blocking::{Client, RequestBuilder, Response};
-use tungstenite::client::AutoStream;
+use std::net::TcpStream;
+use tungstenite::stream::MaybeTlsStream;
 
 use crate::{entities::prelude::*, page::Page};
 
@@ -649,7 +650,7 @@ impl MastodonClient for Mastodon {
 #[derive(Debug)]
 /// WebSocket newtype so that EventStream can be implemented without coherency
 /// issues
-pub struct WebSocket(tungstenite::protocol::WebSocket<AutoStream>);
+pub struct WebSocket(tungstenite::protocol::WebSocket<MaybeTlsStream<TcpStream>>);
 
 /// A type that streaming events can be read from
 pub trait EventStream {
