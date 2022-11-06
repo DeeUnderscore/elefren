@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 
 /// Represents a weekly bucket of instance activity.
-#[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize, Serialize)]
 pub struct Activity {
     /// Midnight at the first day of the week.
     pub week: String,

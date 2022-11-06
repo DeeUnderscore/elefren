@@ -317,7 +317,7 @@ impl Registered {
 
         let mut builder = MastodonBuilder::new();
         builder.client(self.client.clone()).data(data);
-        Ok(builder.build()?)
+        builder.build()
     }
 }
 

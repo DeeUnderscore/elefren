@@ -136,7 +136,7 @@ impl<'a> TryInto<App> for AppBuilder<'a> {
     type Error = Error;
 
     fn try_into(self) -> Result<App> {
-        Ok(self.build()?)
+        self.build()
     }
 }
 
@@ -203,6 +203,7 @@ mod tests {
             website: None,
         };
         let expected = app.clone();
+        #[allow(clippy::useless_conversion)]
         let result = app.try_into().expect("Couldn't make App into App");
         assert_eq!(expected, result);
     }

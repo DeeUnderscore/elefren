@@ -48,7 +48,7 @@ mod tests {
 
     #[test]
     fn test_from_env_no_prefix() {
-        let desered = withenv(None, || from_env()).expect("Couldn't deser");
+        let desered = withenv(None, from_env).expect("Couldn't deser");
         assert_eq!(
             desered,
             Data {

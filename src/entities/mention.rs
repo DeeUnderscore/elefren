@@ -1,5 +1,5 @@
 /// Represents a `mention` used in a status
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Mention {
     /// URL of user's profile (can be remote)
     pub url: String,
