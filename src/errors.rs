@@ -11,7 +11,7 @@ use async_native_tls::Error as TlsError;
 use envy::Error as EnvyError;
 #[cfg(feature = "async")]
 use http_types::Error as HttpTypesError;
-use hyper_old_types::Error as HeaderParseError;
+use parse_link_header::Error as HeaderParseError;
 use reqwest::{header::ToStrError as HeaderStrError, Error as HttpError, StatusCode};
 use serde_json::Error as SerdeError;
 use serde_qs::Error as SerdeQsError;

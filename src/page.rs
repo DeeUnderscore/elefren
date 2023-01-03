@@ -1,6 +1,5 @@
 use super::{deserialise_blocking, Mastodon, Result};
 use crate::entities::itemsiter::ItemsIter;
-use hyper_old_types::header::{parsing, Link, RelationType};
 use reqwest::blocking::Response;
 use reqwest::header::LINK;
 use serde::Deserialize;
@@ -204,18 +203,12 @@ fn get_links(response: &Response) -> Result<(Option<Url>, Option<Url>)> {
 
     if let Some(link_header) = response.headers().get(LINK) {
         let link_header = link_header.to_str()?;
-        let link_header = link_header.as_bytes();
-        let link_header: Link = parsing::from_raw_str(&link_header)?;
-        for value in link_header.values() {
-            if let Some(relations) = value.rel() {
-                if relations.contains(&RelationType::Next) {
-                    next = Some(Url::parse(value.link())?);
-                }
-
-                if relations.contains(&RelationType::Prev) {
-                    prev = Some(Url::parse(value.link())?);
-                }
-            }
+        let link_header = parse_link_header::parse_with_rel(link_header)?;
+        if let Some(link) = link_header.get("prev") {
+            prev = Some(link.uri.clone());
+        }
+        if let Some(link) = link_header.get("next") {
+            next = Some(link.uri.clone());
         }
     }
 
